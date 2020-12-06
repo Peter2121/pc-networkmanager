@@ -51,13 +51,14 @@ void NetworkMan::Init()
     firstUpdate = 0;
     
     // Make sure we are running as root
+    /*
     if ( getuid() != 0 )
     {
 	 QMessageBox::critical( this, tr("Need Root Access"),
 	  tr("This program must be run as root!") );
 	 exit(1);
     }
-
+    */
     // Get the username we're running under
     username = QString::fromLocal8Bit(getenv("LOGNAME"));
         

@@ -5,8 +5,9 @@ CONFIG	+= qt warn_on release
 
 QT	+= core gui widgets network
 
+QMAKE_LIBDIR = /usr/local/lib/qt5 $$PWD/../../../trueos-libqt5/src-qt5/libtrueos/
 LIBS	+= -L/usr/local/lib -ltrueos-utils -ltrueos-ui
-INCLUDEPATH+= /usr/local/include
+INCLUDEPATH+= /usr/local/include $$PWD/../../../trueos-libqt5/src-qt5/libtrueos/ui $$PWD/../../../trueos-libqt5/src-qt5/libtrueos/utils
 
 HEADERS	+= networkman.h \
     dnslist.h

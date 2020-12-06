@@ -80,9 +80,9 @@ TRANSLATIONS =  i18n/ethernetconfig_af.ts \
 
 INSTALLS += target
 
-QMAKE_LIBDIR = /usr/local/lib/qt5
+QMAKE_LIBDIR = /usr/local/lib/qt5 $$PWD/../../../trueos-libqt5/src-qt5/libtrueos/
 
 TARGET  = pc-ethernetconfig
 target.path = /usr/local/bin
 
-INCLUDEPATH+= /usr/local/include
+INCLUDEPATH+= /usr/local/include $$PWD/../../../trueos-libqt5/src-qt5/libtrueos/ui $$PWD/../../../trueos-libqt5/src-qt5/libtrueos/utils
