@@ -1,6 +1,7 @@
 TEMPLATE = subdirs
 
-SUBDIRS+= NetworkManager wificonfig ethernetconfig NetworkTray
+SUBDIRS+= NetworkManager wificonfig ethernetconfig NetworkTray \
+    nmdaemon
 
 #Rules for installing the .desktop registrations
 desktop.files=desktop/*.desktop
