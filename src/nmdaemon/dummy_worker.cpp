@@ -18,9 +18,14 @@ json dummy_worker::execCmd(nmcommand_data*)
 
 bool dummy_worker::isValidCmd(nmcommand_data* pcmd)
 {
-    if(pcmd->getCommand().scope == nmscope::DUMMY)
-        return true;
-    else
+    if( pcmd->getCommand().scope != getScope() )
         return false;
+    int cmd_size = sizeof(Cmds) / sizeof(Cmds[0]);
+    for(int i=0; i<cmd_size; i++)
+    {
+        if(pcmd->getCommand().cmd == Cmds[i].cmd)
+            return true;
+    }
+    return false;
 }
 

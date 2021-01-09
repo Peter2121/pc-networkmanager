@@ -8,7 +8,8 @@ SOURCES += \
         loguru.cpp \
         main.cpp \
         nmcommand_data.cpp \
-        nmdaemon.cpp
+        nmdaemon.cpp \
+        system_worker.cpp
 
 LIBS += $$PWD/../../../../../sockpp/build-debug/libsockpp.a -lpthread -ldl
 #LIBS += -L$$PWD/../../../../../sockpp/build-debug -lsockpp -lpthread -ldl
@@ -31,4 +32,5 @@ HEADERS += \
     nmdaemon.h \
     nmjsonconst.h \
     nmworker.h \
+    system_worker.h \
     workers.h

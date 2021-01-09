@@ -9,3 +9,5 @@ const std::string JSON_PARAM_RESULT = "RESULT";
 const std::string JSON_PARAM_SUCC = "SUCCESS";
 const std::string JSON_PARAM_ERR = "ERROR";
 const std::string JSON_DATA_ERR_INVALID_REQUEST = "INVALID REQUEST";
+const std::string JSON_DATA_ERR_NOT_IMPLEMENTED = "NOT IMPLEMENTED";
+const std::string JSON_DATA_ERR_INVALID_COMMAND = "INVALID COMMAND";

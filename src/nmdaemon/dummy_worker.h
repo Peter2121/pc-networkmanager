@@ -5,6 +5,11 @@
 
 class dummy_worker : public nmworker
 {
+protected:
+    static constexpr nmcommand Cmds[] =
+    {
+        { nmscope::DUMMY, nmcmd::TEST }
+    };
 public:
     dummy_worker();
     ~dummy_worker();

@@ -8,7 +8,7 @@
 //#include <stdlib.h>
 #include <thread>
 
-#include "../json/json.hpp"
+#include "json.hpp"
 
 #define LOGURU_WITH_STREAMS 1
 #include "loguru.hpp"
@@ -18,8 +18,13 @@
 
 #include "nmdaemon.h"
 #include "nmworker.h"
-#include "dummy_worker.h"
 #include "workers.h"
+#if defined (WORKER_DUMMY)
+#include "dummy_worker.h"
+#endif
+#if defined (WORKER_SYSTEM)
+#include "system_worker.h"
+#endif
 
 using namespace std;
 
@@ -61,6 +66,10 @@ int main(int argc, char* argv[])
 
 #if defined (WORKER_DUMMY)
     workers.push_back(new WORKER_DUMMY());
+#endif
+
+#if defined (WORKER_SYSTEM)
+    workers.push_back(new WORKER_SYSTEM());
 #endif
 
     sockpp::socket_initializer sockInit;

@@ -9,7 +9,7 @@ enum class nmscope
 enum class nmcmd
 {
     NONE, TEST,
-    IF_ADD, IF_REMOVE,
+    IF_ADD, IF_REMOVE, IF_LIST,
     IF_ENABLE, IF_DISABLE,
     ADDR_ADD, ADDR_REMOVE, ADDR_CHANGE,
     WPA_SCAN, WPA_SETKEY, WPA_GETKEY, WPA_CONNECT, WPA_DISCONNECT
@@ -26,6 +26,7 @@ static nmcommand cmds[] =
     { nmscope::DUMMY, nmcmd::TEST },
     { nmscope::SYSTEM, nmcmd::IF_ADD },
     { nmscope::SYSTEM, nmcmd::IF_REMOVE },
+    { nmscope::SYSTEM, nmcmd::IF_LIST },
     { nmscope::INTERFACE, nmcmd::IF_ENABLE },
     { nmscope::INTERFACE, nmcmd::IF_DISABLE },
     { nmscope::INTERFACE, nmcmd::ADDR_ADD },
