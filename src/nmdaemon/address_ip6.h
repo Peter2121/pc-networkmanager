@@ -1,0 +1,28 @@
+#ifndef ADDRESS_IP6_H
+#define ADDRESS_IP6_H
+
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include "address.h"
+
+class address_ip6 : public address
+{
+protected:
+    struct in6_addr ip_addr6;
+    const short family = AF_INET6;
+    struct sockaddr* sock_addr;
+    std::string strAddr;
+    void setIpAddr6();
+public:
+    address_ip6(const struct sockaddr*);
+    address_ip6(std::string);
+    ~address_ip6();
+    std::string getStrAddr() const;
+    const struct sockaddr* getSockAddr() const;
+    short getFamily() const;
+    bool operator==(const address&);
+    bool operator!=(const address&);
+};
+
+#endif // ADDRESS_IP6_H
