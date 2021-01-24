@@ -65,7 +65,7 @@ short address_ip4::getFamily() const
     return family;
 }
 
-bool address_ip4::operator==(const address& addr)
+bool address_ip4::operator==(const address_base& addr)
 {
     if(family != addr.getFamily())
         return false;
@@ -75,7 +75,7 @@ bool address_ip4::operator==(const address& addr)
         return true;
 }
 
-bool address_ip4::operator!=(const address& addr)
+bool address_ip4::operator!=(const address_base& addr)
 {
     if(family == addr.getFamily())
         return false;

@@ -1,23 +1,23 @@
-#ifndef ADDRESS_IP4_H
-#define ADDRESS_IP4_H
+#ifndef ADDR_LINK_H
+#define ADDR_LINK_H
 
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <net/if_dl.h>
 #include <arpa/inet.h>
 #include "address_base.h"
 
-class address_ip4 : public address_base
+class address_link : public address_base
 {
 protected:
-    struct in_addr ip_addr;
-    const short family = AF_INET;
+    const short family = AF_LINK;
     struct sockaddr* sock_addr;
     std::string strAddr;
-    void setIpAddr();
+    void setLinkAddr();
 public:
-    address_ip4(const struct sockaddr*);
-    address_ip4(std::string);
-    ~address_ip4();
+    address_link(const struct sockaddr*);
+    address_link(std::string);
+    ~address_link();
     std::string getStrAddr() const;
     const struct sockaddr* getSockAddr() const;
     short getFamily() const;
@@ -25,4 +25,4 @@ public:
     bool operator!=(const address_base&);
 };
 
-#endif // ADDRESS_IP4_H
+#endif // ADDR_LINK_H
