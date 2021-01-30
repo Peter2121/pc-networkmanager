@@ -9,6 +9,7 @@ SOURCES += \
         address_ip6.cpp \
         address_link.cpp \
         dummy_worker.cpp \
+        interface.cpp \
         loguru.cpp \
         main.cpp \
         nmcommand_data.cpp \
@@ -33,6 +34,7 @@ HEADERS += \
     address_ip6.h \
     address_link.h \
     dummy_worker.h \
+    interface.h \
     json.hpp \
     loguru.hpp \
     magic_enum.hpp \

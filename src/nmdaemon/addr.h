@@ -2,6 +2,7 @@
 #define IPADDR_H
 
 #include <ifaddrs.h>
+#include <net/if.h>
 #include "json.hpp"
 #include "magic_enum.hpp"
 #include "nmjsonconst.h"
@@ -12,21 +13,24 @@
 
 enum class ipaddr_type
 {
-    BCAST, PPP, LINK
+    BCAST, PPP, LINK, LOOPBACK
 };
 
 class addr
 {
 protected:
-    ipaddr_type iptype;
-    address_base* ipaddress;
-    address_base* ipmask;    // subnet mask or nothing
-    address_base* ipdata;    // network broadcast or ppp gateway or nothing
+    ipaddr_type ipType;
+    address_base* ipAddress;
+    address_base* ipMask;    // subnet mask or nothing
+    address_base* ipData;    // network broadcast or ppp gateway or nothing
+    bool isAddrUp;
 public:
     addr(struct ifaddrs*);
     ~addr();
-    std::string getIpAddrString();
-    nlohmann::json getIpAddrJson();
+    const std::string getIpAddrString() const;
+    const nlohmann::json getIpAddrJson() const;
+    bool isUp() const;
+    short getFamily() const;
 };
 
 #endif // IPADDR_H

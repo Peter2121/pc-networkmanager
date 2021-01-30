@@ -3,42 +3,52 @@
 addr::addr(struct ifaddrs* ifa)
 {
     if(ifa->ifa_addr->sa_family == AF_LINK)
-        iptype = ipaddr_type::LINK;
-    else if(ifa->ifa_dstaddr)
-        iptype = ipaddr_type::PPP;
+        ipType = ipaddr_type::LINK;
+    else if( (ifa->ifa_dstaddr) && ((ifa->ifa_flags & IFF_POINTOPOINT ) != 0) )
+        ipType = ipaddr_type::PPP;
     else if(ifa->ifa_broadaddr)
-        iptype = ipaddr_type::BCAST;
+        ipType = ipaddr_type::BCAST;
 /*  else
         // TODO: Raise exception
 */
-    ipaddress = nullptr;
-    ipmask = nullptr;
-    ipdata = nullptr;
+    if( (ifa->ifa_flags & IFF_LOOPBACK) != 0 )
+        ipType = ipaddr_type::LOOPBACK;
+
+    if( (ifa->ifa_flags & IFF_UP) != 0 )
+        isAddrUp = true;
+    else
+        isAddrUp = false;
+
+    ipAddress = nullptr;
+    ipMask = nullptr;
+    ipData = nullptr;
+
     switch(ifa->ifa_addr->sa_family)
     {
         case AF_INET:
             if(ifa->ifa_addr)
-                ipaddress = new address_ip4(ifa->ifa_addr);
+                ipAddress = new address_ip4(ifa->ifa_addr);
         /*  else
                 // TODO: Raise exception
         */
             if(ifa->ifa_netmask)
-                ipmask = new address_ip4(ifa->ifa_netmask);
+                ipMask = new address_ip4(ifa->ifa_netmask);
         /*  else
                 // TODO: Raise exception
         */
-            switch(iptype)
+            switch(ipType)
             {
                 case ipaddr_type::BCAST:
+                case ipaddr_type::LOOPBACK:
                     if(ifa->ifa_broadaddr)
-                        ipdata = new address_ip4(ifa->ifa_broadaddr);
+                        ipData = new address_ip4(ifa->ifa_broadaddr);
                 /*  else
                         // TODO: Raise exception
                 */
                     break;
                 case ipaddr_type::PPP:
                     if(ifa->ifa_dstaddr)
-                        ipdata = new address_ip4(ifa->ifa_dstaddr);
+                        ipData = new address_ip4(ifa->ifa_dstaddr);
                 /*  else
                         // TODO: Raise exception
                 */
@@ -49,27 +59,28 @@ addr::addr(struct ifaddrs* ifa)
             break;  // end of case AF_INET
         case AF_INET6:
             if(ifa->ifa_addr)
-                ipaddress = new address_ip6(ifa->ifa_addr);
+                ipAddress = new address_ip6(ifa->ifa_addr);
         /*  else
                 // TODO: Raise exception
         */
             if(ifa->ifa_netmask)
-                ipmask = new address_ip6(ifa->ifa_netmask);
+                ipMask = new address_ip6(ifa->ifa_netmask);
         /*  else
                 // TODO: Raise exception
         */
-            switch(iptype)
+            switch(ipType)
             {
                 case ipaddr_type::BCAST:
+                case ipaddr_type::LOOPBACK:
                     if(ifa->ifa_broadaddr)
-                        ipdata = new address_ip6(ifa->ifa_broadaddr);
+                        ipData = new address_ip6(ifa->ifa_broadaddr);
                 /*  else
                         // TODO: Raise exception
                 */
                     break;
                 case ipaddr_type::PPP:
                     if(ifa->ifa_dstaddr)
-                        ipdata = new address_ip6(ifa->ifa_dstaddr);
+                        ipData = new address_ip6(ifa->ifa_dstaddr);
                 /*  else
                         // TODO: Raise exception
                 */
@@ -80,7 +91,7 @@ addr::addr(struct ifaddrs* ifa)
             break;  // end of case AF_INET6
         case AF_LINK:
             if(ifa->ifa_addr)
-                ipaddress = new address_link(ifa->ifa_addr);
+                ipAddress = new address_link(ifa->ifa_addr);
         /*  else
                 // TODO: Raise exception
         */
@@ -93,67 +104,69 @@ addr::addr(struct ifaddrs* ifa)
 
 addr::~addr()
 {
-    if(ipaddress != nullptr)
-        delete ipaddress;
-    if(ipmask != nullptr)
-        delete ipmask;
-    if(ipdata != nullptr)
-        delete ipdata;
+    if(ipAddress != nullptr)
+        delete ipAddress;
+    if(ipMask != nullptr)
+        delete ipMask;
+    if(ipData != nullptr)
+        delete ipData;
 }
 
-// TODO: customize separtor and eol strings (take them from arguments)
-std::string addr::getIpAddrString()
+// TODO: customize separator and eol strings (take them from arguments)
+const std::string addr::getIpAddrString() const
 {
     std::string retAddrStr = "";
     std::string separator = ":";
     std::string eol = "\n";
-    std::string title = "";
+    std::string strTitle = "";
 
-    retAddrStr += JSON_PARAM_ADDR_TYPE + separator + std::string(magic_enum::enum_name(iptype)) + eol;
+    strTitle = std::string(magic_enum::enum_name(ipType));
+    retAddrStr += JSON_PARAM_ADDR_TYPE + separator + strTitle + eol;
 
-    if(ipaddress != nullptr)
+    if(ipAddress != nullptr)
     {
-        switch(ipaddress->getFamily())
+        switch(ipAddress->getFamily())
         {
             case AF_INET:
-                title = JSON_PARAM_IPV4_ADDR;
+                strTitle = JSON_PARAM_IPV4_ADDR;
                 break;
             case AF_INET6:
-                title = JSON_PARAM_IPV6_ADDR;
+                strTitle = JSON_PARAM_IPV6_ADDR;
                 break;
             case AF_LINK:
-                title = JSON_PARAM_LINK_ADDR;
+                strTitle = JSON_PARAM_LINK_ADDR;
                 break;
             default:
                 break;
         }
 
-        retAddrStr += title + separator + ipaddress->getStrAddr() + eol;
+        retAddrStr += strTitle + separator + ipAddress->getStrAddr() + eol;
 
-        switch(iptype)
+        switch(ipType)
         {
             case ipaddr_type::BCAST:
-                if(ipmask != nullptr)
+            case ipaddr_type::LOOPBACK:
+                if(ipMask != nullptr)
                 {
-                    title = (ipaddress->getFamily() == AF_INET) ? JSON_PARAM_IPV4_MASK : JSON_PARAM_IPV6_MASK;
-                    retAddrStr += title + separator + ipmask->getStrAddr() + eol;
+                    strTitle = (ipAddress->getFamily() == AF_INET) ? JSON_PARAM_IPV4_MASK : JSON_PARAM_IPV6_MASK;
+                    retAddrStr += strTitle + separator + ipMask->getStrAddr() + eol;
                 }
-                if(ipdata != nullptr)
+                if(ipData != nullptr)
                 {
-                    title = (ipaddress->getFamily() == AF_INET) ? JSON_PARAM_IPV4_BCAST : JSON_PARAM_IPV6_BCAST;
-                    retAddrStr += title + separator + ipdata->getStrAddr() + eol;
+                    strTitle = (ipAddress->getFamily() == AF_INET) ? JSON_PARAM_IPV4_BCAST : JSON_PARAM_IPV6_BCAST;
+                    retAddrStr += strTitle + separator + ipData->getStrAddr() + eol;
                 }
                 break;
             case ipaddr_type::PPP:
-                if(ipmask != nullptr)
+                if(ipMask != nullptr)
                 {
-                    title = (ipaddress->getFamily() == AF_INET) ? JSON_PARAM_IPV4_MASK : JSON_PARAM_IPV6_MASK;
-                    retAddrStr += title + separator + ipmask->getStrAddr() + eol;
+                    strTitle = (ipAddress->getFamily() == AF_INET) ? JSON_PARAM_IPV4_MASK : JSON_PARAM_IPV6_MASK;
+                    retAddrStr += strTitle + separator + ipMask->getStrAddr() + eol;
                 }
-                if(ipdata != nullptr)
+                if(ipData != nullptr)
                 {
-                    title = (ipaddress->getFamily() == AF_INET) ? JSON_PARAM_IPV4_PPP_GW : JSON_PARAM_IPV6_PPP_GW;
-                    retAddrStr += title + separator + ipdata->getStrAddr() + eol;
+                    strTitle = (ipAddress->getFamily() == AF_INET) ? JSON_PARAM_IPV4_PPP_GW : JSON_PARAM_IPV6_PPP_GW;
+                    retAddrStr += strTitle + separator + ipData->getStrAddr() + eol;
                 }
                 break;
             case ipaddr_type::LINK:
@@ -164,6 +177,92 @@ std::string addr::getIpAddrString()
     return retAddrStr;
 }
 
-nlohmann::json addr::getIpAddrJson()
+const nlohmann::json addr::getIpAddrJson() const
 {
+    nlohmann::json retAddrJson;
+    nlohmann::json dataJson;
+
+    std::string strTitle = "";
+    std::string strMainTitle = "";
+
+/*
+    IPv4 broadcast address JSON example:
+    {
+        "ADDRESS TYPE" : "BCAST",
+        "BCAST" : {
+            "IPV4 ADDRESS" : "192.168.211.21",
+            "IPV4 SUBNET MASK" : "255.255.255.0",
+            "IPV4 BROADCAST ADDRESS" : "192.168.211.255"
+        }
+    }
+*/
+    strMainTitle = std::string(magic_enum::enum_name(ipType));
+    retAddrJson[JSON_PARAM_ADDR_TYPE] = strMainTitle;
+
+    if(ipAddress != nullptr)
+    {
+        switch(ipAddress->getFamily())
+        {
+            case AF_INET:
+                strTitle = JSON_PARAM_IPV4_ADDR;
+                break;
+            case AF_INET6:
+                strTitle = JSON_PARAM_IPV6_ADDR;
+                break;
+            case AF_LINK:
+                strTitle = JSON_PARAM_LINK_ADDR;
+                break;
+            default:
+                break;
+        }
+
+        dataJson[strTitle] = ipAddress->getStrAddr();
+
+        switch(ipType)
+        {
+            case ipaddr_type::BCAST:
+            case ipaddr_type::LOOPBACK:
+                if(ipMask != nullptr)
+                {
+                    strTitle = (ipAddress->getFamily() == AF_INET) ? JSON_PARAM_IPV4_MASK : JSON_PARAM_IPV6_MASK;
+                    dataJson[strTitle] = ipMask->getStrAddr();
+                }
+                if(ipData != nullptr)
+                {
+                    strTitle = (ipAddress->getFamily() == AF_INET) ? JSON_PARAM_IPV4_BCAST : JSON_PARAM_IPV6_BCAST;
+                    dataJson[strTitle] = ipData->getStrAddr();
+                }
+                break;
+            case ipaddr_type::PPP:
+                if(ipMask != nullptr)
+                {
+                    strTitle = (ipAddress->getFamily() == AF_INET) ? JSON_PARAM_IPV4_MASK : JSON_PARAM_IPV6_MASK;
+                    dataJson[strTitle] = ipMask->getStrAddr();
+                }
+                if(ipData != nullptr)
+                {
+                    strTitle = (ipAddress->getFamily() == AF_INET) ? JSON_PARAM_IPV4_PPP_GW : JSON_PARAM_IPV6_PPP_GW;
+                    dataJson[strTitle] = ipData->getStrAddr();
+                }
+                break;
+            case ipaddr_type::LINK:
+            // TODO: show link data (speed, status etc.)
+            default:
+                break;
+        }
+
+        retAddrJson[strMainTitle] = dataJson;
+    }
+
+    return retAddrJson;
+}
+
+bool addr::isUp() const
+{
+    return isAddrUp;
+}
+
+short addr::getFamily() const
+{
+    return ipAddress->getFamily();
 }
