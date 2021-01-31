@@ -13,6 +13,7 @@ protected:
     const short family = AF_INET;
     struct sockaddr* sock_addr;
     std::string strAddr;
+    nmexception nmExcept;
     void setIpAddr();
 public:
     address_ip4(const struct sockaddr*);

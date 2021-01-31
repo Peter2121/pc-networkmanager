@@ -125,8 +125,15 @@ void nmdaemon::dispatcher(sockpp::unix_socket sockout)
                 }
             }
 //            string strReqData = request->getJsonData().dump();
-            strResult = jsonRes.dump();
-            strlcpy(buf,strResult.c_str(),strResult.length()+1);
+//            strResult = jsonRes.dump();
+            strResult = jsonRes.dump(2);
+            if(strResult.length() >= NM_MAXBUF)
+            {
+                LOG_S(ERROR) << "No place for result, rebuild with increased NM_MAXBUF value";
+                jsonRes = { { JSON_PARAM_RESULT, JSON_PARAM_ERR }, { JSON_PARAM_ERR, JSON_DATA_ERR_INTERNAL_ERROR } };
+                strResult = jsonRes.dump();
+            }
+            strlcpy(buf,strResult.c_str(),NM_MAXBUF);
 /*
             for(int i=0; i<300; i++)
             {

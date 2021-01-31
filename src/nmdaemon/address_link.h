@@ -1,6 +1,7 @@
 #ifndef ADDR_LINK_H
 #define ADDR_LINK_H
 
+#include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <net/if_dl.h>

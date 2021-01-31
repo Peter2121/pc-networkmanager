@@ -27,8 +27,8 @@ protected:
 public:
     addr(struct ifaddrs*);
     ~addr();
-    const std::string getIpAddrString() const;
-    const nlohmann::json getIpAddrJson() const;
+    const std::string getAddrString() const;
+    const nlohmann::json getAddrJson() const;
     bool isUp() const;
     short getFamily() const;
 };

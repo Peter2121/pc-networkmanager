@@ -40,6 +40,34 @@ bool system_worker::isValidCmd(nmcommand_data* pcmd)
 
 json system_worker::execCmdIfList(nmcommand_data*)
 {
-    return { { JSON_PARAM_RESULT, JSON_PARAM_SUCC }, { JSON_PARAM_DATA, {} } };
+    struct ifaddrs * ifaddrs_ptr;
+    nlohmann::json retIfListJson;
+    std::vector<nlohmann::json> vectIfsJson;
+    int status;
+    std::map<std::string, interface> ifMap;
+
+    status = getifaddrs (& ifaddrs_ptr);
+    if (status == -1) {
+        LOG_S(ERROR) << "Error in getifaddrs: " << errno << " (" << strerror (errno) << ")";
+    }
+
+    while (ifaddrs_ptr) {
+        ifMap[ifaddrs_ptr->ifa_name].setName(std::string(ifaddrs_ptr->ifa_name));
+        ifMap[ifaddrs_ptr->ifa_name].addAddress(ifaddrs_ptr);
+        ifaddrs_ptr = ifaddrs_ptr->ifa_next;
+    }
+
+    freeifaddrs (ifaddrs_ptr);
+
+    for (auto iface=ifMap.begin(); iface!=ifMap.end(); ++iface)
+    {
+      vectIfsJson.push_back(iface->second.getIfJson());
+    }
+
+    nlohmann::json addrJson;
+
+    retIfListJson[JSON_PARAM_INTERFACES] = vectIfsJson;
+
+    return retIfListJson;
 }
 

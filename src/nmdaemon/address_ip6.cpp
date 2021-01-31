@@ -16,7 +16,7 @@ address_ip6::address_ip6(std::string str_addr)
     }
     else
     {
-        // TODO: Raise exception
+        throw nmExcept;
     }
 }
 
@@ -37,7 +37,7 @@ void address_ip6::setIpAddr6()
     }
     else
     {
-        // TODO: Raise exception
+        throw nmExcept;
     }
 
     if(inet_ntop(family, addr_ptr, address, sizeof(address)) != nullptr)
@@ -46,7 +46,7 @@ void address_ip6::setIpAddr6()
     }
     else
     {
-        // TODO: Raise exception
+        throw nmExcept;
     }
 }
 

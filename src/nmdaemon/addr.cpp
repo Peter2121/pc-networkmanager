@@ -113,7 +113,7 @@ addr::~addr()
 }
 
 // TODO: customize separator and eol strings (take them from arguments)
-const std::string addr::getIpAddrString() const
+const std::string addr::getAddrString() const
 {
     std::string retAddrStr = "";
     std::string separator = ":";
@@ -177,7 +177,7 @@ const std::string addr::getIpAddrString() const
     return retAddrStr;
 }
 
-const nlohmann::json addr::getIpAddrJson() const
+const nlohmann::json addr::getAddrJson() const
 {
     nlohmann::json retAddrJson;
     nlohmann::json dataJson;

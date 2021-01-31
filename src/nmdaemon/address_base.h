@@ -2,6 +2,7 @@
 #define ADDRESS_H
 
 #include <string>
+#include "nmexception.h"
 
 class address_base
 {

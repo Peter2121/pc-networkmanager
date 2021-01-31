@@ -8,12 +8,25 @@ interface::interface(std::string name)
     isIfUp = false;
 }
 
+interface::interface()
+{
+    strName = "";
+    hasIPv4 = false;
+    hasIPv6 = false;
+    isIfUp = false;
+}
+
 interface::~interface()
 {
     for(auto a : vectAddrs)
     {
         delete a;
     }
+}
+
+void interface::setName(std::string name)
+{
+    strName = name;
 }
 
 void interface::addAddress(struct ifaddrs* ifa)
@@ -73,7 +86,22 @@ const std::vector<addr*>* interface::getAddrs() const
 }
 */
 
-const nlohmann::json getIfJson() const
+const nlohmann::json interface::getIfJson() const
 {
+    nlohmann::json retIfJson;
+    nlohmann::json addrJson;
+    std::vector<nlohmann::json> vectAddrsJson;
 
+    retIfJson[JSON_PARAM_IF_NAME] = strName;
+
+    for(auto addr : vectAddrs)
+    {
+        addrJson = addr->getAddrJson();
+        vectAddrsJson.push_back(addrJson);
+    }
+
+    retIfJson[JSON_PARAM_ADDRESSES] = vectAddrsJson;
+
+    return retIfJson;
 }
+

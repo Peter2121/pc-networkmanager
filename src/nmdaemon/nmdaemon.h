@@ -19,7 +19,7 @@ using namespace std;
 class nmdaemon
 {
 protected:
-    const int NM_MAXBUF = 512;
+    const unsigned long NM_MAXBUF = 8192;
     bool running_sock_receiver;
     bool running_dispatcher;
     mutex req_access;

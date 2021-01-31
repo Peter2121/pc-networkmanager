@@ -16,7 +16,9 @@ protected:
     bool hasIPv6;
     bool isIfUp;
 public:
+    interface();
     interface(std::string);
+    void setName(std::string);
     void addAddress(struct ifaddrs*);
     const std::vector<addr*>* getAddrs() const;
     const nlohmann::json getIfJson() const;

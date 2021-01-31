@@ -14,6 +14,7 @@ SOURCES += \
         main.cpp \
         nmcommand_data.cpp \
         nmdaemon.cpp \
+        nmexception.cpp \
         system_worker.cpp
 
 LIBS += $$PWD/../../../../../sockpp/build-debug/libsockpp.a -lpthread -ldl
@@ -41,6 +42,7 @@ HEADERS += \
     nmcommand.h \
     nmcommand_data.h \
     nmdaemon.h \
+    nmexception.h \
     nmjsonconst.h \
     nmworker.h \
     system_worker.h \

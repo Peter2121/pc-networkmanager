@@ -1,7 +1,11 @@
 #ifndef SYS_WORKER_H
 #define SYS_WORKER_H
 
+#include <ifaddrs.h>
+#define LOGURU_WITH_STREAMS 1
+#include "loguru.hpp"
 #include "nmworker.h"
+#include "interface.h"
 
 class system_worker : public nmworker
 {
