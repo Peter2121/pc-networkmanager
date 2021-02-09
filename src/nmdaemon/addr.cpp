@@ -4,13 +4,13 @@ addr::addr(struct ifaddrs* ifa)
 {
     if(ifa->ifa_addr->sa_family == AF_LINK)
         ipType = ipaddr_type::LINK;
-    else if( (ifa->ifa_dstaddr) && ((ifa->ifa_flags & IFF_POINTOPOINT ) != 0) )
+    else if( (ifa->ifa_flags & IFF_POINTOPOINT ) != 0 )
         ipType = ipaddr_type::PPP;
     else if(ifa->ifa_broadaddr)
         ipType = ipaddr_type::BCAST;
-/*  else
-        // TODO: Raise exception
-*/
+    else
+        throw nmExcept;
+
     if( (ifa->ifa_flags & IFF_LOOPBACK) != 0 )
         ipType = ipaddr_type::LOOPBACK;
 
@@ -28,30 +28,28 @@ addr::addr(struct ifaddrs* ifa)
         case AF_INET:
             if(ifa->ifa_addr)
                 ipAddress = new address_ip4(ifa->ifa_addr);
-        /*  else
-                // TODO: Raise exception
-        */
+            else
+                throw nmExcept;
+
             if(ifa->ifa_netmask)
                 ipMask = new address_ip4(ifa->ifa_netmask);
-        /*  else
-                // TODO: Raise exception
-        */
+            else
+                throw nmExcept;
+
             switch(ipType)
             {
                 case ipaddr_type::BCAST:
                 case ipaddr_type::LOOPBACK:
                     if(ifa->ifa_broadaddr)
                         ipData = new address_ip4(ifa->ifa_broadaddr);
-                /*  else
-                        // TODO: Raise exception
-                */
+                    else
+                        throw nmExcept;
                     break;
                 case ipaddr_type::PPP:
-                    if(ifa->ifa_dstaddr)
+                    // We can have only IPv4 or only IPv6 ifa_dstaddr not the both
+                    // In such case ifa->ifa_dstaddr->sa_family is 0
+                    if( (ifa->ifa_dstaddr) && (ifa->ifa_dstaddr->sa_family==AF_INET) )
                         ipData = new address_ip4(ifa->ifa_dstaddr);
-                /*  else
-                        // TODO: Raise exception
-                */
                     break;
                 default:
                     break;
@@ -60,30 +58,27 @@ addr::addr(struct ifaddrs* ifa)
         case AF_INET6:
             if(ifa->ifa_addr)
                 ipAddress = new address_ip6(ifa->ifa_addr);
-        /*  else
-                // TODO: Raise exception
-        */
+            else
+                throw nmExcept;
+
             if(ifa->ifa_netmask)
                 ipMask = new address_ip6(ifa->ifa_netmask);
-        /*  else
-                // TODO: Raise exception
-        */
+            else
+                throw nmExcept;
+
             switch(ipType)
             {
                 case ipaddr_type::BCAST:
-                case ipaddr_type::LOOPBACK:
                     if(ifa->ifa_broadaddr)
                         ipData = new address_ip6(ifa->ifa_broadaddr);
-                /*  else
-                        // TODO: Raise exception
-                */
+                    else
+                        throw nmExcept;
                     break;
                 case ipaddr_type::PPP:
-                    if(ifa->ifa_dstaddr)
+                    // We can have only IPv4 or only IPv6 ifa_dstaddr not the both
+                    // In such case ifa->ifa_dstaddr->sa_family is 0
+                    if( (ifa->ifa_dstaddr) && (ifa->ifa_dstaddr->sa_family==AF_INET6) )
                         ipData = new address_ip6(ifa->ifa_dstaddr);
-                /*  else
-                        // TODO: Raise exception
-                */
                     break;
                 default:
                     break;
@@ -92,12 +87,11 @@ addr::addr(struct ifaddrs* ifa)
         case AF_LINK:
             if(ifa->ifa_addr)
                 ipAddress = new address_link(ifa->ifa_addr);
-        /*  else
-                // TODO: Raise exception
-        */
+            else
+                throw nmExcept;
             break;
         default:
-            // TODO: Raise exception
+            throw nmExcept;
             break;
     }
 }

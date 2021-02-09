@@ -10,6 +10,7 @@
 #include "address_ip4.h"
 #include "address_ip6.h"
 #include "address_link.h"
+#include "nmexception.h"
 
 enum class ipaddr_type
 {
@@ -24,6 +25,7 @@ protected:
     address_base* ipMask;    // subnet mask or nothing
     address_base* ipData;    // network broadcast or ppp gateway or nothing
     bool isAddrUp;
+    nmexception nmExcept;
 public:
     addr(struct ifaddrs*);
     ~addr();
