@@ -164,12 +164,12 @@ json system_worker::execCmdIfEnable(nmcommand_data* pcmd) {
     int curflags = getIfFlags(ifname);
     if(curflags==0)
     {
-        return { { JSON_PARAM_RESULT, JSON_PARAM_ERR } };
+        return JSON_RESULT_ERR;
     }
     curflags |= cmdflag;
     if(!setIfFlags(ifname, curflags))
     {
-        return { { JSON_PARAM_RESULT, JSON_PARAM_ERR } };
+        return JSON_RESULT_ERR;
     }
     return JSON_RESULT_SUCCESS;
 }
@@ -183,12 +183,12 @@ json system_worker::execCmdIfDisable(nmcommand_data* pcmd) {
     int curflags = getIfFlags(ifname);
     if(curflags==0)
     {
-        return { { JSON_PARAM_RESULT, JSON_PARAM_ERR } };
+        return JSON_RESULT_ERR;
     }
     curflags &= ~cmdflag;
     if(!setIfFlags(ifname, curflags))
     {
-        return { { JSON_PARAM_RESULT, JSON_PARAM_ERR } };
+        return JSON_RESULT_ERR;
     }
     return JSON_RESULT_SUCCESS;
 }
