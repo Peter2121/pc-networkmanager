@@ -5,6 +5,7 @@
 //#include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/un.h>
+#include <sys/stat.h>
 //#include <stdlib.h>
 #include <thread>
 
@@ -83,6 +84,11 @@ int main(int argc, char* argv[])
         return -1;
     }
     LOG_S(INFO) << "Acceptor bound to address: '" << sockAcc.address();
+
+    if(chmod(DEFAULT_SOCKET_PATH.c_str(), S_ISGID|S_IRGRP|S_IWGRP)<0)
+    {
+        LOG_S(WARNING) << "Cannot change permissions for socket: '" << sockAcc.address();
+    }
 
     while (true)
     {

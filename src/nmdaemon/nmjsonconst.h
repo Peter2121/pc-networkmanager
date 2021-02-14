@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include "json.hpp"
 
 const std::string JSON_PARAM_SCOPE = "SCOPE";
 const std::string JSON_PARAM_CMD = "CMD";
@@ -25,5 +26,8 @@ const std::string JSON_PARAM_IPV6_PPP_GW = "IPV6 PPP GATEWAY";
 const std::string JSON_PARAM_IF_NAME = "INTERFACE NAME";
 const std::string JSON_PARAM_ADDRESSES = "ADDRESSES";
 const std::string JSON_PARAM_INTERFACES = "INTERFACES";
+
+const nlohmann::json JSON_RESULT_SUCCESS = { { JSON_PARAM_RESULT, JSON_PARAM_SUCC } };
+const nlohmann::json JSON_RESULT_ERR = { { JSON_PARAM_RESULT, JSON_PARAM_ERR } };
 
 

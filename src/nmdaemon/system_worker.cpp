@@ -20,6 +20,10 @@ json system_worker::execCmd(nmcommand_data* pcmd)
         case nmcmd::IF_ADD :
         case nmcmd::IF_REMOVE :
             return { { JSON_PARAM_RESULT, JSON_PARAM_ERR }, {JSON_PARAM_ERR, JSON_DATA_ERR_NOT_IMPLEMENTED} };
+        case nmcmd::IF_ENABLE :
+            return execCmdIfEnable(pcmd);
+        case nmcmd::IF_DISABLE :
+            return execCmdIfDisable(pcmd);
         default :
             return { { JSON_PARAM_RESULT, JSON_PARAM_ERR }, {JSON_PARAM_ERR, JSON_DATA_ERR_INVALID_COMMAND} };
     }
@@ -69,5 +73,123 @@ json system_worker::execCmdIfList(nmcommand_data*)
     retIfListJson[JSON_PARAM_INTERFACES] = vectIfsJson;
 
     return retIfListJson;
+}
+
+/*********  ifconfig.c  *********
+
+static int
+getifflags(const char *ifname, int us)
+{
+    struct ifreq my_ifr;
+    int s;
+
+    memset(&my_ifr, 0, sizeof(my_ifr));
+    (void) strlcpy(my_ifr.ifr_name, ifname, sizeof(my_ifr.ifr_name));
+    if (us < 0) {
+        if ((s = socket(AF_LOCAL, SOCK_DGRAM, 0)) < 0)
+            err(1, "socket(family AF_LOCAL,SOCK_DGRAM");
+    } else
+        s = us;
+    if (ioctl(s, SIOCGIFFLAGS, (caddr_t)&my_ifr) < 0) {
+        Perror("ioctl (SIOCGIFFLAGS)");
+        exit(1);
+    }
+    if (us < 0)
+        close(s);
+    return ((my_ifr.ifr_flags & 0xffff) | (my_ifr.ifr_flagshigh << 16));
+}
+
+static void
+setifflags(const char *vname, int value, int s, const struct afswtch *afp)
+{
+    struct ifreq		my_ifr;
+    int flags;
+
+    flags = getifflags(name, s);
+    if (value < 0) {
+        value = -value;
+        flags &= ~value;
+    } else
+        flags |= value;
+    memset(&my_ifr, 0, sizeof(my_ifr));
+    (void) strlcpy(my_ifr.ifr_name, name, sizeof(my_ifr.ifr_name));
+    my_ifr.ifr_flags = flags & 0xffff;
+    my_ifr.ifr_flagshigh = flags >> 16;
+    if (ioctl(s, SIOCSIFFLAGS, (caddr_t)&my_ifr) < 0)
+        Perror(vname);
+}
+
+*/
+
+int system_worker::getIfFlags(std::string ifname)
+{
+    struct ifreq ifr;
+    memset(&ifr, 0, sizeof(struct ifreq));
+    strlcpy(ifr.ifr_name, ifname.c_str(), sizeof(ifr.ifr_name));
+    sockpp::socket sock = sockpp::socket::create(AF_LOCAL, SOCK_DGRAM);
+    if (ioctl(sock.handle(), SIOCGIFFLAGS, (caddr_t)&ifr) < 0)
+    {
+        LOG_S(ERROR) << "Cannot get interface " << ifname << " flags";
+        sock.close();
+        return 0;
+    }
+    sock.close();
+    return ((ifr.ifr_flags & 0xffff) | (ifr.ifr_flagshigh << 16));
+}
+
+bool system_worker::setIfFlags(std::string ifname, int setflags)
+{
+    sockpp::socket sock = sockpp::socket::create(AF_LOCAL, SOCK_DGRAM);
+    struct ifreq ifr;
+    memset(&ifr, 0, sizeof(struct ifreq));
+    strlcpy(ifr.ifr_name, ifname.c_str(), sizeof(ifr.ifr_name));
+    ifr.ifr_flags = setflags & 0xffff;
+    ifr.ifr_flagshigh = setflags >> 16;
+    if (ioctl(sock.handle(), SIOCSIFFLAGS, (caddr_t)&ifr) < 0)
+    {
+        LOG_S(ERROR) << "Cannot set interface " << ifname << " flags";
+        sock.close();
+        return false;
+    }
+    sock.close();
+    return true;
+}
+
+json system_worker::execCmdIfEnable(nmcommand_data* pcmd) {
+    struct ifreq ifr;
+    const int cmdflag=IFF_UP;
+    memset(&ifr, 0, sizeof(struct ifreq));
+    json cmd_json = pcmd->getJsonData();
+    std::string ifname = cmd_json[JSON_PARAM_DATA][JSON_PARAM_IF_NAME];
+    int curflags = getIfFlags(ifname);
+    if(curflags==0)
+    {
+        return { { JSON_PARAM_RESULT, JSON_PARAM_ERR } };
+    }
+    curflags |= cmdflag;
+    if(!setIfFlags(ifname, curflags))
+    {
+        return { { JSON_PARAM_RESULT, JSON_PARAM_ERR } };
+    }
+    return JSON_RESULT_SUCCESS;
+}
+
+json system_worker::execCmdIfDisable(nmcommand_data* pcmd) {
+    struct ifreq ifr;
+    const int cmdflag=IFF_UP;
+    memset(&ifr, 0, sizeof(struct ifreq));
+    json cmd_json = pcmd->getJsonData();
+    std::string ifname = cmd_json[JSON_PARAM_DATA][JSON_PARAM_IF_NAME];
+    int curflags = getIfFlags(ifname);
+    if(curflags==0)
+    {
+        return { { JSON_PARAM_RESULT, JSON_PARAM_ERR } };
+    }
+    curflags &= ~cmdflag;
+    if(!setIfFlags(ifname, curflags))
+    {
+        return { { JSON_PARAM_RESULT, JSON_PARAM_ERR } };
+    }
+    return JSON_RESULT_SUCCESS;
 }
 
