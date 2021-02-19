@@ -96,6 +96,15 @@ addr::addr(struct ifaddrs* ifa)
     }
 }
 
+addr::addr(address_base* addr, address_base* mask, address_base* data, ipaddr_type type, bool up)
+{
+    ipAddress = addr;
+    ipMask = mask;
+    ipData = data;
+    ipType = type;
+    isAddrUp = up;
+}
+
 addr::~addr()
 {
     if(ipAddress != nullptr)
@@ -259,4 +268,19 @@ bool addr::isUp() const
 short addr::getFamily() const
 {
     return ipAddress->getFamily();
+}
+
+const address_base* addr::getAddrAB() const
+{
+    return ipAddress;
+}
+
+const address_base* addr::getMaskAB() const
+{
+    return ipMask;
+}
+
+const address_base* addr::getDataAB() const
+{
+    return ipData;
 }

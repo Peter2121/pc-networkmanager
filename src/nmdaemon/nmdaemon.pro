@@ -9,6 +9,7 @@ SOURCES += \
         address_ip6.cpp \
         address_link.cpp \
         dummy_worker.cpp \
+        if_worker.cpp \
         interface.cpp \
         loguru.cpp \
         main.cpp \
@@ -35,6 +36,7 @@ HEADERS += \
     address_ip6.h \
     address_link.h \
     dummy_worker.h \
+    if_worker.h \
     interface.h \
     json.hpp \
     loguru.hpp \
