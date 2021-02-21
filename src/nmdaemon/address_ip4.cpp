@@ -18,6 +18,10 @@ address_ip4::address_ip4(std::string str_addr)
     {
         throw nmExcept;
     }
+    sock_addr = new struct sockaddr;
+    sock_addr->sa_family = family;
+    ((struct sockaddr_in*)sock_addr)->sin_len = sizeof(struct sockaddr_in);
+    ((struct sockaddr_in*)sock_addr)->sin_addr.s_addr = ip_addr.s_addr;
 }
 
 address_ip4::~address_ip4()

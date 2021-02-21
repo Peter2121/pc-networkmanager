@@ -18,6 +18,7 @@ address_ip6::address_ip6(std::string str_addr)
     {
         throw nmExcept;
     }
+// TODO: Set sock_addr vars!!
 }
 
 address_ip6::~address_ip6()

@@ -15,8 +15,7 @@ class if_worker : public nmworker
 protected:
     static constexpr nmcommand Cmds[] =
     {
-        { nmscope::SYSTEM, nmcmd::IP4_ADDR_SET },
-        { nmscope::SYSTEM, nmcmd::IP6_ADDR_SET },
+        { nmscope::SYSTEM, nmcmd::IP_ADDR_SET },
         { nmscope::SYSTEM, nmcmd::IP4_DHCP_ENABLE },
         { nmscope::SYSTEM, nmcmd::IP6_DHCP_ENABLE },
         { nmscope::SYSTEM, nmcmd::IP4_ALIAS_ADD },

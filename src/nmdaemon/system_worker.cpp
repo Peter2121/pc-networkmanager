@@ -157,10 +157,17 @@ bool system_worker::setIfFlags(std::string ifname, int setflags)
 
 json system_worker::execCmdIfEnable(nmcommand_data* pcmd) {
     struct ifreq ifr;
+    std::string ifname = "";
     const int cmdflag=IFF_UP;
     memset(&ifr, 0, sizeof(struct ifreq));
-    json cmd_json = pcmd->getJsonData();
-    std::string ifname = cmd_json[JSON_PARAM_DATA][JSON_PARAM_IF_NAME];
+    json cmd_json = {};
+    try {
+        cmd_json = pcmd->getJsonData();
+        ifname = cmd_json[JSON_PARAM_DATA][JSON_PARAM_IF_NAME];
+    } catch (std::exception& e) {
+        LOG_S(ERROR) << "Exception in execCmdIfEnable - cannot get ifname";
+        return JSON_RESULT_ERR;
+    }
     int curflags = getIfFlags(ifname);
     if(curflags==0)
     {
@@ -176,10 +183,17 @@ json system_worker::execCmdIfEnable(nmcommand_data* pcmd) {
 
 json system_worker::execCmdIfDisable(nmcommand_data* pcmd) {
     struct ifreq ifr;
+    std::string ifname = "";
     const int cmdflag=IFF_UP;
     memset(&ifr, 0, sizeof(struct ifreq));
-    json cmd_json = pcmd->getJsonData();
-    std::string ifname = cmd_json[JSON_PARAM_DATA][JSON_PARAM_IF_NAME];
+    json cmd_json = {};
+    try {
+        cmd_json = pcmd->getJsonData();
+        ifname = cmd_json[JSON_PARAM_DATA][JSON_PARAM_IF_NAME];
+    } catch (std::exception& e) {
+        LOG_S(ERROR) << "Exception in execCmdIfDisable - cannot get ifname";
+        return JSON_RESULT_ERR;
+    }
     int curflags = getIfFlags(ifname);
     if(curflags==0)
     {

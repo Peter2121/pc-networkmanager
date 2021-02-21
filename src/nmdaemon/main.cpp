@@ -26,6 +26,9 @@
 #if defined (WORKER_SYSTEM)
 #include "system_worker.h"
 #endif
+#if defined (WORKER_INTERFACE)
+#include "if_worker.h"
+#endif
 
 using namespace std;
 
@@ -71,6 +74,10 @@ int main(int argc, char* argv[])
 
 #if defined (WORKER_SYSTEM)
     workers.push_back(new WORKER_SYSTEM());
+#endif
+
+#if defined (WORKER_INTERFACE)
+    workers.push_back(new WORKER_INTERFACE());
 #endif
 
     sockpp::socket_initializer sockInit;
