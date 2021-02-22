@@ -127,7 +127,6 @@ address_base* if_worker::getMainIfAddr(short family) // family: AF_INET / AF_INE
 {
     struct ifreq ifr;
     address_base* paddr=nullptr;
-//    address_base* pmask=nullptr;
     memset(&ifr, 0, sizeof(struct ifreq));
     strlcpy(ifr.ifr_name, ifName.c_str(), sizeof(ifr.ifr_name));
     ifr.ifr_addr.sa_family = family;
@@ -135,7 +134,7 @@ address_base* if_worker::getMainIfAddr(short family) // family: AF_INET / AF_INE
     sockpp::socket sock = sockpp::socket::create(AF_INET, SOCK_DGRAM);
     if (ioctl(sock.handle(), SIOCGIFADDR, (caddr_t)&ifr) < 0)
     {
-        LOG_S(ERROR) << "Cannot get current interface " << ifName << " address";
+        LOG_S(INFO) << "Cannot get current interface " << ifName << " address";
         sock.close();
         return paddr;
     }
@@ -159,34 +158,6 @@ address_base* if_worker::getMainIfAddr(short family) // family: AF_INET / AF_INE
     }
 
     LOG_S(INFO) << "Got current IP address: " + paddr->getStrAddr() + " for interface " << ifName;
-/*
-    strlcpy(ifr.ifr_name, ifName.c_str(), sizeof(ifr.ifr_name));
-    ifr.ifr_addr.sa_family = family;
-    if (ioctl(sock.handle(), SIOCGIFNETMASK, (caddr_t)&ifr) < 0)
-    {
-        LOG_S(ERROR) << "Cannot get current interface " << ifName << " netmask";
-        sock.close();
-        return paddr;
-    }
-    sock.close();
-
-    try {
-        switch(family)
-        {
-            case AF_INET:
-                pmask = new address_ip4(&ifr.ifr_addr);
-                break;
-            case AF_INET6:
-                pmask = new address_ip6(&ifr.ifr_addr);
-                break;
-            default:
-                break;
-        }
-    } catch (std::exception& e) {
-        LOG_S(ERROR) << "Cannot get current interface " << ifName << "address";
-        return nullptr;
-    }
-*/
     sock.close();
     return paddr;
 }
@@ -215,36 +186,23 @@ bool if_worker::addIfAddr(addr* paddr)
 {
     struct ifaliasreq ifra;
     memset(&ifra, 0, sizeof(struct ifaliasreq));
-
-/*
-    sa_in = (struct sockaddr_in *) &(ifar_new_alias.ifra_addr);
-    sa_in->sin_family = AF_INET;
-    sa_in->sin_len = sizeof(struct sockaddr_in);
-    sa_in->sin_addr.s_addr = ia_newip.s_addr;
-
-    sa_in = (struct sockaddr_in *) &(ifar_new_alias.ifra_broadaddr);
-    sa_in->sin_family = AF_INET;
-    sa_in->sin_len = sizeof(struct sockaddr_in);
-    sa_in->sin_addr.s_addr = ia_nebcast.s_addr;
-
-    sa_in = (struct sockaddr_in *) &(ifar_new_alias.ifra_mask);
-    sa_in->sin_family = AF_INET;
-    sa_in->sin_len = sizeof(struct sockaddr_in);
-    sa_in->sin_addr.s_addr = ia_newmask.s_addr;
-
-    strcpy(ifar_new_alias.ifra_name, ifname);
-*/
+    const address_base* ab = nullptr;
+    const struct sockaddr* sa = nullptr;
 
     strlcpy(ifra.ifra_name, ifName.c_str(), sizeof(ifra.ifra_name));
-    const address_base* ab = paddr->getAddrAB();
-    const struct sockaddr* sa = ab->getSockAddr();
-    memcpy(&ifra.ifra_addr, &sa, sizeof(struct sockaddr));
+
+//  Set new address
+    ab = paddr->getAddrAB();
+    sa = ab->getSockAddr();
+    memcpy(&ifra.ifra_addr, sa, sizeof(struct sockaddr));
+
+//  Set new mask
     ab = paddr->getMaskAB();
     sa = ab->getSockAddr();
-    memcpy(&ifra.ifra_mask, &sa, sizeof(struct sockaddr));
+    memcpy(&ifra.ifra_mask, sa, sizeof(struct sockaddr));
 
     sockpp::socket sock = sockpp::socket::create(AF_INET, SOCK_DGRAM);
-    if (ioctl(sock.handle(), SIOCAIFADDR, (caddr_t)&ifra) < 0)
+    if (ioctl(sock.handle(), SIOCAIFADDR, &ifra) < 0)
     {
         LOG_S(ERROR) << "Cannot add address:\n" << paddr->getAddrString() << "to interface " << ifName;
         sock.close();
@@ -261,7 +219,6 @@ json if_worker::execCmdIpAddrSet(nmcommand_data* pcmd)
     std::string str_ifaddr = "";
     std::string str_ifmask = "";
     addr* new_if_addr = nullptr;
-//    addr* cur_if_addr = nullptr;
     address_base* ifaddr = nullptr;
     address_base* ifmask = nullptr;
     address_base* cur_if_addr = nullptr;
@@ -292,7 +249,7 @@ json if_worker::execCmdIpAddrSet(nmcommand_data* pcmd)
     }
 
     if(str_ifaddr.empty() || str_ifmask.empty()) {
-        LOG_S(ERROR) << "execCmdIpAddrSet - Cannot get interface parameters from JSON";
+        LOG_S(ERROR) << "Cannot get interface parameters from JSON";
         return JSON_RESULT_ERR;
     }
 
@@ -302,7 +259,7 @@ json if_worker::execCmdIpAddrSet(nmcommand_data* pcmd)
                 ifaddr = new address_ip4(str_ifaddr);
                 ifmask = new address_ip4(str_ifmask);
             } catch (std::exception& e) {
-                LOG_S(ERROR) << "execCmdIpAddrSet - Cannot create ip4 address from JSON parameters";
+                LOG_S(ERROR) << "Cannot create ip4 address from JSON parameters";
                 return JSON_RESULT_ERR;
             }
             break;
@@ -311,35 +268,38 @@ json if_worker::execCmdIpAddrSet(nmcommand_data* pcmd)
                 ifaddr = new address_ip6(str_ifaddr);
                 ifmask = new address_ip6(str_ifmask);
             } catch (std::exception& e) {
-                LOG_S(ERROR) << "execCmdIpAddrSet - Cannot create ip6 address from JSON parameters";
+                LOG_S(ERROR) << "Cannot create ip6 address from JSON parameters";
                 return JSON_RESULT_ERR;
             }
             break;
         default:
-            LOG_S(ERROR) << "execCmdIpAddrSet - Cannot get address type from JSON";
+            LOG_S(ERROR) << "Cannot get address type from JSON";
             return JSON_RESULT_ERR;
     }
 
     new_if_addr = new addr(ifaddr, ifmask);
     cur_if_addr = getMainIfAddr(ip_family);
     if(cur_if_addr==nullptr) {
-        LOG_S(ERROR) << "execCmdIpAddrSet - Cannot get current IP address of interface";
-        return JSON_RESULT_ERR;
+        LOG_S(INFO) << "Cannot get current IP address of interface " << ifName;
     }
-    if(!removeIfAddr(cur_if_addr)) {
+    else
+    {
+        LOG_S(INFO) << "Got current primary IP address " << cur_if_addr->getStrAddr() << " from interface " << ifName;
+        if(!removeIfAddr(cur_if_addr)) {
+            delete cur_if_addr;
+            delete new_if_addr;
+            LOG_S(ERROR) << "Cannot remove current IP address from interface " << ifName;
+            return JSON_RESULT_ERR;
+        }
+        LOG_S(INFO) << "Primary IP address deleted from interface " << ifName;
         delete cur_if_addr;
-        delete new_if_addr;
-        LOG_S(ERROR) << "execCmdIpAddrSet - Cannot remove current IP address from interface";
-        return JSON_RESULT_ERR;
     }
-
-    delete cur_if_addr;
     if(!addIfAddr(new_if_addr)) {
         delete new_if_addr;
-        LOG_S(ERROR) << "execCmdIpAddrSet - Cannot add new IP address to interface";
+        LOG_S(ERROR) << "Cannot add new IP address to interface " << ifName;
         return JSON_RESULT_ERR;
     }
-
+    LOG_S(INFO) << "New IP address set to interface " << ifName;
     delete new_if_addr;
     return JSON_RESULT_SUCCESS;
 }

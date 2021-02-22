@@ -18,7 +18,11 @@ address_ip6::address_ip6(std::string str_addr)
     {
         throw nmExcept;
     }
-// TODO: Set sock_addr vars!!
+    sock_addr = new struct sockaddr;
+    memset(sock_addr,0,sizeof(struct sockaddr));
+    sock_addr->sa_family = family;
+    ((struct sockaddr_in6*)sock_addr)->sin6_len = sizeof(struct sockaddr_in6);
+    memcpy(&(((struct sockaddr_in6*)sock_addr)->sin6_addr.s6_addr), &(ip_addr6.s6_addr), sizeof(in6_addr::s6_addr));
 }
 
 address_ip6::~address_ip6()
