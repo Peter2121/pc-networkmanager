@@ -1,7 +1,11 @@
 TEMPLATE	= app
 LANGUAGE	= C++
-QT += core gui widgets
+QT += core gui widgets network
+QT += testlib
+
 CONFIG	+= qt warn_on release
+CONFIG += qtc_runnable
+CONFIG += c++17
 
 LIBS	+= -L/usr/local/lib -ltrueos-utils -ltrueos-ui
 
@@ -11,6 +15,7 @@ SOURCES	+= main.cpp NetworkTray.cpp netKey.cpp
 
 #Include the backend classes for probing network info
 include("../backend/backend.pri")
+include("../NMDaemonClient/NMDaemonClient.pri")
 
 FORMS	+= netKey.ui
 
