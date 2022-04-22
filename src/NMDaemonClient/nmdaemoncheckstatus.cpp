@@ -67,16 +67,17 @@ void NMDaemonCheckStatus::updateStatus()
     QJsonObject json_object;
     QJsonValue json_value;
     QJsonArray json_array;
+    bool iflistupdated = false;
+    bool netstatusupdated = false;
+    bool ifstatusupdated = false;
     lastJsonReceived = QJsonObject();
     wifiInterfaces.clear();
     spy = new NMDaemonSpy(this, &NMDaemonCheckStatus::dataReady);
     if(!sendRequest(req_object))
-    {
-        delete spy;
-        spy = nullptr;
-        return;
-    }
+        goto label_exit;
     spy->wait(DEFAULT_READ_WAIT_TIME_MSEC);
+    delete spy;
+    spy = nullptr;
     if(!lastJsonReceived.empty())
 //    { "DATA": { "INTERFACES": [ "wlan0", "wlan1" ] }, "RESULT": "SUCCESS" }
     {
@@ -94,20 +95,19 @@ void NMDaemonCheckStatus::updateStatus()
             }
         }
     }
-    emit wifiIfListUpdated();
+    //emit wifiIfListUpdated();
+    iflistupdated = true;
     lastWifiNetStatus.clear();
     foreach(const QString &s, wifiInterfaces)
     {
         req_string = QString::asprintf(CMD_GET_WIFI_NET_STATUS.c_str(), s.toStdString().c_str());
         req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
-        spy->reset();
+        spy = new NMDaemonSpy(this, &NMDaemonCheckStatus::dataReady);
         if(!sendRequest(req_object))
-        {
-            delete spy;
-            spy = nullptr;
-            return;
-        }
+            goto label_exit;
         spy->wait(DEFAULT_READ_WAIT_TIME_MSEC);
+        delete spy;
+        spy = nullptr;
         if(!lastJsonReceived.empty())
         {
             json_value = lastJsonReceived.value("RESULT");
@@ -119,20 +119,19 @@ void NMDaemonCheckStatus::updateStatus()
             }
         }
     }
-    emit wifiNetStatusUpdated();
+    //emit wifiNetStatusUpdated();
+    netstatusupdated = true;
     lastWifiIfStatus.clear();
     foreach(const QString &s, wifiInterfaces)
     {
         req_string = QString::asprintf(CMD_GET_WIFI_IF_STATUS.c_str(), s.toStdString().c_str());
         req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
-        spy->reset();
+        spy = new NMDaemonSpy(this, &NMDaemonCheckStatus::dataReady);
         if(!sendRequest(req_object))
-        {
-            delete spy;
-            spy = nullptr;
-            return;
-        }
+            goto label_exit;
         spy->wait(DEFAULT_READ_WAIT_TIME_MSEC);
+        delete spy;
+        spy = nullptr;
         if(!lastJsonReceived.empty())
         {
             json_value = lastJsonReceived.value("RESULT");
@@ -146,14 +145,12 @@ void NMDaemonCheckStatus::updateStatus()
     }
     lastIfStatus = QJsonArray();
     req_object = QJsonDocument::fromJson(CMD_GET_IF_STATUS.toUtf8()).object();
-    spy->reset();
+    spy = new NMDaemonSpy(this, &NMDaemonCheckStatus::dataReady);
     if(!sendRequest(req_object))
-    {
-        delete spy;
-        spy = nullptr;
-        return;
-    }
+        goto label_exit;
     spy->wait(DEFAULT_READ_WAIT_TIME_MSEC);
+    delete spy;
+    spy = nullptr;
     if(!lastJsonReceived.empty())
     {
         json_value = lastJsonReceived.value("RESULT");
@@ -162,11 +159,22 @@ void NMDaemonCheckStatus::updateStatus()
             json_value = lastJsonReceived.value("DATA");
             json_array = json_value.toArray();
             lastIfStatus = json_array;
-            emit ifStatusUpdated();
+            //emit ifStatusUpdated();
+            ifstatusupdated = true;
         }
     }
-    delete spy;
-    spy = nullptr;
+label_exit:
+    if(spy != nullptr)
+    {
+        delete spy;
+        spy = nullptr;
+    }
+    if(ifstatusupdated)
+        emit ifStatusUpdated();
+    if(netstatusupdated)
+        emit wifiNetStatusUpdated();
+    if(iflistupdated)
+        emit wifiIfListUpdated();
 }
 
 QString NMDaemonCheckStatus::getIfMainAddress(QString ifname) const
@@ -187,8 +195,10 @@ QPair<QString,int> NMDaemonCheckStatus::getIfWifiNetwork(QString ifname) const
     {
         if(ifst.first == ifname)
         {
-            ret_status.first = ifst.second.value("SSID").toString();
             bssid = ifst.second.value("BSSID").toString();
+            if(bssid.isEmpty())
+                continue;
+            ret_status.first = ifst.second.value("SSID").toString();
             foreach(const auto &netst, lastWifiNetStatus)
             {
                 if(netst.first == ifname)

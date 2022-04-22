@@ -1,7 +1,6 @@
 #pragma once
 
 #include <string>
-#include "json/json.hpp"
 
 const std::string JSON_PARAM_SCOPE = "SCOPE";
 const std::string JSON_PARAM_CMD = "CMD";
@@ -16,6 +15,9 @@ const std::string JSON_DATA_ERR_INVALID_REQUEST = "INVALID REQUEST";
 const std::string JSON_DATA_ERR_NOT_IMPLEMENTED = "NOT IMPLEMENTED";
 const std::string JSON_DATA_ERR_INVALID_COMMAND = "INVALID COMMAND";
 const std::string JSON_DATA_ERR_INTERNAL_ERROR = "INTERNAL ERROR";
+const std::string JSON_DATA_ERR_AUTH_FAILED = "AUTHENTICATION FAILED";
+const std::string JSON_DATA_ERR_NOT_AVAILABLE = "NOT AVAILABLE";
+const std::string JSON_DATA_ERR_DRV_REQ_FAILED = "DRIVER REQUEST FAILED";
 const std::string JSON_PARAM_ADDR_TYPE = "ADDRESS TYPE";
 const std::string JSON_PARAM_ADDR_PRIMARY = "PRIMARY";
 const std::string JSON_PARAM_ADDR_RUNNING = "RUNNING";
@@ -39,6 +41,7 @@ const std::string JSON_PARAM_NETWORK = "NETWORK";
 const std::string JSON_PARAM_NETWORKS = "NETWORKS";
 const std::string JSON_PARAM_SSID = "SSID";
 const std::string JSON_PARAM_BSSID = "BSSID";
+const std::string JSON_PARAM_MESHID = "MESHID";
 const std::string JSON_PARAM_CHANNEL = "CHANNEL";
 const std::string JSON_PARAM_MAX_RATE = "MAX_RATE";
 const std::string JSON_PARAM_SIGNAL = "SIGNAL";
@@ -47,6 +50,9 @@ const std::string JSON_PARAM_PSK = "PSK";
 const std::string JSON_PARAM_NETID = "NETID";
 const std::string JSON_PARAM_STATUS = "STATUS";
 const std::string JSON_PARAM_MEDIA = "MEDIA";
+const std::string JSON_PARAM_NET_PARAM_NAME = "PARAM_NAME";
+const std::string JSON_PARAM_NET_PARAM_VALUE = "PARAM_VALUE";
+const std::string JSON_PARAM_NET_PARAM_QUOTES = "PARAM_QUOTES";
 const std::string JSON_DATA_ENABLED = "ENABLED";
 const std::string JSON_DATA_DISABLED = "DISABLED";
 const std::string JSON_PARAM_FLAGS = "FLAGS";
@@ -65,11 +71,5 @@ const std::string JSON_DATA_RTFLAG_LOCAL = "LOCAL";
 const std::string JSON_DATA_RTFLAG_BROADCAST = "BROADCAST";
 const std::string JSON_DATA_RTFLAG_MULTICAST = "MULTICAST";
 const std::string JSON_DATA_RTFLAG_STICKY = "STICKY";
-
-const nlohmann::json JSON_RESULT_SUCCESS = { { JSON_PARAM_RESULT, JSON_PARAM_SUCC } };
-const nlohmann::json JSON_RESULT_ERR = { { JSON_PARAM_RESULT, JSON_PARAM_ERR } };
-const nlohmann::json JSON_RESULT_NOTFOUND = { { JSON_PARAM_RESULT, JSON_PARAM_NOTFOUND } };
-const nlohmann::json JSON_RESULT_BUSY = { { JSON_PARAM_RESULT, JSON_PARAM_BUSY } };
-const nlohmann::json JSON_RESULT_EXISTS = { { JSON_PARAM_RESULT, JSON_PARAM_EXISTS } };
 
 

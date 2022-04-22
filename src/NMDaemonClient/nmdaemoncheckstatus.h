@@ -9,7 +9,6 @@ class NMDaemonCheckStatus : public NMDaemonClient
     Q_OBJECT
 protected:
     static long constexpr DEFAULT_REFRESH_TIME_MSEC = 300000;
-    static int constexpr DEFAULT_READ_WAIT_TIME_MSEC = 2000;
     static inline const QString CMD_GET_IF_LIST = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_LIST_IF\" }";
     static inline const QString CMD_GET_IF_STATUS = "{ \"SCOPE\" : \"SYSTEM\", \"CMD\" : \"IF_LIST\" }";
     static inline const std::string CMD_GET_WIFI_NET_STATUS = "{ \"SCOPE\" : \"WIFI\", \"CMD\" : \"NET_LIST\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\" } }";
@@ -19,10 +18,10 @@ protected:
     QVector<QPair<QString,QJsonObject>> lastWifiNetStatus;  // <ifname,status>
     QVector<QPair<QString,QJsonObject>> lastWifiIfStatus;  // <ifname,status>
     QVector<QString> wifiInterfaces;
-    NMDaemonSpy* spy;
     bool isMonitoring;
     bool isWaitingForData;
     QTimer *timerMonitoring;
+    NMDaemonSpy* spy;
 public slots:
         void updateStatus();
         void qqdebug();

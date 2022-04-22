@@ -56,7 +56,7 @@ int  main(int argc, char *argv[]) {
             json_object = v.toObject();
             json_value = json_object.value("STATUS");
             str_value = json_value.toString();
-            if( (str_value!="ACTIVE") && (str_value!="ASSOCIATED") )
+            if( (str_value!="ACTIVE") && (str_value!="ASSOCIATED") && (str_value!="NO_CARRIER"))
                 continue;
             json_value = json_object.value("MEDIA");
             str_value = json_value.toString();

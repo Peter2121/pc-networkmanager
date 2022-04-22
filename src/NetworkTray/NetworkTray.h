@@ -27,6 +27,7 @@ private:
     static inline const QString IF_WIFI_PREFIX = "wlan";
     static constexpr short UPDATE_MSEC = 5000;
     static inline const std::string CMD_CONNECT_WIFI_NETWORK = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_CONNECT\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\", \"SSID\" : \"%s\" } }";
+    static inline const std::string CMD_RESET_WPA = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_RESET\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\" } }";
 
 public:
    NetworkTray(NMDaemonCheckStatus* nmds);
@@ -37,6 +38,7 @@ private slots:
 //   void openNetManager();
 //   void openDeviceInfo();
    void openConfigDlg();
+   void resetWpaSupplicant();
 //   void monitorStatus(bool noloop=false);
    void updateStatus();
 //   void slotRestartNetwork();
@@ -55,6 +57,7 @@ protected:
    NMDaemonCheckStatus* nmdStatus;
    QAction* QuitAction;
    QAction* ConfigAction;
+   QAction* ResetAction;
    QAction* StatusAction;
    QVector<QAction*> ConnectActions;
    QAction* SeparatorActions[NUM_SEPARATORS];

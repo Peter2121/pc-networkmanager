@@ -4,6 +4,10 @@ NMDaemonClient::NMDaemonClient() : NMDaemonClient(NMD_SOCKET_DEFAULT, false)
 {
 }
 
+NMDaemonClient::NMDaemonClient(bool is_persistent) : NMDaemonClient(NMD_SOCKET_DEFAULT, is_persistent)
+{
+}
+
 NMDaemonClient::NMDaemonClient(QString socket_path, bool is_persistent) : socketPath(socket_path),
                                                                           isPersistentConn(is_persistent),
                                                                           isConnected(false)
@@ -74,7 +78,7 @@ bool NMDaemonClient::sendRequest(QJsonObject json_command)
 {
     memset(buf, 0, sizeof(buf));
     const char *ptr = nullptr;
-    NMDaemonSpy* spy = nullptr;
+    NMDaemonSpy* connspy = nullptr; // TODO: use unique_ptr
     std::string str_cmd = QJsonDocument(json_command).toJson(QJsonDocument::Compact).toStdString();
     ptr = str_cmd.c_str();
     strlcpy(buf,ptr,NM_MAXBUF);
@@ -82,25 +86,169 @@ bool NMDaemonClient::sendRequest(QJsonObject json_command)
     buf[len] = 0;
     if(!isConnected)
     {
-        spy = new NMDaemonSpy(nmdSocket, &QLocalSocket::connected);
+        connspy = new NMDaemonSpy(nmdSocket, &QLocalSocket::connected);
         doConnect();
         if(!isConnected)
         {
-            if(!spy->wait(SOCKET_CONNECT_TIMEOUT_MSEC))
+            if(!connspy->wait(SOCKET_CONNECT_TIMEOUT_MSEC))
                 qDebug() << "Signal QLocalSocket::connected was not received in time";
             if(!isConnected)
             {
-                delete spy;
+                delete connspy;
                 return false;
             }
         }
-        delete spy;
+        delete connspy;
     }
     int len_sent = nmdSocket->write(buf, len+1);
     if(len_sent<len+1)
         return false;
     else
         return true;
+}
+
+std::string NMDaemonClient::connectWifiNetwork(QString ifname, QString ssid)
+{
+    QJsonObject json_object;
+    QJsonValue json_value;
+    QJsonArray json_array;
+    QString conf_ssid;
+    QString req_string;
+    QJsonObject req_object;
+    QString flags;
+    //bool found = false;
+    NMDaemonSpy* readspy = nullptr; // TODO: use unique_ptr
+
+    // Get list of configured networks from WPA and search for the ssid in this list
+    /*
+    req_string = QString::asprintf(CMD_WPA_LIST_NETWORKS.c_str(), ifname.toStdString().c_str());
+    req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
+    lastJsonReceived = QJsonObject();
+    readspy = new NMDaemonSpy(this, &NMDaemonClient::dataReady);
+    if(!sendRequest(req_object))
+    {
+        delete readspy;
+        return JSON_PARAM_ERR;
+    }
+    readspy->wait(DEFAULT_READ_WAIT_TIME_MSEC);
+    if(!lastJsonReceived.empty())
+    {
+        json_value = lastJsonReceived.value(QString::fromStdString(JSON_PARAM_RESULT));
+        if(json_value.toString().toStdString() == JSON_PARAM_SUCC)
+        {
+            json_value = lastJsonReceived.value(QString::fromStdString(JSON_PARAM_DATA));
+            json_object = json_value.toObject();
+            json_value = json_object.value(QString::fromStdString(JSON_PARAM_NETWORKS));
+            json_array = json_value.toArray();
+            found = false;
+            foreach (const QJsonValue &v, json_array)
+            {
+                json_object = v.toObject();
+                conf_ssid = json_object.value("ssid").toString();
+                if(conf_ssid == ssid)
+                {
+                    found = true;
+                    break;
+                }
+            }
+        }
+        else
+        {
+            delete readspy;
+            return JSON_PARAM_ERR;
+        }
+        if(!found)
+        {
+            delete readspy;
+            return JSON_PARAM_NOTFOUND;
+        }
+    }
+    else
+    {
+        delete readspy;
+        return JSON_PARAM_ERR;
+    }
+*/
+    // Get list of available networks from WPA, search for the ssid in this list and get network parameters
+/*
+    req_string = QString::asprintf(CMD_WPA_SCAN_NETWORKS.c_str(), ifname.toStdString().c_str());
+    req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
+    lastJsonReceived = QJsonObject();
+    delete readspy;
+    readspy = new NMDaemonSpy(this, &NMDaemonClient::dataReady);
+    if(!sendRequest(req_object))
+    {
+        delete readspy;
+        return JSON_PARAM_ERR;
+    }
+    readspy->wait(DEFAULT_READ_WAIT_TIME_MSEC);
+    if(!lastJsonReceived.empty())
+    {
+        json_value = lastJsonReceived.value(QString::fromStdString(JSON_PARAM_RESULT));
+        if(json_value.toString().toStdString() == JSON_PARAM_SUCC)
+        {
+            json_value = lastJsonReceived.value(QString::fromStdString(JSON_PARAM_DATA));
+            json_object = json_value.toObject();
+            json_value = json_object.value(QString::fromStdString(JSON_PARAM_NETWORKS));
+            json_array = json_value.toArray();
+            found = false;
+            foreach (const QJsonValue &v, json_array)
+            {
+                json_object = v.toObject();
+                conf_ssid = json_object.value("ssid").toString();
+                if(conf_ssid == ssid)
+                {
+                    found = true;
+                    flags = json_object.value("flags").toString();
+                    break;
+                }
+            }
+        }
+        else
+        {
+            delete readspy;
+            return JSON_PARAM_ERR;
+        }
+        if(!found)
+        {
+            delete readspy;
+            return JSON_DATA_ERR_NOT_AVAILABLE;
+        }
+    }
+    else
+    {
+        delete readspy;
+        return JSON_PARAM_ERR;
+    }
+*/
+    // Finally, try to connect and return the result
+    req_string = QString::asprintf(CMD_CONNECT_WIFI_NETWORK.c_str(), ifname.toStdString().c_str(), ssid.toStdString().c_str());
+    req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
+    lastJsonReceived = QJsonObject();
+    delete readspy;
+    readspy = new NMDaemonSpy(this, &NMDaemonClient::dataReady);
+    if(!sendRequest(req_object))
+    {
+        delete readspy;
+        return JSON_PARAM_ERR;
+    }
+    readspy->wait(CONNECT_READ_WAIT_TIME_MSEC);
+    if(!lastJsonReceived.empty())
+/*
+{ { JSON_PARAM_RESULT, JSON_DATA_ERR_AUTH_FAILED } }
+{ { JSON_PARAM_RESULT, JSON_DATA_ERR_NOT_AVAILABLE } }
+...
+*/
+    {
+        json_value = lastJsonReceived.value(QString::fromStdString(JSON_PARAM_RESULT));
+        delete readspy;
+        return json_value.toString().toStdString();
+    }
+    else
+    {
+        delete readspy;
+        return JSON_PARAM_ERR;
+    }
 }
 
 void NMDaemonClient::slotConnected()

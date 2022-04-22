@@ -104,8 +104,13 @@ void NetworkTray::programInit(QString device)
     ConfigAction->setIcon(IconConfigure);
     connect(ConfigAction, &QAction::triggered, this, &NetworkTray::openConfigDlg);
 
+    ResetAction  = new QAction(tr("&Reset"), this);
+    //ConfigAction->setIcon(IconConfigure);
+    connect(ResetAction, &QAction::triggered, this, &NetworkTray::resetWpaSupplicant);
+
     TrayIconMenu = new QMenu(this);
     TrayIconMenu->addAction(ConfigAction);
+    TrayIconMenu->addAction(ResetAction);
     TrayIconMenu->addAction(SeparatorActions[0]);
 
   if(device.startsWith(IF_WIFI_PREFIX))
@@ -198,11 +203,25 @@ QString NetworkTray::getWifiStatusLine(QPair<QString,int> wifi_status, bool conn
 void NetworkTray::slotConnect()
 {
 // TODO: check if psk is already present in WPA config file and ask user for the psk if needed
-    QString action_sender = sender()->property("text").toString().split(" ").at(0);
-    QString req_string = QString::asprintf(CMD_CONNECT_WIFI_NETWORK.c_str(), IfName.toStdString().c_str(), action_sender.toStdString().c_str());
-    QJsonObject req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
-    if(!nmdStatus->sendRequest(req_object))
-        QMessageBox::warning(this, IfName, "Cannot send WPA_CONNECT command to backend");
+    QString ssid = sender()->property("text").toString().split(" ").at(0);
+//    NMDaemonClient* nmdClient = new NMDaemonClient(true);
+    nmdStatus->stopMonitoring();
+    std::string result = nmdStatus->connectWifiNetwork(IfName, ssid);
+    qDebug() << "connectWifiNetwork to ssid " << ssid << " result: " << QString::fromStdString(result);
+/*
+<3>Associated with 04:d1:3a:f4:53:68
+nmworkerwpa.cpp:385   INFO| wpaCtrlCmd received data: <3>Association request to the driver failed
+nmworkerieee80211.cpp:438    ERR| Error in execCmdIfStatus: cannot get bssid for interface wlan0 -> NO WLAN INTERFACE!!!
+nmworkerwpa.cpp:256    ERR| wpaCtrlCmd cannot connect to client socket /tmp/nmd_wpaw.xrEFI : Address already in use
+nmworkerieee80211.cpp:82     ERR| Error in execCmdNetList: incorrect data received from lib80211
+
+*/
+//    QString req_string = QString::asprintf(CMD_CONNECT_WIFI_NETWORK.c_str(), IfName.toStdString().c_str(), action_sender.toStdString().c_str());
+//    QJsonObject req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
+//    if(!nmdStatus->sendRequest(req_object))
+//        QMessageBox::warning(this, IfName, "Cannot send WPA_CONNECT command to backend");
+//    delete nmdClient;
+    nmdStatus->startMonitoring();
 }
 
 void NetworkTray::updateStatus()
@@ -257,8 +276,8 @@ void NetworkTray::updateStatus()
         // First outer cycle - by networks
         foreach(const auto &net, wifi_networks)
         {
-            if(wifi_status.first.isEmpty())
-                continue;
+            //if(wifi_status.first.isEmpty())
+            //    continue;
             if(net.first == wifi_status.first)
                 continue;
             found = false;
@@ -368,6 +387,15 @@ void  NetworkTray::openConfigDlg() {
     QProcess *runCommandProc = new QProcess(this);
     runCommandProc->start(program, arguments);
   }
+}
+
+void NetworkTray::resetWpaSupplicant() {
+    QString req_string = QString::asprintf(CMD_RESET_WPA.c_str(), IfName.toStdString().c_str());
+    QJsonObject req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
+    nmdStatus->stopMonitoring();
+    if(!nmdStatus->sendRequest(req_object))
+        QMessageBox::warning(this, IfName, "Cannot send WPA_RESET command to backend");
+    nmdStatus->startMonitoring();
 }
 
 // Load all the icons we'll be using
