@@ -32,21 +32,26 @@ void netKey::slotShowKey(){
   if( checkShowKey->isChecked() ){
     lineKey->setEchoMode(QLineEdit::Normal);
     lineKey2->setEchoMode(QLineEdit::Normal);
-  }else{
+    lineKey->setEnabled(false);
+  } else
+  {
     lineKey->setEchoMode(QLineEdit::Password);
     lineKey2->setEchoMode(QLineEdit::Password);
+    lineKey->setEnabled(true);
   }
 }
 void netKey::slotApply()
 {
-    if ( lineKey->text() != lineKey2->text() )
+    if ( (!checkShowKey->isChecked()) && ( lineKey->text() != lineKey2->text() ) )
     {
 	QMessageBox::warning( this, tr("Network Key Error"), tr("Error: The entered network keys do not match!\n") );
-    } else {
+    }
+    else
+    {
 	bool useHex = true;
 	if( group_keytype->isVisible() && radio_text->isChecked() ){ useHex = false; }
-  	emit saved(lineKey->text(), ssid, useHex);
-        close();
+    close();
+    emit saved(lineKey2->text(), ssid, useHex);
     }
 }
 

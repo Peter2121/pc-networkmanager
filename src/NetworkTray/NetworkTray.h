@@ -46,6 +46,7 @@ private slots:
    void slotQuit();
    void slotGetNetKey(QAction* act);
    void slotConnect();
+   void slotUpdatePskAndConnect(QString key, QString SSID, bool hexkey);
 //   void slotQuickConnect(QString key, QString SSID, bool hexkey);
 //   void slotCheckWifiAvailability();
 //   void slotUpdateIfStatus();
@@ -82,6 +83,7 @@ private:
    int LastWifiPower;
 //   void displayTooltip();
    void loadIcons();
+   void connectWifiNetwork(QString);
 //   void updateWifiNetworks();
    QFileSystemWatcher *fileWatcherClosed;
 //   QString getLineFromCommandOutput( QString command );

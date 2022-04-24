@@ -23,6 +23,8 @@ protected:
     static inline const std::string CMD_CONNECT_WIFI_NETWORK = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_CONNECT\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\", \"SSID\" : \"%s\" } }";
     static inline const std::string CMD_WPA_LIST_NETWORKS = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_LIST\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\" } }";
     static inline const std::string CMD_WPA_SCAN_NETWORKS = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_SCAN\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\" } }";
+    static inline const std::string CMD_WPA_UPDATE_PSK = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_SETPSK\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\", \"NETID\" : %d, \"PSK\" : \"%s\" } }";
+    static inline const std::string CMD_WPA_SAVE = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_SAVE\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\" } }";
     static inline const QString NMD_SOCKET_DEFAULT = "/var/run/nmd.socket";
     static constexpr int NM_MAXBUF = 8192;
     static constexpr int SOCKET_CONNECT_TIMEOUT_MSEC = 1000;
@@ -44,6 +46,9 @@ public:
     bool sendRequest(QJsonObject);
     QString getLastError();
     std::string connectWifiNetwork(QString, QString);
+    bool updatePsk(QString, QString, QString, bool);
+    bool saveConfig(QString);
+    int getWifiNetworkId(QString, QString);
 signals:
     void dataReady(QJsonObject);
     void connected();

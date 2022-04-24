@@ -204,10 +204,44 @@ void NetworkTray::slotConnect()
 {
 // TODO: check if psk is already present in WPA config file and ask user for the psk if needed
     QString ssid = sender()->property("text").toString().split(" ").at(0);
-//    NMDaemonClient* nmdClient = new NMDaemonClient(true);
+    connectWifiNetwork(ssid);
+}
+
+void NetworkTray::connectWifiNetwork(QString ssid)
+{
     nmdStatus->stopMonitoring();
     std::string result = nmdStatus->connectWifiNetwork(IfName, ssid);
     qDebug() << "connectWifiNetwork to ssid " << ssid << " result: " << QString::fromStdString(result);
+    if(result == JSON_DATA_ERR_NOT_AVAILABLE)
+    {
+        // TODO: Add translations
+        QMessageBox::information(this, QString(JSON_DATA_ERR_NOT_AVAILABLE.c_str()), "The requested network " + ssid + " is not available");
+    }
+    else if( (result == JSON_PARAM_ERR) ||
+             (result == JSON_DATA_ERR_AUTH_FAILED) ||
+             (result == JSON_DATA_ERR_DRV_REQ_FAILED) )
+    {
+        dialogNetKey = new netKey();
+        //Insert the SSID into the dialog
+        dialogNetKey->setSSID(ssid);
+        dialogNetKey->showKeyType(true);
+        //connect the signal from the dialog to the quick-connect slot
+        connect(dialogNetKey, SIGNAL( saved(QString,QString,bool) ), this, SLOT( slotUpdatePskAndConnect(QString,QString,bool) ) );
+        //Activate the dialog
+        dialogNetKey->exec();
+    }
+    else if( result == JSON_PARAM_NOTFOUND )
+    {
+        dialogNetKey = new netKey();
+        //Insert the SSID into the dialog
+        dialogNetKey->setSSID(ssid);
+        dialogNetKey->showKeyType(true);
+        //connect the signal from the dialog to the quick-connect slot
+        //connect(dialogNetKey, SIGNAL( saved(QString,QString,bool) ), this, SLOT( slotAddNetworkt(QString,QString,bool) ) );
+        //Activate the dialog
+        dialogNetKey->exec();
+    }
+
 /*
 <3>Associated with 04:d1:3a:f4:53:68
 nmworkerwpa.cpp:385   INFO| wpaCtrlCmd received data: <3>Association request to the driver failed
@@ -222,6 +256,20 @@ nmworkerieee80211.cpp:82     ERR| Error in execCmdNetList: incorrect data receiv
 //        QMessageBox::warning(this, IfName, "Cannot send WPA_CONNECT command to backend");
 //    delete nmdClient;
     nmdStatus->startMonitoring();
+}
+
+void NetworkTray::slotUpdatePskAndConnect(QString key, QString ssid, bool hexkey)
+{
+    if(nmdStatus->updatePsk(IfName, ssid, key, hexkey))
+        connectWifiNetwork(ssid);
+    else
+        qDebug() << "Error updating PSK for network " << ssid;
+  //Run the wifiQuickConnect function
+  //NetworkInterface::wifiQuickConnect(ssid,key,DEVICE->device(), hexkey);
+
+  //Inform the user that it is connecting (this is done by libtrueos now)
+  //QString msg = tr("Connecting to ") + SSID;
+  //trayIcon->showMessage( tr("Please Wait"),msg,QSystemTrayIcon::NoIcon,10000);
 }
 
 void NetworkTray::updateStatus()
