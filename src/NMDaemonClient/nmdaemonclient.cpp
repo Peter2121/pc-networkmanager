@@ -267,6 +267,31 @@ bool NMDaemonClient::updatePsk(QString ifname, QString ssid, QString psk, bool h
     return false;
 }
 
+bool NMDaemonClient::addNetwork(QString ifname, QString ssid, QString psk, bool hexkey)
+{
+    if(hexkey)
+    {
+        qDebug() << "Hex keys are not (yet) supported";
+        return false;
+    }
+    QJsonValue json_value;
+    std::unique_ptr<NMDaemonSpy> readspy = std::make_unique<NMDaemonSpy>(this, &NMDaemonClient::dataReady);
+    QString req_string = QString::asprintf(CMD_WPA_ADD_NETWORK.c_str(), ifname.toStdString().c_str(), ssid.toStdString().c_str(), psk.toStdString().c_str());
+    QJsonObject req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
+    if(!sendRequest(req_object))
+    {
+        return false;
+    }
+    readspy->wait(3*DEFAULT_READ_WAIT_TIME_MSEC);
+    if(!lastJsonReceived.empty())
+    {
+        json_value = lastJsonReceived.value(QString::fromStdString(JSON_PARAM_RESULT));
+        if(json_value.toString().toStdString() == JSON_PARAM_SUCC)
+            return saveConfig(ifname);
+    }
+    return false;
+}
+
 bool NMDaemonClient::saveConfig(QString ifname)
 {
     QJsonValue json_value;

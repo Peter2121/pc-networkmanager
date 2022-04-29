@@ -238,6 +238,7 @@ void NetworkTray::connectWifiNetwork(QString ssid)
         dialogNetKey->showKeyType(true);
         //connect the signal from the dialog to the quick-connect slot
         //connect(dialogNetKey, SIGNAL( saved(QString,QString,bool) ), this, SLOT( slotAddNetworkt(QString,QString,bool) ) );
+        connect(dialogNetKey, SIGNAL( saved(QString,QString,bool) ), this, SLOT( slotAddNetworkAndConnect(QString,QString,bool) ) );
         //Activate the dialog
         dialogNetKey->exec();
     }
@@ -260,16 +261,36 @@ nmworkerieee80211.cpp:82     ERR| Error in execCmdNetList: incorrect data receiv
 
 void NetworkTray::slotUpdatePskAndConnect(QString key, QString ssid, bool hexkey)
 {
+    nmdStatus->stopMonitoring();
     if(nmdStatus->updatePsk(IfName, ssid, key, hexkey))
+    {
         connectWifiNetwork(ssid);
+    }
     else
+    {
         qDebug() << "Error updating PSK for network " << ssid;
+        nmdStatus->startMonitoring();
+    }
   //Run the wifiQuickConnect function
   //NetworkInterface::wifiQuickConnect(ssid,key,DEVICE->device(), hexkey);
 
   //Inform the user that it is connecting (this is done by libtrueos now)
   //QString msg = tr("Connecting to ") + SSID;
   //trayIcon->showMessage( tr("Please Wait"),msg,QSystemTrayIcon::NoIcon,10000);
+}
+
+void NetworkTray::slotAddNetworkAndConnect(QString key, QString ssid, bool hexkey)
+{
+    nmdStatus->stopMonitoring();
+    if(nmdStatus->addNetwork(IfName, ssid, key, hexkey))
+    {
+        connectWifiNetwork(ssid);
+    }
+    else
+    {
+        qDebug() << "Error adding network " << ssid;
+        nmdStatus->startMonitoring();
+    }
 }
 
 void NetworkTray::updateStatus()
