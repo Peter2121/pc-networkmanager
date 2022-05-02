@@ -26,6 +26,8 @@ class NetworkTray : public QDialog {
 private:
     static inline const QString IF_WIFI_PREFIX = "wlan";
     static constexpr short UPDATE_MSEC = 5000;
+    static constexpr int IDLE_REFRESH_TIME_MSEC = 180000;
+    static constexpr int ACTIVE_REFRESH_TIME_MSEC = 10000;
     static inline const std::string CMD_CONNECT_WIFI_NETWORK = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_CONNECT\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\", \"SSID\" : \"%s\" } }";
     static inline const std::string CMD_RESET_WPA = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_RESET\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\" } }";
 
@@ -37,10 +39,14 @@ public:
 private slots:
 //   void openNetManager();
 //   void openDeviceInfo();
+   void onActivated(QSystemTrayIcon::ActivationReason);
    void openConfigDlg();
    void resetWpaSupplicant();
 //   void monitorStatus(bool noloop=false);
    void updateStatus();
+   void setIdleScanTimeout();
+   void setActiveScanTimeout();
+   void scanWifi();
 //   void slotRestartNetwork();
 //   void slotTrayActivated(QSystemTrayIcon::ActivationReason);
    void slotQuit();
@@ -60,6 +66,7 @@ protected:
    QAction* QuitAction;
    QAction* ConfigAction;
    QAction* ResetAction;
+   QAction* ScanAction;
    QAction* StatusAction;
    QVector<QAction*> ConnectActions;
    QAction* SeparatorActions[NUM_SEPARATORS];
@@ -76,6 +83,8 @@ protected:
    QIcon IconUnlocked;
    QIcon IconConfigure; // "preferences-system"
    QIcon IconQuit;  // "application-exit"
+   QIcon IconReset;
+   QIcon IconScan;
    QDateTime LastUpdateTime;
 private:
    backend::NetDevice *DEVICE;

@@ -1,6 +1,6 @@
 #include "nmdaemoncheckstatus.h"
 
-NMDaemonCheckStatus::NMDaemonCheckStatus(long refresh_time) : NMDaemonClient(NMD_SOCKET_DEFAULT, true),
+NMDaemonCheckStatus::NMDaemonCheckStatus(int refresh_time) : NMDaemonClient(NMD_SOCKET_DEFAULT, true),
                                                               refreshTime(refresh_time), isMonitoring(false), isWaitingForData(false)
 {
     spy = nullptr;
@@ -59,8 +59,26 @@ void NMDaemonCheckStatus::stopMonitoring()
 
 void NMDaemonCheckStatus::updateStatus()
 {
-    if(!isMonitoring || !isConnected || isWaitingForData)
+    if(isWaitingForData)
         return;
+    if(!isConnected)
+    {
+        spy = new NMDaemonSpy(this, &NMDaemonClient::connected);
+        doConnect();
+        if(!isConnected)
+        {
+            if(!spy->wait(SOCKET_CONNECT_TIMEOUT_MSEC))
+                qDebug() << "Signal NMDaemonClient::connected was not received in time";
+            if(!isConnected)
+            {
+                delete spy;
+                spy = nullptr;
+                return;
+            }
+        }
+        delete spy;
+        spy = nullptr;
+    }
     QJsonObject req_object = QJsonDocument::fromJson(CMD_GET_IF_LIST.toUtf8()).object();
     QString if_name;
     QString req_string;
@@ -100,7 +118,7 @@ void NMDaemonCheckStatus::updateStatus()
     lastWifiNetStatus.clear();
     foreach(const QString &s, wifiInterfaces)
     {
-        req_string = QString::asprintf(CMD_GET_WIFI_NET_STATUS.c_str(), s.toStdString().c_str());
+        req_string = QString::asprintf(CMD_WIFI_SCAN.c_str(), s.toStdString().c_str());
         req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
         spy = new NMDaemonSpy(this, &NMDaemonCheckStatus::dataReady);
         if(!sendRequest(req_object))
@@ -124,7 +142,7 @@ void NMDaemonCheckStatus::updateStatus()
     lastWifiIfStatus.clear();
     foreach(const QString &s, wifiInterfaces)
     {
-        req_string = QString::asprintf(CMD_GET_WIFI_IF_STATUS.c_str(), s.toStdString().c_str());
+        req_string = QString::asprintf(CMD_WIFI_STATUS.c_str(), s.toStdString().c_str());
         req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
         spy = new NMDaemonSpy(this, &NMDaemonCheckStatus::dataReady);
         if(!sendRequest(req_object))
@@ -284,4 +302,9 @@ QString NMDaemonCheckStatus::getIfStatusString(QString ifname) const
         }
     }
     return ret_string;
+}
+
+void NMDaemonCheckStatus::setInterval(int timeout)
+{
+    timerMonitoring->setInterval(timeout);
 }

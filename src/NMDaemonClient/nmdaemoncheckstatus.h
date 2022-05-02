@@ -8,11 +8,11 @@ class NMDaemonCheckStatus : public NMDaemonClient
 {
     Q_OBJECT
 protected:
-    static long constexpr DEFAULT_REFRESH_TIME_MSEC = 300000;
+    static long constexpr DEFAULT_REFRESH_TIME_MSEC = 180000;   // 180sec = 3min
     static inline const QString CMD_GET_IF_LIST = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_LIST_IF\" }";
     static inline const QString CMD_GET_IF_STATUS = "{ \"SCOPE\" : \"SYSTEM\", \"CMD\" : \"IF_LIST\" }";
-    static inline const std::string CMD_GET_WIFI_NET_STATUS = "{ \"SCOPE\" : \"WIFI\", \"CMD\" : \"NET_LIST\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\" } }";
-    static inline const std::string CMD_GET_WIFI_IF_STATUS = "{ \"SCOPE\" : \"WIFI\", \"CMD\" : \"IF_STATUS\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\" } }";
+    static inline const std::string CMD_WIFI_SCAN = "{ \"SCOPE\" : \"WIFI\", \"CMD\" : \"WIFI_SCAN\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\" } }";
+    static inline const std::string CMD_WIFI_STATUS = "{ \"SCOPE\" : \"WIFI\", \"CMD\" : \"WIFI_STATUS\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\" } }";
     long refreshTime;   // msec
     QJsonArray lastIfStatus;
     QVector<QPair<QString,QJsonObject>> lastWifiNetStatus;  // <ifname,status>
@@ -26,11 +26,12 @@ public slots:
         void updateStatus();
         void qqdebug();
 public:
-    NMDaemonCheckStatus(long);  // msec
+    NMDaemonCheckStatus(int);  // msec
     NMDaemonCheckStatus();
     ~NMDaemonCheckStatus();
     void startMonitoring();
     void stopMonitoring();
+    void setInterval(int);
     QJsonArray getLastIfStatus() const { return lastIfStatus; };
     QVector<QPair<QString,QJsonObject>> getLastWifiNetStatus() const { return lastWifiNetStatus; };
     QVector<QPair<QString,QJsonObject>> getLastWifiIfStatus() const { return lastWifiIfStatus; };

@@ -67,6 +67,11 @@ NetworkTray::~NetworkTray()
     }
 }
 
+void NetworkTray::onActivated(QSystemTrayIcon::ActivationReason reason)
+{
+    qDebug() << "onActivated called with the reason: " << reason;
+}
+
 void NetworkTray::programInit(QString device)
 {
     //Setup all the null pointers to start with
@@ -104,13 +109,18 @@ void NetworkTray::programInit(QString device)
     ConfigAction->setIcon(IconConfigure);
     connect(ConfigAction, &QAction::triggered, this, &NetworkTray::openConfigDlg);
 
-    ResetAction  = new QAction(tr("&Reset"), this);
-    //ConfigAction->setIcon(IconConfigure);
+    ResetAction  = new QAction(tr("&Reset Status"), this);
+    ResetAction->setIcon(IconReset);
     connect(ResetAction, &QAction::triggered, this, &NetworkTray::resetWpaSupplicant);
+
+    ScanAction  = new QAction(tr("&Scan Wifi"), this);
+    ScanAction->setIcon(IconScan);
+    connect(ScanAction, &QAction::triggered, this, &NetworkTray::scanWifi);
 
     TrayIconMenu = new QMenu(this);
     TrayIconMenu->addAction(ConfigAction);
     TrayIconMenu->addAction(ResetAction);
+    TrayIconMenu->addAction(ScanAction);
     TrayIconMenu->addAction(SeparatorActions[0]);
 
   if(device.startsWith(IF_WIFI_PREFIX))
@@ -167,11 +177,27 @@ void NetworkTray::programInit(QString device)
   TrayIconMenu->addAction(QuitAction);
   TrayIcon->setContextMenu(TrayIconMenu);
   TrayIcon->show();
-  
+/*
+void QMenu::aboutToShow()
+This signal is emitted just before the menu is shown to the user.
+void QMenu::aboutToHide()
+This signal is emitted just before the menu is hidden from the user.
+*/
   connect(nmdStatus, &NMDaemonCheckStatus::wifiIfListUpdated, this, &NetworkTray::updateStatus);
   connect(nmdStatus, &NMDaemonCheckStatus::ifStatusUpdated, this, &NetworkTray::updateStatus);
   connect(nmdStatus, &NMDaemonCheckStatus::wifiNetStatusUpdated, this, &NetworkTray::updateStatus);
   connect(nmdStatus, &NMDaemonCheckStatus::wifiIfStatusUpdated, this, &NetworkTray::updateStatus);
+  connect(TrayIconMenu, &QMenu::aboutToShow, this, &NetworkTray::setActiveScanTimeout);
+  connect(TrayIconMenu, &QMenu::aboutToHide, this, &NetworkTray::setIdleScanTimeout);
+//  connect(TrayIcon, &QSystemTrayIcon::activated, this, &NetworkTray::onActivated);
+/*
+  QObject::connect(TrayIconMenu, &QMenu::aboutToShow, [](){
+      qDebug()<<"aboutToShow";
+  });
+  QObject::connect(TrayIconMenu, &QMenu::aboutToHide, [](){
+      qDebug()<<"aboutToHide";
+  });
+*/
   LastUpdateTime = QDateTime::currentDateTime();
 //  updateStatus();
 //  monitorStatus();
@@ -467,6 +493,26 @@ void NetworkTray::resetWpaSupplicant() {
     nmdStatus->startMonitoring();
 }
 
+void NetworkTray::scanWifi()
+{
+    nmdStatus->stopMonitoring();
+    nmdStatus->updateStatus();
+    nmdStatus->startMonitoring();
+}
+
+void NetworkTray::setIdleScanTimeout()
+{
+    nmdStatus->setInterval(IDLE_REFRESH_TIME_MSEC);
+}
+
+void NetworkTray::setActiveScanTimeout()
+{
+    nmdStatus->stopMonitoring();
+    nmdStatus->updateStatus();
+    nmdStatus->setInterval(ACTIVE_REFRESH_TIME_MSEC);
+    nmdStatus->startMonitoring();
+}
+
 // Load all the icons we'll be using
 void NetworkTray::loadIcons() {
 #ifdef USE_SVG
@@ -490,8 +536,10 @@ void NetworkTray::loadIcons() {
     iconLocked.addFile( PROGPATH + "/pics/object-locked.png");
     iconUnlocked.addFile( PROGPATH + "/pics/object-unlocked.png");
 #endif
-    IconConfigure = QIcon::fromTheme("preferences-system");
+    IconConfigure = QIcon::fromTheme("cm_options");
     IconQuit = QIcon::fromTheme("application-exit");
+    IconReset = QIcon::fromTheme("button_cancel");
+    IconScan = QIcon::fromTheme("cm_refresh");
 }
 
 void NetworkTray::slotQuit() {

@@ -22,11 +22,6 @@
 
 bool PICOSESSION = false;
 
-void onActivated(QSystemTrayIcon::ActivationReason reason)
-{
-    qDebug() << "onActivated called with the reason: " << reason;
-}
-
 int  main(int argc, char *argv[]) {
 
 //  PICOSESSION = !QString(getenv("PICO_CLIENT_LOGIN")).isEmpty();
@@ -40,7 +35,7 @@ int  main(int argc, char *argv[]) {
     NMDaemonCheckStatus* nmd_status;
 //  if(argc==1 && !PICOSESSION){
     QApplication a(argc, argv);
-    nmd_status = new NMDaemonCheckStatus(10000);
+    nmd_status = new NMDaemonCheckStatus();
     NMDaemonSpy* spy = new NMDaemonSpy(nmd_status, &NMDaemonCheckStatus::ifStatusUpdated);
     nmd_status->startMonitoring();
     if(!spy->wait(5000))
