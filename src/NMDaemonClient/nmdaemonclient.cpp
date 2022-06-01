@@ -10,7 +10,8 @@ NMDaemonClient::NMDaemonClient(bool is_persistent) : NMDaemonClient(NMD_SOCKET_D
 
 NMDaemonClient::NMDaemonClient(QString socket_path, bool is_persistent) : socketPath(socket_path),
                                                                           isPersistentConn(is_persistent),
-                                                                          isConnected(false)
+                                                                          isConnected(false),
+                                                                          writeSocket(1)
 {
     nmdSocket = new QLocalSocket(this);
     memset(buf, 0, sizeof(buf));
@@ -60,6 +61,9 @@ void NMDaemonClient::slotReadyRead()
     }
     if(!isPersistentConn)
         doDisconnect();
+    if(writeSocket.available() == 0)
+        writeSocket.release();
+    //writeSocket.unlock();
 }
 
 void NMDaemonClient::slotError(QLocalSocket::LocalSocketError error)
@@ -100,9 +104,16 @@ bool NMDaemonClient::sendRequest(QJsonObject json_command)
             }
         }
     }
+    writeSocket.acquire();
+    //writeSocket.lock();
+    lastJsonReceived = QJsonObject();
     int len_sent = nmdSocket->write(buf, len+1);
     if(len_sent<len+1)
+    {
+        writeSocket.release();
+        //writeSocket.unlock();
         return false;
+    }
     else
         return true;
 }
@@ -196,7 +207,42 @@ std::string NMDaemonClient::connectWifiNetwork(QString ifname, QString ssid)
     }
 }
 
-int NMDaemonClient::getWifiNetworkId(QString ifname, QString ssid)
+QJsonObject NMDaemonClient::getJsonForSsid(QString ssid)
+// Get JSON object from lastJsonReceived for given SSID
+{
+    QJsonArray json_array;
+    QJsonValue json_value;
+    QJsonObject json_object;
+    QJsonObject ret_object;
+    QString conf_ssid;
+
+    json_value = lastJsonReceived.value(QString::fromStdString(JSON_PARAM_RESULT));
+    if(json_value.toString().toStdString() == JSON_PARAM_SUCC)
+    {
+        json_value = lastJsonReceived.value(QString::fromStdString(JSON_PARAM_DATA));
+        json_object = json_value.toObject();
+        json_value = json_object.value(QString::fromStdString(JSON_PARAM_NETWORKS));
+        json_array = json_value.toArray();
+        foreach (const QJsonValue &v, json_array)
+        {
+            json_object = v.toObject();
+            if(!json_object.value("ssid").Undefined)
+                conf_ssid = json_object.value("ssid").toString();
+            else if(!json_object.value("SSID").Undefined)
+                conf_ssid = json_object.value("ssid").toString();
+            else
+                conf_ssid = ""; // TODO: manage this case better
+            if(conf_ssid == ssid)
+            {
+                ret_object = json_object;
+                break;
+            }
+        }
+    }
+    return ret_object;
+}
+
+int NMDaemonClient::getWpaNetworkId(QString ifname, QString ssid)
 // Get list of configured networks from WPA and search for the ssid in this list
 {
     QString req_string = QString::asprintf(CMD_WPA_LIST_NETWORKS.c_str(), ifname.toStdString().c_str());
@@ -216,23 +262,10 @@ int NMDaemonClient::getWifiNetworkId(QString ifname, QString ssid)
     readspy->wait(DEFAULT_READ_WAIT_TIME_MSEC);
     if(!lastJsonReceived.empty())
     {
-        json_value = lastJsonReceived.value(QString::fromStdString(JSON_PARAM_RESULT));
-        if(json_value.toString().toStdString() == JSON_PARAM_SUCC)
+        json_object = getJsonForSsid(ssid);
+        if(!json_object.empty())
         {
-            json_value = lastJsonReceived.value(QString::fromStdString(JSON_PARAM_DATA));
-            json_object = json_value.toObject();
-            json_value = json_object.value(QString::fromStdString(JSON_PARAM_NETWORKS));
-            json_array = json_value.toArray();
-            foreach (const QJsonValue &v, json_array)
-            {
-                json_object = v.toObject();
-                conf_ssid = json_object.value("ssid").toString();
-                if(conf_ssid == ssid)
-                {
-                    net_id = json_object.value("network id").toString().toInt();
-                    break;
-                }
-            }
+            net_id = json_object.value("network id").toString().toInt();
         }
     }
     return net_id;
@@ -245,7 +278,7 @@ bool NMDaemonClient::updatePsk(QString ifname, QString ssid, QString psk, bool h
         qDebug() << "Hex keys are not (yet) supported";
         return false;
     }
-    int net_id = getWifiNetworkId(ifname, ssid);
+    int net_id = getWpaNetworkId(ifname, ssid);
     if(net_id<0)
         return false;
 
@@ -275,21 +308,91 @@ bool NMDaemonClient::addNetwork(QString ifname, QString ssid, QString psk, bool 
         return false;
     }
     QJsonValue json_value;
+    QString req_string;
+    QJsonObject req_object;
+    QJsonObject json_object;
+    QString caps;
+    QString ies;
+    QString security;
     std::unique_ptr<NMDaemonSpy> readspy = std::make_unique<NMDaemonSpy>(this, &NMDaemonClient::dataReady);
-    QString req_string = QString::asprintf(CMD_WPA_ADD_NETWORK.c_str(), ifname.toStdString().c_str(), ssid.toStdString().c_str(), psk.toStdString().c_str());
-    QJsonObject req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
+    req_string = QString::asprintf(CMD_WIFI_SCAN_RESULTS.c_str(), ifname.toStdString().c_str());
+    req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
     if(!sendRequest(req_object))
     {
         return false;
     }
-    readspy->wait(3*DEFAULT_READ_WAIT_TIME_MSEC);
+    readspy->wait(DEFAULT_READ_WAIT_TIME_MSEC);
     if(!lastJsonReceived.empty())
     {
-        json_value = lastJsonReceived.value(QString::fromStdString(JSON_PARAM_RESULT));
-        if(json_value.toString().toStdString() == JSON_PARAM_SUCC)
-            return saveConfig(ifname);
+        json_object = getJsonForSsid(ssid);
+        if(!json_object.empty())
+        {
+            caps = json_object.value("CAPS").toString();
+            ies = json_object.value("IES").toString();
+            if( (!caps.isEmpty()) && (!ies.isEmpty()) )
+            {
+                security = getWifiNetworkSecurity(caps, ies);
+            }
+            if(security != WIFI_SECURITY_ERROR)
+            {
+                if(security == WIFI_SECURITY_OPEN)
+                {
+                    req_string = QString::asprintf(CMD_WPA_ADD_OPEN_NETWORK.c_str(), ifname.toStdString().c_str(), ssid.toStdString().c_str());
+                }
+                else
+                {
+                    req_string = QString::asprintf(CMD_WPA_ADD_SECURE_NETWORK.c_str(), ifname.toStdString().c_str(), ssid.toStdString().c_str(), psk.toStdString().c_str(), security.toStdString().c_str());
+                }
+                readspy = std::make_unique<NMDaemonSpy>(this, &NMDaemonClient::dataReady);
+                if(sendRequest(req_object))
+                {
+                    readspy->wait(DEFAULT_READ_WAIT_TIME_MSEC);
+                    if(!lastJsonReceived.empty())
+                    {
+                        json_value = lastJsonReceived.value(QString::fromStdString(JSON_PARAM_RESULT));
+                        if(json_value.toString().toStdString() == JSON_PARAM_SUCC)
+                        {
+                            return saveConfig(ifname);
+                        }
+                    }
+                }
+            }
+        }
     }
     return false;
+}
+
+// Used code from trueos-utils-qt5 QString NetworkInterface::parseWifiSecurity( QString caps, QString etc )
+QString NMDaemonClient::getWifiNetworkSecurity(QString caps, QString ies)
+{
+    bool isDisabled = !caps.contains("P") && caps.contains("ES");
+    bool isWEP = caps.contains("EP");
+    bool isWPA = ies.contains("WPA");
+    bool isWPA2 = ies.contains("RSN");
+    QString securityType;
+
+    // TODO: detect more security types (RADIUS etc.)
+    if(isDisabled)
+    {
+      securityType = WIFI_SECURITY_OPEN;
+    }
+    else if(isWPA2)
+    {
+      securityType = WIFI_SECURITY_WPA2_PSK;
+    }
+    else if(isWPA)
+    {
+      securityType = WIFI_SECURITY_WPA_PSK;
+    }
+    else if(isWEP)
+    {
+      securityType = WIFI_SECURITY_WEP;
+    }
+    else
+    {
+      securityType = WIFI_SECURITY_ERROR;
+    }
+    return securityType;
 }
 
 bool NMDaemonClient::saveConfig(QString ifname)

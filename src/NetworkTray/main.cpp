@@ -38,7 +38,7 @@ int  main(int argc, char *argv[]) {
     nmd_status = new NMDaemonCheckStatus();
     NMDaemonSpy* spy = new NMDaemonSpy(nmd_status, &NMDaemonCheckStatus::ifStatusUpdated);
     nmd_status->startMonitoring();
-    if(!spy->wait(5000))
+    if(!spy->wait(30000))
         qDebug() << "Signal NMDaemonCheckStatus::ifStatusUpdated was not received in time";
     delete spy;
     QJsonArray if_status = nmd_status->getLastIfStatus();

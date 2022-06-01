@@ -315,8 +315,8 @@ void NetworkTray::slotAddNetworkAndConnect(QString key, QString ssid, bool hexke
     else
     {
         qDebug() << "Error adding network " << ssid;
-        nmdStatus->startMonitoring();
     }
+    nmdStatus->startMonitoring();
 }
 
 void NetworkTray::updateStatus()

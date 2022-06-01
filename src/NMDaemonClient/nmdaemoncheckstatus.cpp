@@ -1,7 +1,7 @@
 #include "nmdaemoncheckstatus.h"
 
 NMDaemonCheckStatus::NMDaemonCheckStatus(int refresh_time) : NMDaemonClient(NMD_SOCKET_DEFAULT, true),
-                                                              refreshTime(refresh_time), isMonitoring(false), isWaitingForData(false)
+                                                              refreshTime(refresh_time), isMonitoring(false)
 {
     spy = nullptr;
     timerMonitoring = new QTimer(this);
@@ -59,8 +59,9 @@ void NMDaemonCheckStatus::stopMonitoring()
 
 void NMDaemonCheckStatus::updateStatus()
 {
-    if(isWaitingForData)
-        return;
+//    if(isWaitingForData)
+//        return;
+    timerMonitoring->stop();
     if(!isConnected)
     {
         spy = new NMDaemonSpy(this, &NMDaemonClient::connected);
@@ -73,13 +74,13 @@ void NMDaemonCheckStatus::updateStatus()
             {
                 delete spy;
                 spy = nullptr;
+                isMonitoring = false;
                 return;
             }
         }
         delete spy;
         spy = nullptr;
     }
-    QJsonObject req_object = QJsonDocument::fromJson(CMD_GET_IF_LIST.toUtf8()).object();
     QString if_name;
     QString req_string;
     QJsonObject json_object;
@@ -88,12 +89,39 @@ void NMDaemonCheckStatus::updateStatus()
     bool iflistupdated = false;
     bool netstatusupdated = false;
     bool ifstatusupdated = false;
+    // Get list of all netwok interfaces
+    lastIfStatus = QJsonArray();
+    QJsonObject req_object = QJsonDocument::fromJson(CMD_GET_SYS_IF_STATUS.toUtf8()).object();
+    spy = new NMDaemonSpy(this, &NMDaemonCheckStatus::dataReady);
+    if(!sendRequest(req_object))
+        goto label_exit;
+    if(!spy->wait(DEFAULT_READ_WAIT_TIME_MSEC))
+        writeSocket.release();
+        //writeSocket.unlock();
+    delete spy;
+    spy = nullptr;
+    if(!lastJsonReceived.empty())
+    {
+        json_value = lastJsonReceived.value("RESULT");
+        if(json_value.toString() == "SUCCESS")
+        {
+            json_value = lastJsonReceived.value("DATA");
+            json_array = json_value.toArray();
+            lastIfStatus = json_array;
+            //emit ifStatusUpdated();
+            ifstatusupdated = true;
+        }
+    }
+    // Get list of wireless interfaces available for wpa_supplicant
+    req_object = QJsonDocument::fromJson(CMD_GET_WPA_IF_LIST.toUtf8()).object();
     lastJsonReceived = QJsonObject();
     wifiInterfaces.clear();
     spy = new NMDaemonSpy(this, &NMDaemonCheckStatus::dataReady);
     if(!sendRequest(req_object))
         goto label_exit;
-    spy->wait(DEFAULT_READ_WAIT_TIME_MSEC);
+    if(!spy->wait(DEFAULT_READ_WAIT_TIME_MSEC))
+        writeSocket.release();
+        //writeSocket.unlock();
     delete spy;
     spy = nullptr;
     if(!lastJsonReceived.empty())
@@ -116,6 +144,7 @@ void NMDaemonCheckStatus::updateStatus()
     //emit wifiIfListUpdated();
     iflistupdated = true;
     lastWifiNetStatus.clear();
+    // Get list of wireless networks for each wireless interface
     foreach(const QString &s, wifiInterfaces)
     {
         req_string = QString::asprintf(CMD_WIFI_SCAN.c_str(), s.toStdString().c_str());
@@ -123,7 +152,9 @@ void NMDaemonCheckStatus::updateStatus()
         spy = new NMDaemonSpy(this, &NMDaemonCheckStatus::dataReady);
         if(!sendRequest(req_object))
             goto label_exit;
-        spy->wait(DEFAULT_READ_WAIT_TIME_MSEC);
+        if(!spy->wait(SCAN_READ_WAIT_TIME_MSEC))
+            writeSocket.release();
+            //writeSocket.unlock();
         delete spy;
         spy = nullptr;
         if(!lastJsonReceived.empty())
@@ -140,6 +171,7 @@ void NMDaemonCheckStatus::updateStatus()
     //emit wifiNetStatusUpdated();
     netstatusupdated = true;
     lastWifiIfStatus.clear();
+    // Get status of each wireless interface
     foreach(const QString &s, wifiInterfaces)
     {
         req_string = QString::asprintf(CMD_WIFI_STATUS.c_str(), s.toStdString().c_str());
@@ -147,7 +179,9 @@ void NMDaemonCheckStatus::updateStatus()
         spy = new NMDaemonSpy(this, &NMDaemonCheckStatus::dataReady);
         if(!sendRequest(req_object))
             goto label_exit;
-        spy->wait(DEFAULT_READ_WAIT_TIME_MSEC);
+        if(!spy->wait(DEFAULT_READ_WAIT_TIME_MSEC))
+            writeSocket.release();
+            //writeSocket.unlock();
         delete spy;
         spy = nullptr;
         if(!lastJsonReceived.empty())
@@ -159,26 +193,6 @@ void NMDaemonCheckStatus::updateStatus()
                 json_object = json_value.toObject();
                 lastWifiIfStatus.push_back(QPair(s,json_object));
             }
-        }
-    }
-    lastIfStatus = QJsonArray();
-    req_object = QJsonDocument::fromJson(CMD_GET_IF_STATUS.toUtf8()).object();
-    spy = new NMDaemonSpy(this, &NMDaemonCheckStatus::dataReady);
-    if(!sendRequest(req_object))
-        goto label_exit;
-    spy->wait(DEFAULT_READ_WAIT_TIME_MSEC);
-    delete spy;
-    spy = nullptr;
-    if(!lastJsonReceived.empty())
-    {
-        json_value = lastJsonReceived.value("RESULT");
-        if(json_value.toString() == "SUCCESS")
-        {
-            json_value = lastJsonReceived.value("DATA");
-            json_array = json_value.toArray();
-            lastIfStatus = json_array;
-            //emit ifStatusUpdated();
-            ifstatusupdated = true;
         }
     }
 label_exit:
@@ -193,6 +207,7 @@ label_exit:
         emit wifiNetStatusUpdated();
     if(iflistupdated)
         emit wifiIfListUpdated();
+    timerMonitoring->start();
 }
 
 QString NMDaemonCheckStatus::getIfMainAddress(QString ifname) const
