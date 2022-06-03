@@ -226,12 +226,17 @@ QJsonObject NMDaemonClient::getJsonForSsid(QString ssid)
         foreach (const QJsonValue &v, json_array)
         {
             json_object = v.toObject();
+            /*
             if(!json_object.value("ssid").Undefined)
                 conf_ssid = json_object.value("ssid").toString();
             else if(!json_object.value("SSID").Undefined)
-                conf_ssid = json_object.value("ssid").toString();
+                conf_ssid = json_object.value("SSID").toString();
             else
                 conf_ssid = ""; // TODO: manage this case better
+            */
+            conf_ssid = json_object.value("ssid").toString();
+            if(conf_ssid.isEmpty())
+                conf_ssid = json_object.value("SSID").toString();
             if(conf_ssid == ssid)
             {
                 ret_object = json_object;
@@ -343,6 +348,7 @@ bool NMDaemonClient::addNetwork(QString ifname, QString ssid, QString psk, bool 
                 {
                     req_string = QString::asprintf(CMD_WPA_ADD_SECURE_NETWORK.c_str(), ifname.toStdString().c_str(), ssid.toStdString().c_str(), psk.toStdString().c_str(), security.toStdString().c_str());
                 }
+                req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
                 readspy = std::make_unique<NMDaemonSpy>(this, &NMDaemonClient::dataReady);
                 if(sendRequest(req_object))
                 {
