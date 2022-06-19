@@ -20,7 +20,7 @@ class NMDAEMONCLIENT_EXPORT NMDaemonClient : public QObject
 Q_OBJECT
 
 protected:
-    static int constexpr DEFAULT_READ_WAIT_TIME_MSEC = 2000;
+    static int constexpr DEFAULT_READ_WAIT_TIME_MSEC = 5000;
     static int constexpr SCAN_READ_WAIT_TIME_MSEC = 15000;
     static int constexpr CONNECT_READ_WAIT_TIME_MSEC = 20000;
     static inline const std::string CMD_CONNECT_WIFI_NETWORK = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_CONNECT\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\", \"SSID\" : \"%s\" } }";
