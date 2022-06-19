@@ -24,6 +24,8 @@
 #include <qdialog.h>
 #include <qwidget.h>
 #include "ui_ethernetconfig.h"
+#include "../NMDaemonClient/nmdaemoncheckstatus.h"
+#include "../NMDaemonClient/nmdaemonspy.h"
 
 #ifndef _ETHERNETCONFIG_H_
 #define _ETHERNETCONFIG_H_
@@ -36,9 +38,14 @@ class ethernetconfig : public QDialog, private Ui::ethernetconfig
 public:
     ethernetconfig() : QDialog()
     {
+    nmd_status = new NMDaemonCheckStatus();
 	setupUi(this);
     }
-
+    ~ethernetconfig()
+    {
+        nmd_status->stopMonitoring();
+        delete nmd_status;
+    }
     virtual void setDevice(QString Device);
     virtual void showInfo();
     virtual void programInit();
@@ -72,6 +79,8 @@ private:
     void saveLaggLine(QString dev, QString config);
     void setupEthLagg(QString dev);
     bool useLagg;
+    QString DeviceName;
+    NMDaemonCheckStatus* nmd_status;
 
 private slots:
     void loadInfo();

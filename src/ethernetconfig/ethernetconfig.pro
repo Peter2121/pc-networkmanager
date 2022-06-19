@@ -1,13 +1,17 @@
 TEMPLATE	= app
 LANGUAGE	= C++
-QT += core gui widgets
+QT += core gui widgets network
+QT += testlib
 CONFIG	+= qt warn_on release
+CONFIG += qtc_runnable
+CONFIG += c++17
 
 LIBS	+= -L/usr/local/lib -ltrueos-utils -ltrueos-ui
 
 HEADERS	+= ethernetconfig.h
 
 SOURCES	+= main.cpp ethernetconfig.cpp
+include("../NMDaemonClient/NMDaemonClient.pri")
 
 FORMS	= ethernetconfig.ui 
 

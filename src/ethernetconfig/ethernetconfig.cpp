@@ -46,10 +46,6 @@
 
 using namespace std;
 
-QString DeviceName;
-
-
-
 void ethernetconfig::slot_close()
 {
    exit(0);
@@ -163,9 +159,14 @@ void ethernetconfig::slotIPCheckbox()
 void ethernetconfig::programInit()
 {
    // See if we need to enable / disable the IP setup
-   slotIPCheckbox();
+   //slotIPCheckbox();
    // Done, now set the apply button to on
    buttonApply->setEnabled(false);
+   if(DeviceName.isEmpty())
+   {
+       qDebug() << "Device name not set!";
+       return;
+   }
 
    // Connect our buttons / slots
    connect(buttonClose, SIGNAL(clicked()), this, SLOT(slot_close()) );
@@ -181,6 +182,14 @@ void ethernetconfig::programInit()
    connect(lineIPv6Address, SIGNAL(textChanged(const QString &)), this, SLOT(slotCheckGlobalText() ) );
    connect(lineMAC, SIGNAL(textChanged(const QString &)), this, SLOT(slotCheckGlobalText() ) );
    connect(pushWPAE, SIGNAL(clicked()), this, SLOT(slotConfigWPA()) );
+
+   NMDaemonSpy* spy = new NMDaemonSpy(nmd_status, &NMDaemonCheckStatus::ifStatusUpdated);
+   nmd_status->startMonitoring();
+   if(!spy->wait(10000))
+       qDebug() << "Signal NMDaemonCheckStatus::ifStatusUpdated was not received in time";
+   delete spy;
+   nmd_status->stopMonitoring();
+   QTimer::singleShot(30,  this,  SLOT(loadInfo()));
 }
 
 void ethernetconfig::setDevice(QString Device)
@@ -190,15 +199,10 @@ void ethernetconfig::setDevice(QString Device)
 
    DeviceName = Device;
 
-
    this->setWindowTitle(DeviceName + " " + tr("configuration") );
 
    // Connect the slot to load the values
-   QTimer::singleShot(100,  this,  SLOT(slotFinishLoad()));
-
-   
-  
-
+   //QTimer::singleShot(100,  this,  SLOT(slotFinishLoad()));
 }
 
 void ethernetconfig::runCommand( QString command )
@@ -252,36 +256,93 @@ void ethernetconfig::slotMacClicked()
 void ethernetconfig::loadInfo()
 {
   QString tmp;
+  QJsonValue json_value;
+  QJsonObject json_object,json_obj;
+  QJsonArray json_array;
+  QString str_value,str_type;
+  QString dev;
 
-  // Get all the device information for the info tab
-  if ( textInfoName->text().isEmpty() ) {
-  tmp = getNameForIdent(DeviceName);
-  tmp.truncate(25);
-  textInfoName->setText(tmp);
+  QJsonArray if_status = nmd_status->getLastIfStatus();
+  if(!if_status.empty())
+  {
+      foreach (const QJsonValue &v, if_status)
+      {
+          json_object = v.toObject();
+          json_value = json_object.value("INTERFACE NAME");
+          dev = json_value.toString();
+          if(dev != DeviceName)
+              continue;
+          json_value = json_object.value("MEDIA");
+          str_value = json_value.toString();
+          if(!str_value.contains("Ethernet"))
+          {
+               qDebug() << "Unknown device media: " << str_value;
+               return;
+          }
+          str_value = json_object.value("STATUS").toString();
+          textStatus->setText(str_value);
+          str_value = json_object.value("MEDIA").toString();
+          textMedia->setText(str_value);
+          json_array = json_object.value("ADDRESSES").toArray();
+          foreach(auto addr, json_array)
+          {
+              json_obj = addr.toObject();
+              str_type = json_obj.value("ADDRESS TYPE").toString();
+              // TODO: add support for other types of addresses
+              str_value = json_obj.value(str_type).toObject().value("IPV4 ADDRESS").toString();
+              if(!str_value.isEmpty())
+              {
+                  textIP->setText(str_value);
+                  str_value = json_obj.value(str_type).toObject().value("IPV4 SUBNET MASK").toString();
+                  textNetmask->setText(str_value);
+              }
+              str_value = json_obj.value(str_type).toObject().value("LINK ADDRESS").toString();
+              if(!str_value.isEmpty())
+              {
+                  textMac->setText(str_value);
+              }
+              str_value = json_obj.value(str_type).toObject().value("IPV6 ADDRESS").toString();
+              if(!str_value.isEmpty())
+              {
+                  textIPv6->setText(str_value);
+              }
+
+          }
+
+      }
   }
 
-  QString fDev = DeviceName ;
-  if ( useLagg )
-    fDev = "lagg0" ;
+  // Get all the device information for the info tab
+  //if ( textInfoName->text().isEmpty() ) {
+  //tmp = getNameForIdent(DeviceName);
+  //tmp.truncate(25);
+  //textInfoName->setText(tmp);
+  //}
 
-  textIP->setText(getIpForIdent(fDev) );
-  textNetmask->setText(getNetmaskForIdent(fDev) );
+  //QString fDev = DeviceName ;
+  //if ( useLagg )
+  //  fDev = "lagg0" ;
+
+  //textIP->setText(getIpForIdent(fDev) );
+  //textNetmask->setText(getNetmaskForIdent(fDev) );
+  //textStatus->setText(getStatusForIdent( DeviceName ) );
+/*
   textMac->setText(getMacForIdent( DeviceName ) );
-  textStatus->setText(getStatusForIdent( DeviceName ) );
   textIPv6->setText(getIPv6ForIdent( DeviceName) );
   textGateway->setText(getGatewayForIdent(fDev) );
-  tmp = getMediaForIdent(DeviceName);
-  tmp.truncate(20);
-  textMedia->setText(tmp);
+*/
+  //tmp = getMediaForIdent(DeviceName);
+  //tmp.truncate(20);
+  //textMedia->setText(tmp);
 
   // Get the packet status for this device
-  textPacketsIn->setText(getInPacketsForIdent( DeviceName) );
-  textPacketsInErrors->setText( getInErrorsForIdent( DeviceName) );
-  textPacketsOut->setText(getOutPacketsForIdent( DeviceName) );
-  textPacketsOutErrors->setText(getOutErrorsForIdent( DeviceName) );
+  //textPacketsIn->setText(getInPacketsForIdent( DeviceName) );
+  //textPacketsInErrors->setText( getInErrorsForIdent( DeviceName) );
+  //textPacketsOut->setText(getOutPacketsForIdent( DeviceName) );
+  //textPacketsOutErrors->setText(getOutErrorsForIdent( DeviceName) );
 
   // Connect the slot to refresh
-  QTimer::singleShot(3000,  this,  SLOT(loadInfo()));
+  //QTimer::singleShot(3000,  this,  SLOT(loadInfo()));
 }
 
 QString ethernetconfig::getNameForIdent( QString ident )
@@ -368,19 +429,19 @@ void ethernetconfig::slotFinishLoad()
 {
    QString tmp, tmp2;
 
-   QSettings settings("PCBSD");
-   useLagg = settings.value("/pc-netmanager/useLagg", false).toBool();
+   //QSettings settings("PCBSD");
+   //useLagg = settings.value("/pc-netmanager/useLagg", false).toBool();
 
    // Start loading the device information
-   if ( useLagg )
-      tmp = trueos::Utils::getConfFileValue( "/etc/rc.conf", "ifconfig_lagg0=", 1 );
+   //if ( useLagg )
+   //   tmp = trueos::Utils::getConfFileValue( "/etc/rc.conf", "ifconfig_lagg0=", 1 );
 
-   if ( tmp.isEmpty() )
-      tmp = trueos::Utils::getConfFileValue( "/etc/rc.conf", "ifconfig_" + DeviceName + "=", 1 );
+   //if ( tmp.isEmpty() )
+   //   tmp = trueos::Utils::getConfFileValue( "/etc/rc.conf", "ifconfig_" + DeviceName + "=", 1 );
 
    // Using WPAE config?
-   if ( tmp.indexOf("WPA") != -1 )
-      groupWPAE->setChecked(true);
+   //if ( tmp.indexOf("WPA") != -1 )
+   //   groupWPAE->setChecked(true);
 
    if ( tmp.isEmpty() ) {
       checkDisableNetwork->setChecked(true);
@@ -408,11 +469,11 @@ void ethernetconfig::slotFinishLoad()
         tmp2 = tmp;
 
 	// Using the lagg port
-	if ( useLagg ) {
-        	tmp2.remove(0, tmp2.lastIndexOf("laggport") + 9);
-        	tmp2 = tmp2.simplified(); 
-        	tmp2.remove(0, tmp2.indexOf(" "));
-	}
+    //if ( useLagg ) {
+    //    	tmp2.remove(0, tmp2.lastIndexOf("laggport") + 9);
+    //    	tmp2 = tmp2.simplified();
+    //    	tmp2.remove(0, tmp2.indexOf(" "));
+    //}
 
        	tmp2 = tmp2.simplified(); 
 

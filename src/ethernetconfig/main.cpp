@@ -30,7 +30,9 @@
 #include <qdesktopwidget.h>
 #include <qtextcodec.h>
 #include <QApplication>
-#define PREFIX QString("/usr/local")
+//#define PREFIX QString("/usr/local")
+//#include "../NMDaemonClient/nmdaemoncheckstatus.h"
+//#include "../NMDaemonClient/nmdaemonspy.h"
 
 int main(int argc, char **argv)
 {
@@ -38,10 +40,12 @@ int main(int argc, char **argv)
     QTranslator translator;
     QLocale mylocale;
     QString langCode = mylocale.name();
+    /*
     if ( ! QFile::exists( PREFIX + "/share/trueos/i18n/ethernetconfig_" + langCode + ".qm" ) )
       langCode.truncate(langCode.indexOf("_"));
     translator.load( QString("ethernetconfig_") + langCode, PREFIX + "/share/trueos/i18n/" );
     a.installTranslator( &translator );
+    */
     qDebug() << "Locale:" << langCode;
     QTextCodec::setCodecForLocale( QTextCodec::codecForName("UTF-8") ); //Force Utf-8 compliance
     
@@ -51,13 +55,13 @@ int main(int argc, char **argv)
     mainWin = new ethernetconfig();
     if ( argc == 2)
     {
-	QString Device = argv[1];
-	mainWin->setDevice( Device );
-	mainWin->setWindowTitle(Device + " " + "configuration");
-
+        QString Device = argv[1];
+        mainWin->setDevice( Device );
+        //mainWin->setWindowTitle(Device + " " + "configuration");
         mainWin->programInit();
         mainWin->show();
-     } else if ( argc == 3  ) {
+     }
+    /* else if ( argc == 3  ) {
 	 QString val = argv[1];
 	 if ( val != "info" ) {
 	   exit(1);  
@@ -72,7 +76,7 @@ int main(int argc, char **argv)
      } else {
 	exit(1);
      }
-
+    */
     // mainWin has WDestructiveClose flag by default, so it will delete itself.
     return a.exec();
 }
