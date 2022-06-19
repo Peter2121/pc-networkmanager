@@ -109,13 +109,16 @@ void NetworkTray::programInit(QString device)
     ConfigAction->setIcon(IconConfigure);
     connect(ConfigAction, &QAction::triggered, this, &NetworkTray::openConfigDlg);
 
-    ResetAction  = new QAction(tr("&Reset Status"), this);
-    ResetAction->setIcon(IconReset);
-    connect(ResetAction, &QAction::triggered, this, &NetworkTray::resetWpaSupplicant);
+    if(device.startsWith(IF_WIFI_PREFIX))
+    {
+        ResetAction  = new QAction(tr("&Reset Status"), this);
+        ResetAction->setIcon(IconReset);
+        connect(ResetAction, &QAction::triggered, this, &NetworkTray::resetWpaSupplicant);
 
-    ScanAction  = new QAction(tr("&Scan Wifi"), this);
-    ScanAction->setIcon(IconScan);
-    connect(ScanAction, &QAction::triggered, this, &NetworkTray::scanWifi);
+        ScanAction  = new QAction(tr("&Scan Wifi"), this);
+        ScanAction->setIcon(IconScan);
+        connect(ScanAction, &QAction::triggered, this, &NetworkTray::scanWifi);
+    }
 
     TrayIconMenu = new QMenu(this);
     TrayIconMenu->addAction(ConfigAction);
