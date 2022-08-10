@@ -30,6 +30,7 @@ protected:
     static inline const std::string CMD_WPA_ADD_SECURE_NETWORK = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_ADD\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\", \"SSID\" : \"%s\", \"PSK\" : \"%s\", \"PROFILE\": \"%s\" } }";
     static inline const std::string CMD_WPA_ADD_OPEN_NETWORK = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_ADD\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\", \"SSID\" : \"%s\", \"PROFILE\": \"OPEN\" } }";
     static inline const std::string CMD_WPA_SAVE = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_SAVE\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\" } }";
+    static inline const std::string CMD_WPA_ENABLE_NETWORK = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_SETPARAM\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\", \"NETID\" : %d, \"PARAM_NAME\" : \"disabled\", \"PARAM_VALUE\" : \"0\", \"PARAM_QUOTES\" : false } }";
     static inline const std::string CMD_WIFI_SCAN_RESULTS = "{ \"SCOPE\" : \"WIFI\", \"CMD\" : \"WIFI_SCAN_RESULTS\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\" } }";
     static inline const std::string CMD_WIFI_SCAN = "{ \"SCOPE\" : \"WIFI\", \"CMD\" : \"WIFI_SCAN\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\" } }";
     static inline const QString WIFI_SECURITY_ERROR = "ERROR";
@@ -64,6 +65,7 @@ public:
     bool addNetwork(QString, QString, QString, bool);
     //bool addOpenNetwork(QString, QString);
     bool saveConfig(QString);
+    bool enableNetwork(QString, QString);
     int getWpaNetworkId(QString, QString);
     QJsonObject getJsonForSsid(QString);
     QString getWifiNetworkSecurity(QString, QString);

@@ -247,6 +247,35 @@ QJsonObject NMDaemonClient::getJsonForSsid(QString ssid)
     return ret_object;
 }
 
+bool NMDaemonClient::enableNetwork(QString ifname, QString ssid)
+{
+    int net_id = getWpaNetworkId(ifname, ssid);
+    if(net_id<0)
+        return false;
+    QJsonValue json_value;
+    std::unique_ptr<NMDaemonSpy> readspy = std::make_unique<NMDaemonSpy>(this, &NMDaemonClient::dataReady);
+    QString req_string = QString::asprintf(CMD_WPA_ENABLE_NETWORK.c_str(), ifname.toStdString().c_str(), net_id);
+    QJsonObject req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
+    lastJsonReceived = QJsonObject();
+    if(!sendRequest(req_object))
+    {
+        return false;
+    }
+    readspy->wait(DEFAULT_READ_WAIT_TIME_MSEC);
+    if(!lastJsonReceived.empty())
+    {
+        json_value = lastJsonReceived.value(QString::fromStdString(JSON_PARAM_RESULT));
+        if(json_value.toString().toStdString() == JSON_PARAM_SUCC)
+            return true;
+        else
+            return false;
+    }
+    else
+    {
+        return false;
+    }
+}
+
 int NMDaemonClient::getWpaNetworkId(QString ifname, QString ssid)
 // Get list of configured networks from WPA and search for the ssid in this list
 {

@@ -285,6 +285,7 @@ nmworkerieee80211.cpp:82     ERR| Error in execCmdNetList: incorrect data receiv
 //    if(!nmdStatus->sendRequest(req_object))
 //        QMessageBox::warning(this, IfName, "Cannot send WPA_CONNECT command to backend");
 //    delete nmdClient;
+    nmdStatus->enableNetwork(IfName, ssid);
     nmdStatus->startMonitoring();
 }
 
