@@ -182,6 +182,7 @@ void ethernetconfig::programInit()
    connect(lineIPv6Address, SIGNAL(textChanged(const QString &)), this, SLOT(slotCheckGlobalText() ) );
    connect(lineMAC, SIGNAL(textChanged(const QString &)), this, SLOT(slotCheckGlobalText() ) );
    connect(pushWPAE, SIGNAL(clicked()), this, SLOT(slotConfigWPA()) );
+   connect(nmd_status, SIGNAL(ifStatusUpdated()), this, SLOT(slotFinishLoad()));
 
    NMDaemonSpy* spy = new NMDaemonSpy(nmd_status, &NMDaemonCheckStatus::ifStatusUpdated);
    nmd_status->startMonitoring();
@@ -189,7 +190,8 @@ void ethernetconfig::programInit()
        qDebug() << "Signal NMDaemonCheckStatus::ifStatusUpdated was not received in time";
    delete spy;
    nmd_status->stopMonitoring();
-   QTimer::singleShot(30,  this,  SLOT(loadInfo()));
+//   QTimer::singleShot(30,  this,  SLOT(loadInfo()));
+//   QTimer::singleShot(30,  this,  SLOT(slotFinishLoad()));
 }
 
 void ethernetconfig::setDevice(QString Device)
@@ -428,7 +430,11 @@ void ethernetconfig::showInfo()
 void ethernetconfig::slotFinishLoad()
 {
    QString tmp, tmp2;
-
+   QJsonValue json_value;
+   QJsonObject json_object,json_obj;
+   QJsonArray json_array;
+   QString str_value,str_type;
+   QString dev;
    //QSettings settings("PCBSD");
    //useLagg = settings.value("/pc-netmanager/useLagg", false).toBool();
 
@@ -443,6 +449,50 @@ void ethernetconfig::slotFinishLoad()
    //if ( tmp.indexOf("WPA") != -1 )
    //   groupWPAE->setChecked(true);
 
+   QJsonArray if_status = nmd_status->getLastIfStatus();
+   if(!if_status.empty())
+   {
+       foreach (const QJsonValue &v, if_status)
+       {
+           json_object = v.toObject();
+           json_value = json_object.value("INTERFACE NAME");
+           dev = json_value.toString();
+           if(dev != DeviceName)
+               continue;
+           json_value = json_object.value("MEDIA");
+           str_value = json_value.toString();
+           if(!str_value.contains("Ethernet"))
+           {
+                qDebug() << "Unknown device media: " << str_value;
+                return;
+           }
+           // TODO: check here if this is a static or DHCP provided address
+           groupStatic->setChecked(true);
+           json_array = json_object.value("ADDRESSES").toArray();
+           foreach(auto addr, json_array)
+           {
+               json_obj = addr.toObject();
+               str_type = json_obj.value("ADDRESS TYPE").toString();
+               // TODO: add support for other types of addresses
+               str_value = json_obj.value(str_type).toObject().value("IPV4 ADDRESS").toString();
+               if(!str_value.isEmpty())
+               {
+                   lineIP->setText(str_value);
+                   str_value = json_obj.value(str_type).toObject().value("IPV4 SUBNET MASK").toString();
+                   lineNetmask->setText(str_value);
+                   break;   // TODO: What should we do if there are several IPv4 addresses??
+               }
+               /*
+               str_value = json_obj.value(str_type).toObject().value("IPV6 ADDRESS").toString();
+               if(!str_value.isEmpty())
+               {
+                   textIPv6->setText(str_value);
+               }
+               */
+           }
+       }
+   }
+/*
    if ( tmp.isEmpty() ) {
       checkDisableNetwork->setChecked(true);
       tabMainWidget->setEnabled(false);
@@ -513,8 +563,8 @@ void ethernetconfig::slotFinishLoad()
 
 
    }
-
-
+*/
+/*
   // Check for the IPv6 Configuration
   // Start loading the device information
    tmp = trueos::Utils::getConfFileValue( "/etc/rc.conf", "ifconfig_" + DeviceName + "_ipv6=", 1 );
@@ -537,7 +587,7 @@ void ethernetconfig::slotFinishLoad()
    }
 
   slotIPv6clicked();
-
+*/
   // Starts grabbing information for the info tab
   loadInfo();
 
