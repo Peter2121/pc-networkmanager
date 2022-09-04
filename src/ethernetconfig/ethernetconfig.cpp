@@ -286,6 +286,7 @@ void ethernetconfig::loadInfo()
           str_value = json_object.value("MEDIA").toString();
           textMedia->setText(str_value);
           json_array = json_object.value("ADDRESSES").toArray();
+          textIP->setText("");
           foreach(auto addr, json_array)
           {
               json_obj = addr.toObject();
@@ -294,9 +295,13 @@ void ethernetconfig::loadInfo()
               str_value = json_obj.value(str_type).toObject().value("IPV4 ADDRESS").toString();
               if(!str_value.isEmpty())
               {
-                  textIP->setText(str_value);
+                  if(textIP->text().isEmpty())
+                      textIP->setText(str_value);
+                  else
+                      textIP->setText(textIP->text()+"\n"+str_value);
                   str_value = json_obj.value(str_type).toObject().value("IPV4 SUBNET MASK").toString();
-                  textNetmask->setText(str_value);
+                  if(!str_value.isEmpty())
+                    textNetmask->setText(str_value);
               }
               str_value = json_obj.value(str_type).toObject().value("LINK ADDRESS").toString();
               if(!str_value.isEmpty())
