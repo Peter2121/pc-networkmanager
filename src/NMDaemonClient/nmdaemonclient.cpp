@@ -13,39 +13,94 @@ NMDaemonClient::NMDaemonClient(QString socket_path, bool is_persistent) : socket
                                                                           isConnected(false),
                                                                           writeSocket(1)
 {
-    nmdSocket = new QLocalSocket(this);
+//    nmdSocket = new QLocalSocket(this);
+    nmdUnixSocket = new sockpp::unix_connector();
     memset(buf, 0, sizeof(buf));
-    connect(nmdSocket, QOverload<QLocalSocket::LocalSocketError>::of(&QLocalSocket::errorOccurred),
-            this, &NMDaemonClient::slotError);
-    nmdSocket->setServerName(socketPath);
-    connect(nmdSocket, &QLocalSocket::connected, this, &NMDaemonClient::slotConnected);
-    connect(nmdSocket, &QLocalSocket::disconnected, this, &NMDaemonClient::slotDisconnected);
-    connect(nmdSocket, &QLocalSocket::readyRead, this, &NMDaemonClient::slotReadyRead);
+    callbackFunction = nullptr;
+//    connect(nmdSocket, QOverload<QLocalSocket::LocalSocketError>::of(&QLocalSocket::errorOccurred),
+//            this, &NMDaemonClient::slotError);
+//    nmdSocket->setServerName(socketPath);
+//    connect(nmdSocket, &QLocalSocket::connected, this, &NMDaemonClient::slotConnected);
+//    connect(nmdSocket, &QLocalSocket::disconnected, this, &NMDaemonClient::slotDisconnected);
+    connect(this, &NMDaemonClient::dataReceived, this, &NMDaemonClient::slotReadyRead);
 }
 
 NMDaemonClient::~NMDaemonClient()
 {
     if(isConnected)
-        nmdSocket->disconnect();
-    delete nmdSocket;
+    {
+//        nmdSocket->disconnect();
+        nmdUnixSocket->close();
+    }
+//    delete nmdSocket;
+    delete nmdUnixSocket;
+}
+
+void NMDaemonClient::slotConnected()
+{
+    isConnected = true;
+    emit connected();
+}
+
+void NMDaemonClient::slotDisconnected()
+{
+    isConnected = false;
+    emit disconnected();
+}
+
+void NMDaemonClient::slotStatusChanged(QLocalSocket::LocalSocketState socketState)
+{
+    switch (socketState)
+    {
+        case QLocalSocket::UnconnectedState:
+            isConnected = false;
+            break;
+        case QLocalSocket::ConnectedState:
+            isConnected = true;
+            break;
+        default:
+            break;
+    }
+}
+
+bool NMDaemonClient::doConnect()
+{
+    if(isConnected)
+        return true;
+//    nmdSocket->connectToServer();
+    bool ok = nmdUnixSocket->connect(sockpp::unix_address(socketPath.toStdString()));
+    if(!ok)
+    {
+        qDebug() << "Cannot connect to " << socketPath << " socket:\n" << QString::fromStdString(nmdUnixSocket->last_error_str());
+        return false;
+    }
+    isConnected = true;
+    return true;
+    //return false;
+}
+
+bool NMDaemonClient::doDisconnect()
+{
+    if(!isConnected)
+        return true;
+//    nmdSocket->disconnectFromServer();
+    if(!nmdUnixSocket->close())
+        return false;
+    isConnected = false;
+    return true;
+//    return false;
+}
+
+QString NMDaemonClient::getLastError()
+{
+    return lastError;
 }
 
 void NMDaemonClient::slotReadyRead()
 {
-    QDataStream in(nmdSocket);
     QJsonObject json_received;
-    QString qstr_received = "";
-    memset(buf, 0, sizeof(buf));
-    for(;;)
-    {
-        if( (nmdSocket->bytesAvailable() < (int)sizeof(char)) || (!isConnected) )
-            break;
-        if(in.readRawData(buf, NM_MAXBUF) > 0)
-        {
-            qstr_received += QString(buf);
-            memset(buf, 0, sizeof(buf));
-        }
-    }
+    QString qstr_received = QString(buf);
+    qDebug() << "Received from socket: " << qstr_received;
     QJsonDocument qjdoc_received = QJsonDocument::fromJson(qstr_received.toUtf8());
     if(!qjdoc_received.isNull())
     {
@@ -63,11 +118,11 @@ void NMDaemonClient::slotReadyRead()
         doDisconnect();
     if(writeSocket.available() == 0)
         writeSocket.release();
-    //writeSocket.unlock();
 }
 
 void NMDaemonClient::slotError(QLocalSocket::LocalSocketError error)
 {
+    /*
     lastError =
         "Error: " + (error == QLocalSocket::ServerNotFoundError ?
                      "The socket " + socketPath + " is not found." :
@@ -76,22 +131,34 @@ void NMDaemonClient::slotError(QLocalSocket::LocalSocketError error)
                      error == QLocalSocket::ConnectionRefusedError ?
                      "The connection was refused (check socket " + socketPath + " permissions)." :
                      QString(nmdSocket->errorString()));
+     */
 }
-
+/*
 bool NMDaemonClient::sendRequest(QJsonObject json_command)
 {
     memset(buf, 0, sizeof(buf));
+    QDataStream in(nmdSocket);
+    QString qstr_received = "";
     const char *ptr = nullptr;
     std::unique_ptr<NMDaemonSpy> connspy = nullptr;
-    //NMDaemonSpy* connspy = nullptr;
-    std::string str_cmd = QJsonDocument(json_command).toJson(QJsonDocument::Compact).toStdString();
-    ptr = str_cmd.c_str();
-    strlcpy(buf,ptr,NM_MAXBUF);
-    int len = (str_cmd.length()<NM_MAXBUF) ? str_cmd.length() : NM_MAXBUF-1;
-    buf[len] = 0;
-    if(!isConnected)
+    std::string str_cmd = QJsonDocument(json_command).toJson(QJsonDocument::Compact).toStdString();    
+    if(isConnected)
     {
-        //connspy = new NMDaemonSpy(nmdSocket, &QLocalSocket::connected);
+        for(;;)
+        {
+            if( (nmdSocket->bytesAvailable() < (int)sizeof(char)) || (!isConnected) )
+                break;
+            if(in.readRawData(buf, NM_MAXBUF) > 0)
+            {
+                qstr_received += QString(buf);
+                memset(buf, 0, sizeof(buf));
+            }
+        }
+        if(!qstr_received.isEmpty())
+            qDebug() << "Unattended data received in sendRequest: " << qstr_received;
+    }
+    else
+    {
         connspy = std::make_unique<NMDaemonSpy>(nmdSocket, &QLocalSocket::connected);
         doConnect();
         if(!isConnected)
@@ -104,18 +171,151 @@ bool NMDaemonClient::sendRequest(QJsonObject json_command)
             }
         }
     }
-    writeSocket.acquire();
-    //writeSocket.lock();
+    ptr = str_cmd.c_str();
+    strlcpy(buf,ptr,NM_MAXBUF);
+    int len = (str_cmd.length()<NM_MAXBUF) ? str_cmd.length() : NM_MAXBUF-1;
+    buf[len] = 0;
+    if(writeSocket.available()>0)
+        writeSocket.acquire();
+    else
+    {
+        bool available=false;
+        for(int i=0; i<10; i++)
+        {
+            sleep(1);
+            if(writeSocket.available()>0)
+            {
+                available=true;
+                break;
+            }
+        }
+        if(available)
+            writeSocket.acquire();
+        else
+        {
+            qDebug() << "FATAL: Cannot acquire write lock on nmdaemon socket";
+            exit(1);
+        }
+    }
     lastJsonReceived = QJsonObject();
+    nmdSocket->flush();
+//    connect(nmdSocket, &QLocalSocket::readyRead, this, &NMDaemonClient::slotReadyRead);
+    qDebug() << "Writing to socket: " << buf;
     int len_sent = nmdSocket->write(buf, len+1);
+    //nmdSocket->flush();
+    nmdSocket->waitForBytesWritten();
+    nmdSocket->flush();
+    //sleep(1);
     if(len_sent<len+1)
     {
         writeSocket.release();
-        //writeSocket.unlock();
         return false;
     }
     else
         return true;
+}
+*/
+bool NMDaemonClient::sendRequest(QJsonObject json_command)
+{
+    memset(buf, 0, sizeof(buf));
+//    QDataStream in(nmdSocket);
+    QString qstr_received = "";
+    const char *ptr = nullptr;
+    //std::unique_ptr<NMDaemonSpy> connspy = nullptr;
+    std::string str_cmd = QJsonDocument(json_command).toJson(QJsonDocument::Compact).toStdString();
+    /*
+    if(isConnected)
+    {
+        for(;;)
+        {
+            if( (nmdSocket->bytesAvailable() < (int)sizeof(char)) || (!isConnected) )
+                break;
+            if(in.readRawData(buf, NM_MAXBUF) > 0)
+            {
+                qstr_received += QString(buf);
+                memset(buf, 0, sizeof(buf));
+            }
+        }
+        if(!qstr_received.isEmpty())
+            qDebug() << "Unattended data received in sendRequest: " << qstr_received;
+    }
+    else
+    {
+        connspy = std::make_unique<NMDaemonSpy>(nmdSocket, &QLocalSocket::connected);
+        doConnect();
+        if(!isConnected)
+        {
+            if(!connspy->wait(SOCKET_CONNECT_TIMEOUT_MSEC))
+                qDebug() << "Signal QLocalSocket::connected was not received in time";
+            if(!isConnected)
+            {
+                return false;
+            }
+        }
+    }
+    */
+    if(!isConnected)
+    {
+        if(!doConnect())
+            return false;
+    }
+    ptr = str_cmd.c_str();
+    strlcpy(buf,ptr,NM_MAXBUF);
+    int len = (str_cmd.length()<NM_MAXBUF) ? str_cmd.length() : NM_MAXBUF-1;
+    buf[len] = 0;
+    if(writeSocket.available()>0)
+        writeSocket.acquire();
+    else
+    {
+        bool available=false;
+        for(int i=0; i<10; i++)
+        {
+            sleep(1);
+            if(writeSocket.available()>0)
+            {
+                available=true;
+                break;
+            }
+        }
+        if(available)
+            writeSocket.acquire();
+        else
+        {
+            qDebug() << "FATAL: Cannot acquire write lock on nmdaemon socket";
+            exit(1);
+        }
+    }
+    lastJsonReceived = QJsonObject();
+    qDebug() << "Writing to socket: " << buf;
+    int len_sent = nmdUnixSocket->write(buf, sizeof(buf));
+    if(len_sent<len+1)
+    {
+        writeSocket.release();
+        return false;
+    }
+    else
+    {
+        //QtConcurrent::run(this, &NMDaemonClient::readData);   //  Data lost in socket communications
+        readData();    // TODO: call it in a separate thread
+        return true;
+    }
+}
+
+void NMDaemonClient::readData()
+{
+    int n = 0;
+    if(!isConnected)
+    {
+        qDebug() << "ERROR: readData from disconnected socket";
+        return;
+    }
+    memset(buf, 0, sizeof(buf));
+    n = nmdUnixSocket->read_n(buf, sizeof(buf));
+    if(n>0)
+        emit dataReceived();
+    else
+        qDebug() << "ERROR: Cannot read data from socket";
+    //slotReadyRead();    // TODO: emit signal
 }
 
 std::string NMDaemonClient::connectWifiNetwork(QString ifname, QString ssid)
@@ -253,7 +453,7 @@ bool NMDaemonClient::enableNetwork(QString ifname, QString ssid)
     if(net_id<0)
         return false;
     QJsonValue json_value;
-    std::unique_ptr<NMDaemonSpy> readspy = std::make_unique<NMDaemonSpy>(this, &NMDaemonClient::dataReady);
+    //std::unique_ptr<NMDaemonSpy> readspy = std::make_unique<NMDaemonSpy>(this, &NMDaemonClient::dataReady);
     QString req_string = QString::asprintf(CMD_WPA_ENABLE_NETWORK.c_str(), ifname.toStdString().c_str(), net_id);
     QJsonObject req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
     lastJsonReceived = QJsonObject();
@@ -261,6 +461,10 @@ bool NMDaemonClient::enableNetwork(QString ifname, QString ssid)
     {
         return false;
     }
+    //checkDataResultSource = "enableNetwork";
+    //callbackFunction = std::bind(&NMDaemonClient::saveConfig, this, ifname);
+    //connect(this, &NMDaemonClient::dataReady, this, &NMDaemonClient::slotCheckDataResult);
+    /*
     readspy->wait(DEFAULT_READ_WAIT_TIME_MSEC);
     if(!lastJsonReceived.empty())
     {
@@ -274,6 +478,8 @@ bool NMDaemonClient::enableNetwork(QString ifname, QString ssid)
     {
         return false;
     }
+    */
+    return true;
 }
 
 int NMDaemonClient::getWpaNetworkId(QString ifname, QString ssid)
@@ -378,8 +584,15 @@ bool NMDaemonClient::addNetwork(QString ifname, QString ssid, QString psk, bool 
                     req_string = QString::asprintf(CMD_WPA_ADD_SECURE_NETWORK.c_str(), ifname.toStdString().c_str(), ssid.toStdString().c_str(), psk.toStdString().c_str(), security.toStdString().c_str());
                 }
                 req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
-                readspy = std::make_unique<NMDaemonSpy>(this, &NMDaemonClient::dataReady);
-                if(sendRequest(req_object))
+                //readspy = std::make_unique<NMDaemonSpy>(this, &NMDaemonClient::dataReady);
+                //checkDataResultSource = "addNetwork";
+                //callbackFunction = std::bind(&NMDaemonClient::saveConfig, this, ifname);
+                //connect(this, &NMDaemonClient::dataReady, this, &NMDaemonClient::slotCheckDataResult);
+                if(!sendRequest(req_object))
+                {
+                    return false;
+                }
+                /*
                 {
                     readspy->wait(DEFAULT_READ_WAIT_TIME_MSEC);
                     if(!lastJsonReceived.empty())
@@ -391,10 +604,11 @@ bool NMDaemonClient::addNetwork(QString ifname, QString ssid, QString psk, bool 
                         }
                     }
                 }
+                */
             }
         }
     }
-    return false;
+    return true;
 }
 
 // Used code from trueos-utils-qt5 QString NetworkInterface::parseWifiSecurity( QString caps, QString etc )
@@ -429,17 +643,35 @@ QString NMDaemonClient::getWifiNetworkSecurity(QString caps, QString ies)
     }
     return securityType;
 }
-
-bool NMDaemonClient::saveConfig(QString ifname)
+/*
+bool NMDaemonClient::tsavConfigg(QString ifname)
 {
-    QJsonValue json_value;
-    std::unique_ptr<NMDaemonSpy> readspy = std::make_unique<NMDaemonSpy>(this, &NMDaemonClient::dataReady);
+//    QJsonObject req_object = QJsonDocument::fromJson(CMD_GWPA_TSAV.toUtf8()).object();
     QString req_string = QString::asprintf(CMD_WPA_SAVE.c_str(), ifname.toStdString().c_str());
     QJsonObject req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
     if(!sendRequest(req_object))
     {
         return false;
     }
+    return true;
+}
+*/
+bool NMDaemonClient::saveConfig(QString ifname)
+{
+    QJsonValue json_value;
+    //std::unique_ptr<NMDaemonSpy> readspy = std::make_unique<NMDaemonSpy>(this, &NMDaemonClient::dataReady);
+    QString req_string = QString::asprintf(CMD_WPA_SAVE.c_str(), ifname.toStdString().c_str());
+    QJsonObject req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
+    //QJsonObject req_object = QJsonDocument::fromJson(CMD_GET_WPA_IF_LIST.toUtf8()).object();
+    connect(this, &NMDaemonClient::dataReady, this, &NMDaemonClient::slotCheckDataResult);
+    checkDataResultSource = "saveConfig";
+    callbackFunction = nullptr;
+    //sleep(20);
+    if(!sendRequest(req_object))
+    {
+        return false;
+    }
+/*
     readspy->wait(DEFAULT_READ_WAIT_TIME_MSEC);
     if(!lastJsonReceived.empty())
     {
@@ -448,52 +680,42 @@ bool NMDaemonClient::saveConfig(QString ifname)
             return true;
     }
     return false;
+*/
+    return true;
 }
 
-void NMDaemonClient::slotConnected()
+bool NMDaemonClient::checkSuccess(QJsonObject data)
 {
-    isConnected = true;
-    emit connected();
-}
-
-void NMDaemonClient::slotDisconnected()
-{
-    isConnected = false;
-    emit disconnected();
-}
-
-void NMDaemonClient::slotStatusChanged(QLocalSocket::LocalSocketState socketState)
-{
-    switch (socketState)
+    if(!data.empty())
     {
-        case QLocalSocket::UnconnectedState:
-            isConnected = false;
-            break;
-        case QLocalSocket::ConnectedState:
-            isConnected = true;
-            break;
-        default:
-            break;
+        QJsonValue json_value = data.value(QString::fromStdString(JSON_PARAM_RESULT));
+        if(json_value.toString().toStdString() == JSON_PARAM_SUCC)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+void NMDaemonClient::slotCheckDataResult(QJsonObject data)
+{
+    disconnect(this, &NMDaemonClient::dataReady, this, &NMDaemonClient::slotCheckDataResult);
+    QString src = checkDataResultSource;
+    checkDataResultSource = "";
+    if(checkSuccess(data))
+    {
+        qDebug() << "SUCCESS received from " << src;
+        if(callbackFunction != nullptr)
+        {
+            std::function<void()> cb = callbackFunction;
+            callbackFunction = nullptr;
+            cb();
+        }
+    }
+    else
+    {
+        qDebug() << "ERROR received from " << src;
+        emit dataError(QJsonDocument(data).toJson(QJsonDocument::Compact), src);
     }
 }
 
-bool NMDaemonClient::doConnect()
-{
-    if(isConnected)
-        return true;
-    nmdSocket->connectToServer();
-    return false;
-}
-
-bool NMDaemonClient::doDisconnect()
-{
-    if(!isConnected)
-        return true;
-    nmdSocket->disconnectFromServer();
-    return false;
-}
-
-QString NMDaemonClient::getLastError()
-{
-    return lastError;
-}

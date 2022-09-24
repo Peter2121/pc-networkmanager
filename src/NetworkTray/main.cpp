@@ -35,12 +35,14 @@ int  main(int argc, char *argv[]) {
     NMDaemonCheckStatus* nmd_status;
 //  if(argc==1 && !PICOSESSION){
     QApplication a(argc, argv);
-    nmd_status = new NMDaemonCheckStatus();
-    NMDaemonSpy* spy = new NMDaemonSpy(nmd_status, &NMDaemonCheckStatus::ifStatusUpdated);
+    //nmd_status = new NMDaemonCheckStatus();
+    nmd_status = new NMDaemonCheckStatus("/var/run/debug.socket");
+//    NMDaemonSpy* spy = new NMDaemonSpy(nmd_status, &NMDaemonCheckStatus::ifStatusUpdated);
     nmd_status->startMonitoring();
-    if(!spy->wait(30000))
-        qDebug() << "Signal NMDaemonCheckStatus::ifStatusUpdated was not received in time";
-    delete spy;
+    sleep(2);
+//    if(!spy->wait(30000))
+//        qDebug() << "Signal NMDaemonCheckStatus::ifStatusUpdated was not received in time";
+//    delete spy;
     QJsonArray if_status = nmd_status->getLastIfStatus();
     if(!if_status.empty())
     {

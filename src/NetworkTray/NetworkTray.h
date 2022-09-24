@@ -50,6 +50,7 @@ private slots:
 //   void slotRestartNetwork();
 //   void slotTrayActivated(QSystemTrayIcon::ActivationReason);
    void slotQuit();
+   void slotSave();
    void slotGetNetKey(QAction* act);
    void slotConnect();
    void slotUpdatePskAndConnect(QString key, QString SSID, bool hexkey);
@@ -59,11 +60,13 @@ private slots:
 //   void slotUpdateIfStatus();
 //   void slotToggleTorMode(bool enable);
    void slotShowIfStatus();
+   void slotShowError(QString, QString);
 
 protected:
    static constexpr short NUM_SEPARATORS = 3;
    NMDaemonCheckStatus* nmdStatus;
    QAction* QuitAction;
+   QAction* SaveAction;
    QAction* ConfigAction;
    QAction* ResetAction;
    QAction* ScanAction;
@@ -85,6 +88,7 @@ protected:
    QIcon IconQuit;  // "application-exit"
    QIcon IconReset;
    QIcon IconScan;
+   QIcon IconSave;
    QDateTime LastUpdateTime;
 private:
    backend::NetDevice *DEVICE;

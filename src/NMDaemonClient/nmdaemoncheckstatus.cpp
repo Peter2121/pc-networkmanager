@@ -1,16 +1,24 @@
 #include "nmdaemoncheckstatus.h"
 
-NMDaemonCheckStatus::NMDaemonCheckStatus(int refresh_time) : NMDaemonClient(NMD_SOCKET_DEFAULT, true),
+NMDaemonCheckStatus::NMDaemonCheckStatus(int refresh_time, QString socket_path) : NMDaemonClient(socket_path, true),
                                                               refreshTime(refresh_time), isMonitoring(false)
 {
     spy = nullptr;
     timerMonitoring = new QTimer(this);
     timerMonitoring->setInterval(refreshTime);
     connect(timerMonitoring, &QTimer::timeout, this, &NMDaemonCheckStatus::updateStatus);
-    connect(nmdSocket, &QLocalSocket::disconnected, timerMonitoring, &QTimer::stop);
+//    connect(nmdSocket, &QLocalSocket::disconnected, timerMonitoring, &QTimer::stop);
 }
 
-NMDaemonCheckStatus::NMDaemonCheckStatus() : NMDaemonCheckStatus(DEFAULT_REFRESH_TIME_MSEC)
+NMDaemonCheckStatus::NMDaemonCheckStatus(QString socket_path) : NMDaemonCheckStatus(REFRESH_TIME_DEFAULT_MSEC, socket_path)
+{
+}
+
+NMDaemonCheckStatus::NMDaemonCheckStatus(int refresh_time) : NMDaemonCheckStatus(refresh_time, NMD_SOCKET_DEFAULT)
+{
+}
+
+NMDaemonCheckStatus::NMDaemonCheckStatus() : NMDaemonCheckStatus(REFRESH_TIME_DEFAULT_MSEC)
 {
 }
 

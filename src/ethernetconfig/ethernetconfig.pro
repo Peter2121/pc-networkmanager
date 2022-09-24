@@ -1,12 +1,14 @@
 TEMPLATE	= app
 LANGUAGE	= C++
-QT += core gui widgets network
+QT += core gui widgets network concurrent
 QT += testlib
+
 CONFIG	+= qt warn_on release
 CONFIG += qtc_runnable
 CONFIG += c++17
 
 LIBS	+= -L/usr/local/lib -ltrueos-utils -ltrueos-ui
+LIBS    += /usr/local/lib/libsockpp.a
 
 HEADERS	+= ethernetconfig.h
 

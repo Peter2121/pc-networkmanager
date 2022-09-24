@@ -72,6 +72,12 @@ void NetworkTray::onActivated(QSystemTrayIcon::ActivationReason reason)
     qDebug() << "onActivated called with the reason: " << reason;
 }
 
+void NetworkTray::slotSave()
+{
+    //nmdStatus->enableNetwork(IfName, "ppp-rrr");
+    nmdStatus->saveConfig(IfName);
+}
+
 void NetworkTray::programInit(QString device)
 {
     //Setup all the null pointers to start with
@@ -118,12 +124,19 @@ void NetworkTray::programInit(QString device)
         ScanAction  = new QAction(tr("&Scan Wifi"), this);
         ScanAction->setIcon(IconScan);
         connect(ScanAction, &QAction::triggered, this, &NetworkTray::scanWifi);
+
+        SaveAction = new QAction(tr("Save"), this);
+        SaveAction->setIcon(IconSave);
+        connect(SaveAction, &QAction::triggered, this, &NetworkTray::slotSave);
     }
 
     TrayIconMenu = new QMenu(this);
     TrayIconMenu->addAction(ConfigAction);
-    TrayIconMenu->addAction(ResetAction);
-    TrayIconMenu->addAction(ScanAction);
+    if(device.startsWith(IF_WIFI_PREFIX))
+    {
+        TrayIconMenu->addAction(ResetAction);
+        TrayIconMenu->addAction(ScanAction);
+    }
     TrayIconMenu->addAction(SeparatorActions[0]);
 
   if(device.startsWith(IF_WIFI_PREFIX))
@@ -177,6 +190,8 @@ void NetworkTray::programInit(QString device)
   }
 
   TrayIconMenu->addAction(SeparatorActions[2]);
+  //if(device.startsWith(IF_WIFI_PREFIX))
+  // TrayIconMenu->addAction(SaveAction);
   TrayIconMenu->addAction(QuitAction);
   TrayIcon->setContextMenu(TrayIconMenu);
   TrayIcon->show();
@@ -190,6 +205,7 @@ This signal is emitted just before the menu is hidden from the user.
   connect(nmdStatus, &NMDaemonCheckStatus::ifStatusUpdated, this, &NetworkTray::updateStatus);
   connect(nmdStatus, &NMDaemonCheckStatus::wifiNetStatusUpdated, this, &NetworkTray::updateStatus);
   connect(nmdStatus, &NMDaemonCheckStatus::wifiIfStatusUpdated, this, &NetworkTray::updateStatus);
+  connect(nmdStatus, &NMDaemonCheckStatus::dataError, this, &NetworkTray::slotShowError);
   connect(TrayIconMenu, &QMenu::aboutToShow, this, &NetworkTray::setActiveScanTimeout);
   connect(TrayIconMenu, &QMenu::aboutToHide, this, &NetworkTray::setIdleScanTimeout);
 //  connect(TrayIcon, &QSystemTrayIcon::activated, this, &NetworkTray::onActivated);
@@ -248,7 +264,7 @@ void NetworkTray::connectWifiNetwork(QString ssid)
     }
     else if( (result == JSON_PARAM_ERR) ||
              (result == JSON_DATA_ERR_AUTH_FAILED) ||
-             (result == JSON_DATA_ERR_DRV_REQ_FAILED) )
+             (result == JSON_DATA_ERR_DRV_REQ_FAILED) ) // TODO: Anyway, wait a little and then check the status
     {
         dialogNetKey = new netKey();
         //Insert the SSID into the dialog
@@ -287,6 +303,7 @@ nmworkerieee80211.cpp:82     ERR| Error in execCmdNetList: incorrect data receiv
 //    delete nmdClient;
     nmdStatus->enableNetwork(IfName, ssid);
     nmdStatus->saveConfig(IfName);
+    updateStatus();    
     nmdStatus->startMonitoring();
 }
 
@@ -321,7 +338,7 @@ void NetworkTray::slotAddNetworkAndConnect(QString key, QString ssid, bool hexke
     {
         qDebug() << "Error adding network " << ssid;
     }
-    nmdStatus->saveConfig(IfName);
+    //nmdStatus->saveConfig(IfName);
     nmdStatus->startMonitoring();
 }
 
@@ -454,6 +471,11 @@ void NetworkTray::slotShowIfStatus()
     QMessageBox::information(this, IfName+" "+tr("Status"), status);
 }
 
+void NetworkTray::slotShowError(QString message, QString source)
+{
+    QMessageBox::critical(this, "Error from "+source, message);
+}
+
 QIcon NetworkTray::getWifiIcon(int power)
 {
     if(power<25)
@@ -546,6 +568,7 @@ void NetworkTray::loadIcons() {
     IconQuit = QIcon::fromTheme("application-exit");
     IconReset = QIcon::fromTheme("button_cancel");
     IconScan = QIcon::fromTheme("cm_refresh");
+    IconSave = QIcon::fromTheme("filesave");
 }
 
 void NetworkTray::slotQuit() {

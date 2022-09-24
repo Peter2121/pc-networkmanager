@@ -1,6 +1,6 @@
 TEMPLATE	= app
 LANGUAGE	= C++
-QT += core gui widgets network
+QT += core gui widgets network concurrent
 QT += testlib
 
 CONFIG	+= qt warn_on release
@@ -8,6 +8,7 @@ CONFIG += qtc_runnable
 CONFIG += c++17
 
 LIBS	+= -L/usr/local/lib -ltrueos-utils -ltrueos-ui
+LIBS    += /usr/local/lib/libsockpp.a
 
 HEADERS	+= NetworkTray.h netKey.h
 
@@ -85,9 +86,10 @@ TRANSLATIONS =  i18n/NetworkTray_af.ts \
 
 INSTALLS += target
 
-QMAKE_LIBDIR = /usr/local/lib/qt5 $$PWD/../../../trueos-libqt5/src-qt5/libtrueos/
+QMAKE_LIBDIR = /usr/local/lib /usr/local/lib/qt5 $$PWD/../../../trueos-libqt5/src-qt5/libtrueos/
 
 TARGET  = pc-nettray
 target.path = /usr/local/bin/
 
 INCLUDEPATH+= /usr/local/include $$PWD/../../../trueos-libqt5/src-qt5/libtrueos/ui $$PWD/../../../trueos-libqt5/src-qt5/libtrueos/utils
+

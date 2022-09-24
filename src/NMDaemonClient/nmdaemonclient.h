@@ -11,6 +11,11 @@
 #include <QSignalSpy>
 //#include <QMutex>
 #include <QSemaphore>
+#include <QtConcurrent>
+#include <functional>
+#include <unistd.h>
+#include <sockpp/unix_connector.h>
+#include <sockpp/version.h>
 #include "../nmdaemon/nmjsonconst.h"
 #include "nmdaemonspy.h"
 
@@ -33,6 +38,8 @@ protected:
     static inline const std::string CMD_WPA_ENABLE_NETWORK = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_SETPARAM\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\", \"NETID\" : %d, \"PARAM_NAME\" : \"disabled\", \"PARAM_VALUE\" : \"0\", \"PARAM_QUOTES\" : false } }";
     static inline const std::string CMD_WIFI_SCAN_RESULTS = "{ \"SCOPE\" : \"WIFI\", \"CMD\" : \"WIFI_SCAN_RESULTS\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\" } }";
     static inline const std::string CMD_WIFI_SCAN = "{ \"SCOPE\" : \"WIFI\", \"CMD\" : \"WIFI_SCAN\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\" } }";
+    //static inline const QString CMD_GET_WPA_IF_LIST = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_LIST_IF\" }";
+    //static inline const QString CMD_GWPA_TSAV = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_SAVE\", \"DATA\" : { \"INTERFACE NAME\" : \"wlan0\" } }";
     static inline const QString WIFI_SECURITY_ERROR = "ERROR";
     static inline const QString WIFI_SECURITY_OPEN = "OPEN";
     static inline const QString WIFI_SECURITY_WEP = "WEP";
@@ -41,7 +48,10 @@ protected:
     static inline const QString NMD_SOCKET_DEFAULT = "/var/run/nmd.socket";
     static constexpr int NM_MAXBUF = 8192;
     static constexpr int SOCKET_CONNECT_TIMEOUT_MSEC = 1000;
-    QLocalSocket* nmdSocket;
+    static constexpr std::chrono::milliseconds WAIT_TIME = std::chrono::milliseconds(200);
+    static constexpr int WAIT_CYCLES = 10;
+    //QLocalSocket* nmdSocket;
+    sockpp::unix_connector* nmdUnixSocket;
     QString socketPath;
     bool isPersistentConn;
     bool isConnected;
@@ -49,10 +59,13 @@ protected:
     //NMDaemonSpy* spy;
     bool doConnect();
     bool doDisconnect();
+    void readData();
     QString lastError;
     QJsonObject lastJsonReceived;
 //    QMutex writeSocket;
     QSemaphore writeSocket;
+    QString checkDataResultSource;
+    std::function<void()> callbackFunction;
 public:
     NMDaemonClient();
     NMDaemonClient(bool);
@@ -65,20 +78,25 @@ public:
     bool addNetwork(QString, QString, QString, bool);
     //bool addOpenNetwork(QString, QString);
     bool saveConfig(QString);
+    //bool tsavConfigg(QString);
     bool enableNetwork(QString, QString);
     int getWpaNetworkId(QString, QString);
     QJsonObject getJsonForSsid(QString);
     QString getWifiNetworkSecurity(QString, QString);
+    bool checkSuccess(QJsonObject);
 signals:
     void dataReady(QJsonObject);
     void connected();
     void disconnected();
+    void dataReceived();
+    void dataError(QString, QString);
 private slots:
     void slotReadyRead();
     void slotError(QLocalSocket::LocalSocketError);
     void slotConnected();
     void slotDisconnected();
     void slotStatusChanged(QLocalSocket::LocalSocketState);
+    void slotCheckDataResult(QJsonObject);
 };
 
 #endif // NMDAEMONCLIENT_H

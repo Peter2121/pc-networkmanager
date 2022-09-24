@@ -8,8 +8,8 @@ class NMDaemonCheckStatus : public NMDaemonClient
 {
     Q_OBJECT
 protected:
-//    static long constexpr DEFAULT_REFRESH_TIME_MSEC = 180000;   // 180sec = 3min
-    static long constexpr DEFAULT_REFRESH_TIME_MSEC = 60000;   // 60sec = 1min
+//    static long constexpr REFRESH_TIME_DEFAULT_MSEC = 180000;   // 180sec = 3min
+    static long constexpr REFRESH_TIME_DEFAULT_MSEC = 60000;   // 60sec = 1min
     static inline const QString CMD_GET_WPA_IF_LIST = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_LIST_IF\" }";
     static inline const QString CMD_GET_SYS_IF_STATUS = "{ \"SCOPE\" : \"SYSTEM\", \"CMD\" : \"IF_LIST\" }";
     static inline const std::string CMD_WIFI_SCAN = "{ \"SCOPE\" : \"WIFI\", \"CMD\" : \"WIFI_SCAN\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\" } }";
@@ -27,6 +27,8 @@ public slots:
         void updateStatus();
         void qqdebug();
 public:
+    NMDaemonCheckStatus(int, QString);  // msec
+    NMDaemonCheckStatus(QString);  // msec
     NMDaemonCheckStatus(int);  // msec
     NMDaemonCheckStatus();
     ~NMDaemonCheckStatus();
