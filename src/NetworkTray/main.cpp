@@ -35,8 +35,8 @@ int  main(int argc, char *argv[]) {
     NMDaemonCheckStatus* nmd_status;
 //  if(argc==1 && !PICOSESSION){
     QApplication a(argc, argv);
-    //nmd_status = new NMDaemonCheckStatus();
-    nmd_status = new NMDaemonCheckStatus("/var/run/debug.socket");
+    nmd_status = new NMDaemonCheckStatus();
+    //nmd_status = new NMDaemonCheckStatus("/var/run/debug.socket");
 //    NMDaemonSpy* spy = new NMDaemonSpy(nmd_status, &NMDaemonCheckStatus::ifStatusUpdated);
     nmd_status->startMonitoring();
     sleep(2);

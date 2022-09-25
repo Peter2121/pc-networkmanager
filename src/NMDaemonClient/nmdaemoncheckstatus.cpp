@@ -29,30 +29,12 @@ NMDaemonCheckStatus::~NMDaemonCheckStatus()
     delete timerMonitoring;
 }
 
-void NMDaemonCheckStatus::qqdebug()
-{
-    qDebug() << "qdebug called";
-}
-
 void NMDaemonCheckStatus::startMonitoring()
 {
     if(isMonitoring)
         return;
-    spy = new NMDaemonSpy(this, &NMDaemonClient::connected);
-    doConnect();
-    if(!isConnected)
-    {
-        if(!spy->wait(SOCKET_CONNECT_TIMEOUT_MSEC))
-            qDebug() << "Signal NMDaemonClient::connected was not received in time";
-        if(!isConnected)
-        {
-            delete spy;
-            spy = nullptr;
-            return;
-        }
-    }
-    delete spy;
-    spy = nullptr;
+    if(!doConnect())
+        return;
     isMonitoring = true;
     updateStatus();
     timerMonitoring->start();
@@ -67,28 +49,10 @@ void NMDaemonCheckStatus::stopMonitoring()
 
 void NMDaemonCheckStatus::updateStatus()
 {
-//    if(isWaitingForData)
-//        return;
+    std::unique_ptr<NMDaemonSpy> spy = nullptr;
     timerMonitoring->stop();
-    if(!isConnected)
-    {
-        spy = new NMDaemonSpy(this, &NMDaemonClient::connected);
-        doConnect();
-        if(!isConnected)
-        {
-            if(!spy->wait(SOCKET_CONNECT_TIMEOUT_MSEC))
-                qDebug() << "Signal NMDaemonClient::connected was not received in time";
-            if(!isConnected)
-            {
-                delete spy;
-                spy = nullptr;
-                isMonitoring = false;
-                return;
-            }
-        }
-        delete spy;
-        spy = nullptr;
-    }
+    if(!doConnect())
+        return;
     QString if_name;
     QString req_string;
     QJsonObject json_object;
@@ -100,14 +64,12 @@ void NMDaemonCheckStatus::updateStatus()
     // Get list of all netwok interfaces
     lastIfStatus = QJsonArray();
     QJsonObject req_object = QJsonDocument::fromJson(CMD_GET_SYS_IF_STATUS.toUtf8()).object();
-    spy = new NMDaemonSpy(this, &NMDaemonCheckStatus::dataReady);
+    //spy = new NMDaemonSpy(this, &NMDaemonCheckStatus::dataReady);
+    spy = std::make_unique<NMDaemonSpy>(this, &NMDaemonClient::dataReady);
     if(!sendRequest(req_object))
         goto label_exit;
     if(!spy->wait(DEFAULT_READ_WAIT_TIME_MSEC))
         writeSocket.release();
-        //writeSocket.unlock();
-    delete spy;
-    spy = nullptr;
     if(!lastJsonReceived.empty())
     {
         json_value = lastJsonReceived.value("RESULT");
@@ -124,14 +86,12 @@ void NMDaemonCheckStatus::updateStatus()
     req_object = QJsonDocument::fromJson(CMD_GET_WPA_IF_LIST.toUtf8()).object();
     lastJsonReceived = QJsonObject();
     wifiInterfaces.clear();
-    spy = new NMDaemonSpy(this, &NMDaemonCheckStatus::dataReady);
+    //spy = new NMDaemonSpy(this, &NMDaemonCheckStatus::dataReady);
+    spy = std::make_unique<NMDaemonSpy>(this, &NMDaemonClient::dataReady);
     if(!sendRequest(req_object))
         goto label_exit;
     if(!spy->wait(DEFAULT_READ_WAIT_TIME_MSEC))
         writeSocket.release();
-        //writeSocket.unlock();
-    delete spy;
-    spy = nullptr;
     if(!lastJsonReceived.empty())
 //    { "DATA": { "INTERFACES": [ "wlan0", "wlan1" ] }, "RESULT": "SUCCESS" }
     {
@@ -157,14 +117,12 @@ void NMDaemonCheckStatus::updateStatus()
     {
         req_string = QString::asprintf(CMD_WIFI_SCAN.c_str(), s.toStdString().c_str());
         req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
-        spy = new NMDaemonSpy(this, &NMDaemonCheckStatus::dataReady);
+        //spy = new NMDaemonSpy(this, &NMDaemonCheckStatus::dataReady);
+        spy = std::make_unique<NMDaemonSpy>(this, &NMDaemonClient::dataReady);
         if(!sendRequest(req_object))
             goto label_exit;
         if(!spy->wait(SCAN_READ_WAIT_TIME_MSEC))
             writeSocket.release();
-            //writeSocket.unlock();
-        delete spy;
-        spy = nullptr;
         if(!lastJsonReceived.empty())
         {
             json_value = lastJsonReceived.value("RESULT");
@@ -184,14 +142,12 @@ void NMDaemonCheckStatus::updateStatus()
     {
         req_string = QString::asprintf(CMD_WIFI_STATUS.c_str(), s.toStdString().c_str());
         req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
-        spy = new NMDaemonSpy(this, &NMDaemonCheckStatus::dataReady);
+        //spy = new NMDaemonSpy(this, &NMDaemonCheckStatus::dataReady);
+        spy = std::make_unique<NMDaemonSpy>(this, &NMDaemonClient::dataReady);
         if(!sendRequest(req_object))
             goto label_exit;
         if(!spy->wait(DEFAULT_READ_WAIT_TIME_MSEC))
             writeSocket.release();
-            //writeSocket.unlock();
-        delete spy;
-        spy = nullptr;
         if(!lastJsonReceived.empty())
         {
             json_value = lastJsonReceived.value("RESULT");
@@ -204,11 +160,6 @@ void NMDaemonCheckStatus::updateStatus()
         }
     }
 label_exit:
-    if(spy != nullptr)
-    {
-        delete spy;
-        spy = nullptr;
-    }
     if(ifstatusupdated)
         emit ifStatusUpdated();
     if(netstatusupdated)
@@ -218,19 +169,14 @@ label_exit:
     timerMonitoring->start();
 }
 
-QString NMDaemonCheckStatus::getIfMainAddress(QString ifname) const
-{
-    return "0.0.0.0/0.0.0.0";
-}
-
-QPair<QString,int> NMDaemonCheckStatus::getIfWifiNetwork(QString ifname) const
+QPair<QString,int> NMDaemonCheckStatus::getLastIfWifiNetwork(QString ifname) const
 {
     QPair<QString,int> ret_status;
     QString bssid;
     QJsonObject json_object;
     QJsonValue json_value;
     QJsonArray json_array;
-    int isig=0,inoi=0;
+    int isig=0, inoi=0;
 
     foreach(const auto &ifst, lastWifiIfStatus)
     {
@@ -262,14 +208,14 @@ QPair<QString,int> NMDaemonCheckStatus::getIfWifiNetwork(QString ifname) const
     return ret_status;
 }
 
-QVector<QPair<QString,int>> NMDaemonCheckStatus::getNetsWifiPower(QString ifname) const
+QVector<QPair<QString,int>> NMDaemonCheckStatus::getLastNetsWifiPower(QString ifname) const
 {
     QVector<QPair<QString,int>> nets_power;
     QPair<QString,int> net_status;
     QJsonObject json_object;
     QJsonArray json_array;
     QJsonValue json_value;
-    int isig=0,inoi=0;
+    int isig=0, inoi=0;
 
     foreach(const auto &netst, lastWifiNetStatus)
     {
@@ -292,7 +238,7 @@ QVector<QPair<QString,int>> NMDaemonCheckStatus::getNetsWifiPower(QString ifname
     return nets_power;
 }
 
-QString NMDaemonCheckStatus::getIfStatusString(QString ifname) const
+QString NMDaemonCheckStatus::getLastIfStatusString(QString ifname) const
 {
     QString ret_string;
     QJsonArray json_arr;

@@ -142,7 +142,7 @@ void NetworkTray::programInit(QString device)
   if(device.startsWith(IF_WIFI_PREFIX))
   {
     TrayIcon->setIcon(IconWifiDisconnect);
-    QPair<QString,int> wifi_status = nmdStatus->getIfWifiNetwork(device);
+    QPair<QString,int> wifi_status = nmdStatus->getLastIfWifiNetwork(device);
     if(!wifi_status.first.isEmpty())
     {
         LastWifiNetwork = wifi_status.first;
@@ -164,7 +164,7 @@ void NetworkTray::programInit(QString device)
     TrayIconMenu->addAction(StatusAction);
 
     TrayIconMenu->addAction(SeparatorActions[1]);
-    QVector<QPair<QString,int>> wifi_networks = nmdStatus->getNetsWifiPower(device);
+    QVector<QPair<QString,int>> wifi_networks = nmdStatus->getLastNetsWifiPower(device);
     foreach(const auto &net, wifi_networks)
     {
         if( !wifi_status.first.isEmpty() && (net.first == wifi_status.first) )
@@ -302,8 +302,8 @@ nmworkerieee80211.cpp:82     ERR| Error in execCmdNetList: incorrect data receiv
 //        QMessageBox::warning(this, IfName, "Cannot send WPA_CONNECT command to backend");
 //    delete nmdClient;
     nmdStatus->enableNetwork(IfName, ssid);
-    nmdStatus->saveConfig(IfName);
-    updateStatus();    
+    //nmdStatus->saveConfig(IfName);
+    //updateStatus();
     nmdStatus->startMonitoring();
 }
 
@@ -317,7 +317,6 @@ void NetworkTray::slotUpdatePskAndConnect(QString key, QString ssid, bool hexkey
     else
     {
         qDebug() << "Error updating PSK for network " << ssid;
-        nmdStatus->startMonitoring();
     }
   //Run the wifiQuickConnect function
   //NetworkInterface::wifiQuickConnect(ssid,key,DEVICE->device(), hexkey);
@@ -325,6 +324,7 @@ void NetworkTray::slotUpdatePskAndConnect(QString key, QString ssid, bool hexkey
   //Inform the user that it is connecting (this is done by libtrueos now)
   //QString msg = tr("Connecting to ") + SSID;
   //trayIcon->showMessage( tr("Please Wait"),msg,QSystemTrayIcon::NoIcon,10000);
+    nmdStatus->startMonitoring();
 }
 
 void NetworkTray::slotAddNetworkAndConnect(QString key, QString ssid, bool hexkey)
@@ -357,7 +357,7 @@ void NetworkTray::updateStatus()
     if(IfName.startsWith(IF_WIFI_PREFIX))
     {
         // Update connected network menu item and tray icon
-        QPair<QString,int> wifi_status = nmdStatus->getIfWifiNetwork(IfName);
+        QPair<QString,int> wifi_status = nmdStatus->getLastIfWifiNetwork(IfName);
         //getIfMedia(IfName) if the status is not "Associated" - we should not consider this network as connected to
         if(!wifi_status.first.isEmpty())
         {
@@ -390,7 +390,7 @@ void NetworkTray::updateStatus()
             LastWifiNetwork = "";
         }
         // Update network list
-        QVector<QPair<QString,int>> wifi_networks = nmdStatus->getNetsWifiPower(IfName);
+        QVector<QPair<QString,int>> wifi_networks = nmdStatus->getLastNetsWifiPower(IfName);
         // First outer cycle - by networks
         foreach(const auto &net, wifi_networks)
         {
@@ -467,7 +467,7 @@ void NetworkTray::updateStatus()
 
 void NetworkTray::slotShowIfStatus()
 {
-    QString status = nmdStatus->getIfStatusString(IfName);
+    QString status = nmdStatus->getLastIfStatusString(IfName);
     QMessageBox::information(this, IfName+" "+tr("Status"), status);
 }
 

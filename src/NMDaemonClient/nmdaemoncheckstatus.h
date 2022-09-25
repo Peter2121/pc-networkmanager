@@ -25,7 +25,6 @@ protected:
     NMDaemonSpy* spy;
 public slots:
         void updateStatus();
-        void qqdebug();
 public:
     NMDaemonCheckStatus(int, QString);  // msec
     NMDaemonCheckStatus(QString);  // msec
@@ -38,10 +37,9 @@ public:
     QJsonArray getLastIfStatus() const { return lastIfStatus; };
     QVector<QPair<QString,QJsonObject>> getLastWifiNetStatus() const { return lastWifiNetStatus; };
     QVector<QPair<QString,QJsonObject>> getLastWifiIfStatus() const { return lastWifiIfStatus; };
-    QString getIfMainAddress(QString) const;
-    QPair<QString,int> getIfWifiNetwork(QString ifname) const;  // <SSID,power>
-    QVector<QPair<QString,int>> getNetsWifiPower(QString) const;
-    QString getIfStatusString(QString) const;
+    QPair<QString,int> getLastIfWifiNetwork(QString ifname) const;  // <SSID,power>
+    QVector<QPair<QString,int>> getLastNetsWifiPower(QString) const;
+    QString getLastIfStatusString(QString) const;
     QPair<QString,QString> getIfMedia(QString) const;   // Status, Media
     signals:
         void wifiIfListUpdated();

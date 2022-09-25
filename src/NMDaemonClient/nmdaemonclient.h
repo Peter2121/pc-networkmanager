@@ -47,7 +47,7 @@ protected:
     static inline const QString WIFI_SECURITY_WPA2_PSK = "WPA2-PSK";
     static inline const QString NMD_SOCKET_DEFAULT = "/var/run/nmd.socket";
     static constexpr int NM_MAXBUF = 8192;
-    static constexpr int SOCKET_CONNECT_TIMEOUT_MSEC = 1000;
+    static constexpr int SOCKET_CONNECT_TIMEOUT_MSEC = 500;
     static constexpr std::chrono::milliseconds WAIT_TIME = std::chrono::milliseconds(200);
     static constexpr int WAIT_CYCLES = 10;
     //QLocalSocket* nmdSocket;
@@ -91,11 +91,7 @@ signals:
     void dataReceived();
     void dataError(QString, QString);
 private slots:
-    void slotReadyRead();
-    void slotError(QLocalSocket::LocalSocketError);
-    void slotConnected();
-    void slotDisconnected();
-    void slotStatusChanged(QLocalSocket::LocalSocketState);
+    void slotDataReceived();
     void slotCheckDataResult(QJsonObject);
 };
 
