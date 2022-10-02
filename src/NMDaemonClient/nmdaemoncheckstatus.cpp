@@ -40,6 +40,11 @@ void NMDaemonCheckStatus::startMonitoring()
     timerMonitoring->start();
 }
 
+void NMDaemonCheckStatus::slotStartMonitoring()
+{
+    startMonitoring();
+}
+
 void NMDaemonCheckStatus::stopMonitoring()
 {
     if(isMonitoring)

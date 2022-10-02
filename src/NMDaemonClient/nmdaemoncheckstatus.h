@@ -25,6 +25,7 @@ protected:
     NMDaemonSpy* spy;
 public slots:
         void updateStatus();
+        void slotStartMonitoring();
 public:
     NMDaemonCheckStatus(int, QString);  // msec
     NMDaemonCheckStatus(QString);  // msec

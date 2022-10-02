@@ -30,7 +30,7 @@ private:
     QString ssid;
 signals:
     void saved(QString, QString, bool);
-
+    void cancel();
 
 } ;
 #endif // NETKEY_H

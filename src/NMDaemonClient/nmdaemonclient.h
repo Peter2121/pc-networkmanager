@@ -65,7 +65,13 @@ protected:
 //    QMutex writeSocket;
     QSemaphore writeSocket;
     QString checkDataResultSource;
-    std::function<void()> callbackFunction;
+    std::function<void()> callbackFunctionSuccess;
+    std::function<void()> callbackFunctionError;
+    void cbWifiConnect(QString, QString);
+    void cbWifiNetEnable(QString, QString);
+    void cbWifiNetAdd(QString, QString);
+    void cbSendSuccessWifiNetEnable(QString ssid) { emit successWifiNetEnable(ssid); }
+    void cbSendSuccessWifiNetAdd(QString ssid) { emit successWifiNetAdd(ssid); }
 public:
     NMDaemonClient();
     NMDaemonClient(bool);
@@ -73,7 +79,7 @@ public:
     ~NMDaemonClient();
     bool sendRequest(QJsonObject);
     QString getLastError();
-    std::string connectWifiNetwork(QString, QString);
+    bool connectWifiNetwork(QString, QString);
     bool updatePsk(QString, QString, QString, bool);
     bool addNetwork(QString, QString, QString, bool);
     //bool addOpenNetwork(QString, QString);
@@ -90,6 +96,13 @@ signals:
     void disconnected();
     void dataReceived();
     void dataError(QString, QString);
+    void dataSuccess(QString, QString);
+    void successWifiConnect(QString);
+    void errorWifiConnect(QString, QString);
+    void successWifiNetEnable(QString);
+    void errorWifiNetEnable(QString, QString);
+    void successWifiNetAdd(QString);
+    void errorWifiNetAdd(QString, QString);
 private slots:
     void slotDataReceived();
     void slotCheckDataResult(QJsonObject);

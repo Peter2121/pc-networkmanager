@@ -255,55 +255,61 @@ void NetworkTray::slotConnect()
 void NetworkTray::connectWifiNetwork(QString ssid)
 {
     nmdStatus->stopMonitoring();
-    std::string result = nmdStatus->connectWifiNetwork(IfName, ssid);
-    qDebug() << "connectWifiNetwork to ssid " << ssid << " result: " << QString::fromStdString(result);
-    if(result == JSON_DATA_ERR_NOT_AVAILABLE)
-    {
-        // TODO: Add translations
-        QMessageBox::information(this, QString(JSON_DATA_ERR_NOT_AVAILABLE.c_str()), "The requested network " + ssid + " is not available");
-    }
-    else if( (result == JSON_PARAM_ERR) ||
-             (result == JSON_DATA_ERR_AUTH_FAILED) ||
-             (result == JSON_DATA_ERR_DRV_REQ_FAILED) ) // TODO: Anyway, wait a little and then check the status
-    {
-        dialogNetKey = new netKey();
-        //Insert the SSID into the dialog
-        dialogNetKey->setSSID(ssid);
-        dialogNetKey->showKeyType(true);
-        //connect the signal from the dialog to the quick-connect slot
-        connect(dialogNetKey, SIGNAL( saved(QString,QString,bool) ), this, SLOT( slotUpdatePskAndConnect(QString,QString,bool) ) );
-        //Activate the dialog
-        dialogNetKey->exec();
-    }
-    else if( result == JSON_PARAM_NOTFOUND )
-    {
-        dialogNetKey = new netKey();
-        //Insert the SSID into the dialog
-        dialogNetKey->setSSID(ssid);
-        dialogNetKey->showKeyType(true);
-        //connect the signal from the dialog to the quick-connect slot
-        //connect(dialogNetKey, SIGNAL( saved(QString,QString,bool) ), this, SLOT( slotAddNetworkt(QString,QString,bool) ) );
-        connect(dialogNetKey, SIGNAL( saved(QString,QString,bool) ), this, SLOT( slotAddNetworkAndConnect(QString,QString,bool) ) );
-        //Activate the dialog
-        dialogNetKey->exec();
-    }
-
-/*
-<3>Associated with 04:d1:3a:f4:53:68
-nmworkerwpa.cpp:385   INFO| wpaCtrlCmd received data: <3>Association request to the driver failed
-nmworkerieee80211.cpp:438    ERR| Error in execCmdIfStatus: cannot get bssid for interface wlan0 -> NO WLAN INTERFACE!!!
-nmworkerwpa.cpp:256    ERR| wpaCtrlCmd cannot connect to client socket /tmp/nmd_wpaw.xrEFI : Address already in use
-nmworkerieee80211.cpp:82     ERR| Error in execCmdNetList: incorrect data received from lib80211
-
-*/
-//    QString req_string = QString::asprintf(CMD_CONNECT_WIFI_NETWORK.c_str(), IfName.toStdString().c_str(), action_sender.toStdString().c_str());
-//    QJsonObject req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
-//    if(!nmdStatus->sendRequest(req_object))
-//        QMessageBox::warning(this, IfName, "Cannot send WPA_CONNECT command to backend");
-//    delete nmdClient;
+    connect(nmdStatus, &NMDaemonClient::successWifiConnect, this, &NetworkTray::slotWifiConnectSuccess);
+    connect(nmdStatus, &NMDaemonClient::errorWifiConnect, this, &NetworkTray::slotWifiConnectError);
+    bool result = nmdStatus->connectWifiNetwork(IfName, ssid);
+    //qDebug() << "connectWifiNetwork to ssid " << ssid << " result: " << result;
+    /*
+//<3>Associated with 04:d1:3a:f4:53:68
+//nmworkerwpa.cpp:385   INFO| wpaCtrlCmd received data: <3>Association request to the driver failed
+//nmworkerieee80211.cpp:438    ERR| Error in execCmdIfStatus: cannot get bssid for interface wlan0 -> NO WLAN INTERFACE!!!
+//nmworkerwpa.cpp:256    ERR| wpaCtrlCmd cannot connect to client socket /tmp/nmd_wpaw.xrEFI : Address already in use
+//nmworkerieee80211.cpp:82     ERR| Error in execCmdNetList: incorrect data received from lib80211
     nmdStatus->enableNetwork(IfName, ssid);
     //nmdStatus->saveConfig(IfName);
     //updateStatus();
+    nmdStatus->startMonitoring();
+    */
+}
+
+void NetworkTray::slotWifiConnectError(QString ssid, QString result)
+{
+    if(result.toStdString() == JSON_DATA_ERR_NOT_AVAILABLE)
+    {
+        // TODO: Add translations
+        QMessageBox::information(this, QString(JSON_DATA_ERR_NOT_AVAILABLE.c_str()), "The requested network " + ssid + " is not available");
+        nmdStatus->startMonitoring();
+    }
+    else if( (result.toStdString() == JSON_PARAM_ERR) ||
+             (result.toStdString() == JSON_DATA_ERR_AUTH_FAILED) ||
+             (result.toStdString() == JSON_DATA_ERR_DRV_REQ_FAILED) ) // TODO: Anyway, wait a little and then check the status
+    {
+        dialogNetKey = new netKey();
+        //Insert the SSID into the dialog
+        dialogNetKey->setSSID(ssid);
+        dialogNetKey->showKeyType(true);
+        connect(dialogNetKey, SIGNAL( saved(QString,QString,bool) ), this, SLOT( slotUpdatePskAndConnect(QString,QString,bool) ) );
+        connect(dialogNetKey, SIGNAL( cancel() ), nmdStatus, SLOT( slotStartMonitoring() ) );
+        //Activate the dialog
+        dialogNetKey->exec();
+    }
+    else if( result.toStdString() == JSON_PARAM_NOTFOUND )
+    {
+        dialogNetKey = new netKey();
+        //Insert the SSID into the dialog
+        dialogNetKey->setSSID(ssid);
+        dialogNetKey->showKeyType(true);
+        connect(dialogNetKey, SIGNAL( saved(QString,QString,bool) ), this, SLOT( slotAddNetworkAndConnect(QString,QString,bool) ) );
+        connect(dialogNetKey, SIGNAL( cancel() ), nmdStatus, SLOT( slotStartMonitoring() ) );
+        //Activate the dialog
+        dialogNetKey->exec();
+    }
+}
+
+void NetworkTray::slotWifiConnectSuccess(QString ssid)
+{
+    disconnect(nmdStatus, &NMDaemonClient::successWifiConnect, this, &NetworkTray::slotWifiConnectSuccess);
+    nmdStatus->enableNetwork(IfName, ssid);
     nmdStatus->startMonitoring();
 }
 
@@ -330,15 +336,31 @@ void NetworkTray::slotUpdatePskAndConnect(QString key, QString ssid, bool hexkey
 void NetworkTray::slotAddNetworkAndConnect(QString key, QString ssid, bool hexkey)
 {
     nmdStatus->stopMonitoring();
-    if(nmdStatus->addNetwork(IfName, ssid, key, hexkey))
-    {
-        connectWifiNetwork(ssid);
-    }
-    else
+    connect(nmdStatus, &NMDaemonClient::successWifiNetAdd, this, &NetworkTray::slotWifiConnectNetwork);
+    connect(nmdStatus, &NMDaemonClient::errorWifiNetAdd, this, &NetworkTray::slotWifiAddError);
+    if(!nmdStatus->addNetwork(IfName, ssid, key, hexkey))
     {
         qDebug() << "Error adding network " << ssid;
+        nmdStatus->startMonitoring();
     }
-    //nmdStatus->saveConfig(IfName);
+}
+
+void NetworkTray::slotWifiConnectNetwork(QString ssid)
+{
+    connectWifiNetwork(ssid);
+}
+
+void NetworkTray::slotWifiEnableError(QString ssid, QString result)
+{
+    qDebug() << "Error enabling network " << ssid;
+    QMessageBox::information(this, QString("ERROR"), QString("Cannot enable network ") + ssid);
+    nmdStatus->startMonitoring();
+}
+
+void NetworkTray::slotWifiAddError(QString ssid, QString result)
+{
+    qDebug() << "Error adding network " << ssid;
+    QMessageBox::information(this, QString("ERROR"), QString("Cannot add network ") + ssid);
     nmdStatus->startMonitoring();
 }
 

@@ -61,6 +61,11 @@ private slots:
 //   void slotToggleTorMode(bool enable);
    void slotShowIfStatus();
    void slotShowError(QString, QString);
+   void slotWifiConnectError(QString, QString);
+   void slotWifiConnectSuccess(QString);
+   void slotWifiEnableError(QString, QString);
+   void slotWifiAddError(QString, QString);
+   void slotWifiConnectNetwork(QString ssid);
 
 protected:
    static constexpr short NUM_SEPARATORS = 3;

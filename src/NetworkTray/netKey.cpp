@@ -57,6 +57,7 @@ void netKey::slotApply()
 
 void netKey::slotCancel(){
   close();
+  emit cancel();
 }
 
 
