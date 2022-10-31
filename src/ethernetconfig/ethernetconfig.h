@@ -40,6 +40,7 @@ public:
     {
     nmd_status = new NMDaemonCheckStatus();
 	setupUi(this);
+    IsMain = false;
     }
     ~ethernetconfig()
     {
@@ -49,6 +50,7 @@ public:
     virtual void setDevice(QString Device);
     virtual void showInfo();
     virtual void programInit();
+    void setIsMain(bool);
 
 public slots:
     virtual void slotIPCheckbox();
@@ -81,6 +83,7 @@ private:
     bool useLagg;
     QString DeviceName;
     NMDaemonCheckStatus* nmd_status;
+    bool IsMain;
 
 private slots:
     void loadInfo();

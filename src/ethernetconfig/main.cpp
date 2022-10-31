@@ -57,6 +57,7 @@ int main(int argc, char **argv)
     {
         QString Device = argv[1];
         mainWin->setDevice( Device );
+        mainWin->setIsMain(true);
         //mainWin->setWindowTitle(Device + " " + "configuration");
         mainWin->programInit();
         mainWin->show();

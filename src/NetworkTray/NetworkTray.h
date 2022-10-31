@@ -9,6 +9,8 @@
 #include "netKey.h"
 #include "../backend/backend-network.h"
 #include "../NMDaemonClient/nmdaemoncheckstatus.h"
+#include "../ethernetconfig/ethernetconfig.h"
+#include "../wificonfig/wificonfigwidgetbase.h"
 
 //#define PROGPATH QString("/usr/local/share/trueos/pc-netmanager")
 #define PROGPATH QString("../../../pc-networkmanager")
@@ -98,6 +100,7 @@ protected:
 private:
    backend::NetDevice *DEVICE;
    QString IfName;
+   bool IsWireless;
    QString LastWifiNetwork;
    int LastWifiPower;
 //   void displayTooltip();

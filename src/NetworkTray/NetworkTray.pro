@@ -11,14 +11,28 @@ LIBS	+= -L/usr/local/lib -ltrueos-utils -ltrueos-ui
 LIBS    += /usr/local/lib/libsockpp.a
 
 HEADERS	+= NetworkTray.h netKey.h
+HEADERS	+= ../ethernetconfig/ethernetconfig.h
+HEADERS	+= ../wificonfig/dialogwpaenterprise.h ../wificonfig/dialogwpapersonal.h ../wificonfig/wepconfig.h
+HEADERS	+= ../wificonfig/wificonfigwidgetbase.h ../wificonfig/wifiscanssid.h ../wificonfig/wifiselectiondialog.h
+
 
 SOURCES	+= main.cpp NetworkTray.cpp netKey.cpp
+SOURCES	+= ../ethernetconfig/ethernetconfig.cpp
+SOURCES	+= ../wificonfig/dialogwpaenterprise.cpp ../wificonfig/dialogwpapersonal.cpp ../wificonfig/wepconfig.cpp
+SOURCES	+= ../wificonfig/wificonfigwidgetbase.cpp ../wificonfig/wifiscanssid.cpp ../wificonfig/wifiselectiondialog.cpp
 
 #Include the backend classes for probing network info
 include("../backend/backend.pri")
 include("../NMDaemonClient/NMDaemonClient.pri")
 
 FORMS	+= netKey.ui
+FORMS	+= ../ethernetconfig/ethernetconfig.ui
+FORMS   += ../wificonfig/dialogwpaenterprise.ui ../wificonfig/dialogwpapersonal.ui ../wificonfig/wepconfig.ui
+FORMS   += ../wificonfig/wificonfigwidgetbase.ui ../wificonfig/wifiscanssid.ui ../wificonfig/wifiselectiondialog.ui
+
+
+RESOURCES += ../ethernetconfig/ethernetconfig.qrc
+RESOURCES += ../wificonfig/wificonfig.qrc
 
 TRANSLATIONS =  i18n/NetworkTray_af.ts \
 		i18n/NetworkTray_ar.ts \
@@ -91,5 +105,7 @@ QMAKE_LIBDIR = /usr/local/lib /usr/local/lib/qt5 $$PWD/../../../trueos-libqt5/sr
 TARGET  = pc-nettray
 target.path = /usr/local/bin/
 
-INCLUDEPATH+= /usr/local/include $$PWD/../../../trueos-libqt5/src-qt5/libtrueos/ui $$PWD/../../../trueos-libqt5/src-qt5/libtrueos/utils
+INCLUDEPATH += /usr/local/include $$PWD/../../../trueos-libqt5/src-qt5/libtrueos/ui $$PWD/../../../trueos-libqt5/src-qt5/libtrueos/utils
+INCLUDEPATH += $$PWD/../wificonfig
+INCLUDEPATH += $$PWD/../ethernetconfig
 

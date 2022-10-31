@@ -37,6 +37,7 @@ NetworkTray::NetworkTray(NMDaemonCheckStatus* nmds) : QDialog()
      TrayIcon = nullptr;
      TrayIconMenu = nullptr;
      LastWifiPower = 0;
+     IsWireless = false;
      for(short i=0; i<NUM_SEPARATORS; i++)
      {
          SeparatorActions[i] = nullptr;
@@ -117,6 +118,7 @@ void NetworkTray::programInit(QString device)
 
     if(device.startsWith(IF_WIFI_PREFIX))
     {
+        IsWireless = true;
         ResetAction  = new QAction(tr("&Reset Status"), this);
         ResetAction->setIcon(IconReset);
         connect(ResetAction, &QAction::triggered, this, &NetworkTray::resetWpaSupplicant);
@@ -513,25 +515,20 @@ QIcon NetworkTray::getWifiIcon(int power)
 }
 
 void  NetworkTray::openConfigDlg() {
-//  if(PICOSESSION){ return; }
-  if ( !DEVICE->isWireless() )
-  {
-//    QString program = "sudo";
-    QString program = ETHCONFIGPATH + "/" + "pc-ethernetconfig";
-    QStringList arguments;
-//    arguments << "pc-ethernetconfig" << DEVICE->device();
-    arguments << DEVICE->device();
-    QProcess *runCommandProc = new QProcess(this);
-    runCommandProc->start(program, arguments);
-  } else {
-//    QString program = "sudo";
-    QString program = WIFICONFIGPATH + "/" + "pc-wificonfig";
-    QStringList arguments;
-//    arguments << "pc-wificonfig" << DEVICE->device();
-    arguments << DEVICE->device();
-    QProcess *runCommandProc = new QProcess(this);
-    runCommandProc->start(program, arguments);
-  }
+    ethernetconfig *eth_config = nullptr;
+    wificonfigwidgetbase *wifi_config = nullptr;
+    if(IsWireless)
+    {
+        wifi_config = new wificonfigwidgetbase();
+    }
+    else
+    {
+        eth_config = new ethernetconfig();
+        eth_config->setDevice(IfName);
+        eth_config->setWindowTitle(IfName + " " + "configuration");
+        eth_config->programInit();
+        eth_config->show();
+    }
 }
 
 void NetworkTray::resetWpaSupplicant() {

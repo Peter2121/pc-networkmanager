@@ -48,7 +48,10 @@ using namespace std;
 
 void ethernetconfig::slot_close()
 {
-   exit(0);
+    if(IsMain)
+      exit(0);
+    else
+      this->close();
 }
 
 // Function to check if we have wlan devices on this system
@@ -229,7 +232,7 @@ void ethernetconfig::slotDisableCheck()
 void ethernetconfig::slotOK()
 {
   slot_apply();
-  exit(0);
+  slot_close();
 }
 
 void ethernetconfig::slotIPv6clicked()
@@ -664,4 +667,9 @@ void ethernetconfig::slotConfigWPA()
 {
    // Bring up the WPA-Enterprise config dialog
    QProcess::execute("/usr/local/bin/pc-wificonfig", QStringList() << "wpaonly" << DeviceName);
+}
+
+void ethernetconfig::setIsMain(bool is_main)
+{
+    IsMain = is_main;
 }
