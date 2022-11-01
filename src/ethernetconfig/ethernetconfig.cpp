@@ -43,6 +43,8 @@
 #include "ethernetconfig.h"
 #include "ui_ethernetconfig.h"
 
+#include "ipv4addrinput.h"
+#include "ui_ipv4addrinput.h"
 
 using namespace std;
 
@@ -176,6 +178,7 @@ void ethernetconfig::programInit()
    connect(buttonClose, SIGNAL(clicked()), this, SLOT(slot_close()) );
    connect(buttonApply, SIGNAL(clicked()), this, SLOT(slot_apply()) );
    connect(btnRemoveAlias, SIGNAL(clicked()), this, SLOT(slotRemoveAlias()) );
+   connect(btnAddAlias, SIGNAL(clicked()), this, SLOT(slotAddAlias()) );
    connect(checkDisableNetwork, SIGNAL(clicked()), this, SLOT(slotDisableCheck()) );
    connect(groupStatic, SIGNAL(clicked()), this, SLOT(slotIPCheckbox()) );
    connect(groupWPAE, SIGNAL(clicked()), this, SLOT(slotIPCheckbox()) );
@@ -691,4 +694,19 @@ void ethernetconfig::slotRemoveAlias()
     QListWidgetItem *it = listAliases->currentItem();
     listAliases->removeItemWidget(it);
     delete it;
+}
+
+void ethernetconfig::slotAddAlias()
+{
+    Ipv4addrinput *ain = new Ipv4addrinput();
+    const QString title = "Add IPv4 alias to " + DeviceName;
+    ain->setWindowTitle(title);
+    connect(ain, SIGNAL( saved(QString,QString) ), this, SLOT( slotAddAliasToList(QString,QString) ) );
+    ain->exec();
+}
+
+void ethernetconfig::slotAddAliasToList(QString addr, QString mask)
+{
+    QString str_value = addr + " / " + mask;
+    listAliases->addItem(str_value);
 }

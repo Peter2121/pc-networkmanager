@@ -10,12 +10,15 @@ CONFIG += c++17
 LIBS	+= -L/usr/local/lib -ltrueos-utils -ltrueos-ui
 LIBS    += /usr/local/lib/libsockpp.a
 
-HEADERS	+= ethernetconfig.h
+HEADERS	+= ethernetconfig.h \
+    ipv4addrinput.h
 
-SOURCES	+= main.cpp ethernetconfig.cpp
+SOURCES	+= main.cpp ethernetconfig.cpp \
+    ipv4addrinput.cpp
 include("../NMDaemonClient/NMDaemonClient.pri")
 
-FORMS	= ethernetconfig.ui 
+FORMS	= ethernetconfig.ui  \
+    ipv4addrinput.ui
 
 RESOURCES += ethernetconfig.qrc
 

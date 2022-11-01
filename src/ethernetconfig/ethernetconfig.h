@@ -24,6 +24,7 @@
 #include <qdialog.h>
 #include <qwidget.h>
 #include "ui_ethernetconfig.h"
+#include "ui_ipv4addrinput.h"
 #include "../NMDaemonClient/nmdaemoncheckstatus.h"
 #include "../NMDaemonClient/nmdaemonspy.h"
 
@@ -61,7 +62,8 @@ public slots:
     virtual void slotIPv6clicked();
     virtual void slotMacClicked();
     virtual void slotRemoveAlias();
-//    virtual void slotAddAlias();
+    virtual void slotAddAlias();
+    virtual void slotAddAliasToList(QString, QString);
 
 private:
     void runCommand( QString command );
