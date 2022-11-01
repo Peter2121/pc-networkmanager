@@ -165,6 +165,7 @@ void ethernetconfig::programInit()
    //slotIPCheckbox();
    // Done, now set the apply button to on
    buttonApply->setEnabled(false);
+
    if(DeviceName.isEmpty())
    {
        qDebug() << "Device name not set!";
@@ -458,6 +459,8 @@ void ethernetconfig::slotFinishLoad()
    //if ( tmp.indexOf("WPA") != -1 )
    //   groupWPAE->setChecked(true);
 
+   checkIPv6Enable->setChecked(true);   // TODO: Check it in rc.conf
+   groupIPv6->setEnabled(false);
    QJsonArray if_status = nmd_status->getLastIfStatus();
    QString primary_ipv4 = nmd_status->getIPv4Address(DeviceName);
    if(!if_status.empty())

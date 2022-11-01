@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>422</width>
-    <height>595</height>
+    <height>588</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -87,9 +87,9 @@
    <item row="0" column="0">
     <widget class="QTabWidget" name="tabMainWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
-     <widget class="QWidget" name="tab">
+     <widget class="QWidget" name="tabGeneral">
       <attribute name="title">
        <string>&amp;General</string>
       </attribute>
@@ -205,68 +205,21 @@
         </widget>
        </item>
        <item>
-        <widget class="QGroupBox" name="groupIPv6_2">
-         <property name="title">
-          <string>IPv6 static address</string>
+        <spacer name="verticalSpacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
          </property>
-         <layout class="QGridLayout" name="_2">
-          <item row="0" column="1">
-           <widget class="QLineEdit" name="lineIPv6Address_2"/>
-          </item>
-          <item row="0" column="0">
-           <widget class="QLabel" name="textLabel1_3">
-            <property name="text">
-             <string>Address:</string>
-            </property>
-            <property name="wordWrap">
-             <bool>false</bool>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </item>
-       <item>
-        <widget class="QGroupBox" name="groupWPAE">
-         <property name="enabled">
-          <bool>false</bool>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>73</height>
+          </size>
          </property>
-         <property name="title">
-          <string>Enable WPA authentication</string>
-         </property>
-         <property name="checkable">
-          <bool>true</bool>
-         </property>
-         <property name="checked">
-          <bool>false</bool>
-         </property>
-         <layout class="QGridLayout" name="gridLayout_2">
-          <item row="0" column="0">
-           <widget class="QPushButton" name="pushWPAE">
-            <property name="text">
-             <string>Configure &amp;WPA</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <spacer name="horizontalSpacer">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>125</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-         </layout>
-        </widget>
+        </spacer>
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="TabPage">
+     <widget class="QWidget" name="tabAdvanced">
       <attribute name="title">
        <string>Advanced</string>
       </attribute>
@@ -335,6 +288,44 @@
         </widget>
        </item>
        <item>
+        <widget class="QGroupBox" name="groupWPAE">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="title">
+          <string>Enable WPA authentication</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <property name="checked">
+          <bool>false</bool>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_3">
+          <item row="0" column="0">
+           <widget class="QPushButton" name="pushWPAE">
+            <property name="text">
+             <string>Configure &amp;WPA</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <spacer name="horizontalSpacer_2">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>125</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
         <spacer name="spacer11">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
@@ -352,7 +343,7 @@
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="TabPage2">
+     <widget class="QWidget" name="tabInfo">
       <attribute name="title">
        <string>I&amp;nfo</string>
       </attribute>
@@ -377,7 +368,7 @@
         <rect>
          <x>10</x>
          <y>6</y>
-         <width>311</width>
+         <width>381</width>
          <height>321</height>
         </rect>
        </property>
@@ -564,7 +555,7 @@
          <rect>
           <x>95</x>
           <y>290</y>
-          <width>201</width>
+          <width>271</width>
           <height>20</height>
          </rect>
         </property>
@@ -580,7 +571,7 @@
          <rect>
           <x>95</x>
           <y>161</y>
-          <width>201</width>
+          <width>271</width>
           <height>20</height>
          </rect>
         </property>
@@ -596,7 +587,7 @@
          <rect>
           <x>95</x>
           <y>133</y>
-          <width>201</width>
+          <width>271</width>
           <height>20</height>
          </rect>
         </property>
@@ -612,7 +603,7 @@
          <rect>
           <x>95</x>
           <y>105</y>
-          <width>201</width>
+          <width>271</width>
           <height>20</height>
          </rect>
         </property>
@@ -634,7 +625,7 @@
          <rect>
           <x>95</x>
           <y>30</y>
-          <width>201</width>
+          <width>271</width>
           <height>61</height>
          </rect>
         </property>
@@ -662,7 +653,7 @@
          <rect>
           <x>95</x>
           <y>189</y>
-          <width>201</width>
+          <width>271</width>
           <height>20</height>
          </rect>
         </property>
@@ -678,7 +669,7 @@
          <rect>
           <x>95</x>
           <y>219</y>
-          <width>201</width>
+          <width>271</width>
           <height>61</height>
          </rect>
         </property>
