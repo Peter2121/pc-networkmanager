@@ -60,7 +60,8 @@ public slots:
     virtual void slotOK();
     virtual void slotIPv6clicked();
     virtual void slotMacClicked();
-
+    virtual void slotRemoveAlias();
+//    virtual void slotAddAlias();
 
 private:
     void runCommand( QString command );

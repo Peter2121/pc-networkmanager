@@ -518,3 +518,33 @@ void NMDaemonClient::slotCheckDataResult(QJsonObject data)
     }
 }
 
+QString NMDaemonClient::getIPv4Address(QString ifname)
+{
+    QString req_string = QString::asprintf(CMD_GET_IPV4_ADDRESS.c_str(), ifname.toStdString().c_str());
+    QJsonObject req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
+    lastJsonReceived = QJsonObject();
+    std::unique_ptr<NMDaemonSpy> readspy = std::make_unique<NMDaemonSpy>(this, &NMDaemonClient::dataReady);
+    QJsonObject json_object;
+    QJsonValue json_value;
+    QString addr;
+
+    if(!sendRequest(req_object))
+    {
+        return addr;
+    }
+    readspy->wait(DEFAULT_READ_WAIT_TIME_MSEC);
+    if(!lastJsonReceived.empty())
+    {
+        if(checkSuccess(lastJsonReceived))
+        {
+            json_value = lastJsonReceived.value(QString::fromStdString(JSON_PARAM_DATA));
+            json_object = json_value.toObject();
+            if(!json_object.empty())
+            {
+                json_value = json_object.value(QString::fromStdString(JSON_PARAM_IPV4_ADDR));
+                addr = json_value.toString();
+            }
+        }
+    }
+    return addr;
+}

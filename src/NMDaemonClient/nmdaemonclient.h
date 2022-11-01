@@ -38,6 +38,7 @@ protected:
     static inline const std::string CMD_WPA_ENABLE_NETWORK = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_SETPARAM\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\", \"NETID\" : %d, \"PARAM_NAME\" : \"disabled\", \"PARAM_VALUE\" : \"0\", \"PARAM_QUOTES\" : false } }";
     static inline const std::string CMD_WIFI_SCAN_RESULTS = "{ \"SCOPE\" : \"WIFI\", \"CMD\" : \"WIFI_SCAN_RESULTS\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\" } }";
     static inline const std::string CMD_WIFI_SCAN = "{ \"SCOPE\" : \"WIFI\", \"CMD\" : \"WIFI_SCAN\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\" } }";
+    static inline const std::string CMD_GET_IPV4_ADDRESS = "{ \"SCOPE\" : \"INTERFACE\", \"CMD\" : \"IP4_ADDR_GET\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\" } }";
     //static inline const QString CMD_GET_WPA_IF_LIST = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_LIST_IF\" }";
     //static inline const QString CMD_GWPA_TSAV = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_SAVE\", \"DATA\" : { \"INTERFACE NAME\" : \"wlan0\" } }";
     static inline const QString WIFI_SECURITY_ERROR = "ERROR";
@@ -90,6 +91,7 @@ public:
     QJsonObject getJsonForSsid(QString);
     QString getWifiNetworkSecurity(QString, QString);
     bool checkSuccess(QJsonObject);
+    QString getIPv4Address(QString);
 signals:
     void dataReady(QJsonObject);
     void connected();

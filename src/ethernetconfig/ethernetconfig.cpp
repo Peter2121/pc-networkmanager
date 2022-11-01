@@ -67,12 +67,12 @@ bool ethernetconfig::isWifiEnabled() {
 void ethernetconfig::slot_apply()
 {
 
-   QString ifConfigLine;
+//   QString ifConfigLine;
 
     if ( ! buttonApply->isEnabled() )
 	return;
 
-
+/*
     // If the user disabled the device, do so now
     if ( checkDisableNetwork->isChecked() )
     {
@@ -148,7 +148,7 @@ void ethernetconfig::slot_apply()
       NetworkInterface::enableLagg(QString("wlan0"));
     
    trueos::Utils::restartNetworking();
-
+*/
    // Done, now set the apply button to off
    buttonApply->setEnabled(false);
 }
@@ -174,6 +174,7 @@ void ethernetconfig::programInit()
    // Connect our buttons / slots
    connect(buttonClose, SIGNAL(clicked()), this, SLOT(slot_close()) );
    connect(buttonApply, SIGNAL(clicked()), this, SLOT(slot_apply()) );
+   connect(btnRemoveAlias, SIGNAL(clicked()), this, SLOT(slotRemoveAlias()) );
    connect(checkDisableNetwork, SIGNAL(clicked()), this, SLOT(slotDisableCheck()) );
    connect(groupStatic, SIGNAL(clicked()), this, SLOT(slotIPCheckbox()) );
    connect(groupWPAE, SIGNAL(clicked()), this, SLOT(slotIPCheckbox()) );
@@ -458,6 +459,7 @@ void ethernetconfig::slotFinishLoad()
    //   groupWPAE->setChecked(true);
 
    QJsonArray if_status = nmd_status->getLastIfStatus();
+   QString primary_ipv4 = nmd_status->getIPv4Address(DeviceName);
    if(!if_status.empty())
    {
        foreach (const QJsonValue &v, if_status)
@@ -485,10 +487,17 @@ void ethernetconfig::slotFinishLoad()
                str_value = json_obj.value(str_type).toObject().value("IPV4 ADDRESS").toString();
                if(!str_value.isEmpty())
                {
-                   lineIP->setText(str_value);
-                   str_value = json_obj.value(str_type).toObject().value("IPV4 SUBNET MASK").toString();
-                   lineNetmask->setText(str_value);
-                   break;   // TODO: What should we do if there are several IPv4 addresses??
+                   if(str_value == primary_ipv4)
+                   {
+                       lineIP->setText(str_value);
+                       str_value = json_obj.value(str_type).toObject().value("IPV4 SUBNET MASK").toString();
+                       lineNetmask->setText(str_value);
+                   }
+                   else
+                   {
+                       str_value += " / " + json_obj.value(str_type).toObject().value("IPV4 SUBNET MASK").toString();
+                       listAliases->addItem(str_value);
+                   }
                }
                /*
                str_value = json_obj.value(str_type).toObject().value("IPV6 ADDRESS").toString();
@@ -672,4 +681,11 @@ void ethernetconfig::slotConfigWPA()
 void ethernetconfig::setIsMain(bool is_main)
 {
     IsMain = is_main;
+}
+
+void ethernetconfig::slotRemoveAlias()
+{
+    QListWidgetItem *it = listAliases->currentItem();
+    listAliases->removeItemWidget(it);
+    delete it;
 }
