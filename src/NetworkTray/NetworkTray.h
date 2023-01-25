@@ -28,6 +28,8 @@ class NetworkTray : public QDialog {
 private:
     static inline const QString IF_WIFI_PREFIX = "wlan";
     static constexpr short UPDATE_MSEC = 5000;
+    static constexpr short WIFI_CONNECT_MAX_RETRIES = 5;
+    static constexpr short WIFI_CONNECT_RETRY_MSEC = 3000;
     static constexpr int IDLE_REFRESH_TIME_MSEC = 180000;
     static constexpr int ACTIVE_REFRESH_TIME_MSEC = 10000;
     static inline const std::string CMD_CONNECT_WIFI_NETWORK = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_CONNECT\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\", \"SSID\" : \"%s\" } }";
@@ -103,6 +105,7 @@ private:
    bool IsWireless;
    QString LastWifiNetwork;
    int LastWifiPower;
+   int numWifiConnectRetries;
 //   void displayTooltip();
    void loadIcons();
    void connectWifiNetwork(QString);

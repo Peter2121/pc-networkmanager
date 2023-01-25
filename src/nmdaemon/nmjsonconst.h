@@ -34,6 +34,7 @@ const std::string JSON_PARAM_IF_NAME = "INTERFACE NAME";
 const std::string JSON_PARAM_RT_NAME = "ROUTE NAME";
 const std::string JSON_PARAM_MTU = "MTU";
 const std::string JSON_PARAM_DHCP_ENABLED = "DHCP_ENABLED";
+const std::string JSON_DATA_DHCP_STATUS = "DHCP STATUS";
 const std::string JSON_PARAM_ADDRESSES = "ADDRESSES";
 const std::string JSON_PARAM_INTERFACES = "INTERFACES";
 const std::string JSON_PARAM_ROUTES = "ROUTES";

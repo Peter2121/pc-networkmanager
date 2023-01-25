@@ -548,3 +548,37 @@ QString NMDaemonClient::getIPv4Address(QString ifname)
     }
     return addr;
 }
+
+bool NMDaemonClient::isDhcpEnabled(QString ifname)
+{
+    QString req_string = QString::asprintf(CMD_GET_IPV4_DHCP_STATUS.c_str(), ifname.toStdString().c_str());
+    QJsonObject req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
+    lastJsonReceived = QJsonObject();
+    std::unique_ptr<NMDaemonSpy> readspy = std::make_unique<NMDaemonSpy>(this, &NMDaemonClient::dataReady);
+    QJsonObject json_object;
+    QJsonValue json_value;
+    QString str_status;
+    bool status = false;
+
+    if(!sendRequest(req_object))
+    {
+        return status;
+    }
+    readspy->wait(DEFAULT_READ_WAIT_TIME_MSEC);
+    if(!lastJsonReceived.empty())
+    {
+        if(checkSuccess(lastJsonReceived))
+        {
+            json_value = lastJsonReceived.value(QString::fromStdString(JSON_PARAM_DATA));
+            json_object = json_value.toObject();
+            if(!json_object.empty())
+            {
+                json_value = json_object.value(QString::fromStdString(JSON_DATA_DHCP_STATUS));
+                str_status = json_value.toString();
+                if(str_status.toStdString()==JSON_DATA_ENABLED)
+                    status = true;
+            }
+        }
+    }
+    return status;
+}

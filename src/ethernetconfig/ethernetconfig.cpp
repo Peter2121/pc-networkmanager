@@ -466,6 +466,7 @@ void ethernetconfig::slotFinishLoad()
    groupIPv6->setEnabled(false);
    QJsonArray if_status = nmd_status->getLastIfStatus();
    QString primary_ipv4 = nmd_status->getIPv4Address(DeviceName);
+   bool dhcp_enabled = nmd_status->isDhcpEnabled(DeviceName);
    if(!if_status.empty())
    {
        foreach (const QJsonValue &v, if_status)
@@ -482,8 +483,10 @@ void ethernetconfig::slotFinishLoad()
                 qDebug() << "Unknown device media: " << str_value;
                 return;
            }
-           // TODO: check here if this is a static or DHCP provided address
-           groupStatic->setChecked(true);
+           if(dhcp_enabled)
+               groupStatic->setChecked(false);
+           else
+               groupStatic->setChecked(true);
            json_array = json_object.value("ADDRESSES").toArray();
            foreach(auto addr, json_array)
            {

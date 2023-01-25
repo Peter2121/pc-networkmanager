@@ -37,6 +37,7 @@ NetworkTray::NetworkTray(NMDaemonCheckStatus* nmds) : QDialog()
      TrayIcon = nullptr;
      TrayIconMenu = nullptr;
      LastWifiPower = 0;
+     numWifiConnectRetries = 0;
      IsWireless = false;
      for(short i=0; i<NUM_SEPARATORS; i++)
      {
@@ -250,16 +251,26 @@ QString NetworkTray::getWifiStatusLine(QPair<QString,int> wifi_status, bool conn
 void NetworkTray::slotConnect()
 {
 // TODO: check if psk is already present in WPA config file and ask user for the psk if needed
+    if(numWifiConnectRetries>0)
+        return;
     QString ssid = sender()->property("text").toString().split(" ").at(0);
+    numWifiConnectRetries = 0;
     connectWifiNetwork(ssid);
 }
 
 void NetworkTray::connectWifiNetwork(QString ssid)
 {
+    if(numWifiConnectRetries>WIFI_CONNECT_MAX_RETRIES)
+    {
+        numWifiConnectRetries = 0;
+        return;
+    }
+    if(numWifiConnectRetries>0)
+        qDebug() << "Retrying connect to ssid " << ssid << " for the " << numWifiConnectRetries << "nd time";
     nmdStatus->stopMonitoring();
     connect(nmdStatus, &NMDaemonClient::successWifiConnect, this, &NetworkTray::slotWifiConnectSuccess);
     connect(nmdStatus, &NMDaemonClient::errorWifiConnect, this, &NetworkTray::slotWifiConnectError);
-    bool result = nmdStatus->connectWifiNetwork(IfName, ssid);
+    nmdStatus->connectWifiNetwork(IfName, ssid);
     //qDebug() << "connectWifiNetwork to ssid " << ssid << " result: " << result;
     /*
 //<3>Associated with 04:d1:3a:f4:53:68
@@ -283,8 +294,7 @@ void NetworkTray::slotWifiConnectError(QString ssid, QString result)
         nmdStatus->startMonitoring();
     }
     else if( (result.toStdString() == JSON_PARAM_ERR) ||
-             (result.toStdString() == JSON_DATA_ERR_AUTH_FAILED) ||
-             (result.toStdString() == JSON_DATA_ERR_DRV_REQ_FAILED) ) // TODO: Anyway, wait a little and then check the status
+             (result.toStdString() == JSON_DATA_ERR_AUTH_FAILED) )
     {
         dialogNetKey = new netKey();
         //Insert the SSID into the dialog
@@ -305,6 +315,11 @@ void NetworkTray::slotWifiConnectError(QString ssid, QString result)
         connect(dialogNetKey, SIGNAL( cancel() ), nmdStatus, SLOT( slotStartMonitoring() ) );
         //Activate the dialog
         dialogNetKey->exec();
+    }
+    else if( result.toStdString() == JSON_DATA_ERR_DRV_REQ_FAILED )
+    {
+        nmdStatus->startMonitoring();
+        QTimer::singleShot(WIFI_CONNECT_RETRY_MSEC, this, [=]() { connectWifiNetwork(ssid); } );
     }
 }
 
