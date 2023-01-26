@@ -36,10 +36,11 @@
 #include <QTextStream>
 #include <QTimer>
 #include <QTranslator>
-
+/*
 #include <trueos-netif.h>
 #include <trueos-utils.h>
-
+*/
+#include "../Utils/utils.h"
 #include "ethernetconfig.h"
 #include "ui_ethernetconfig.h"
 
@@ -57,6 +58,7 @@ void ethernetconfig::slot_close()
 }
 
 // Function to check if we have wlan devices on this system
+/*
 bool ethernetconfig::isWifiEnabled() {
 	QString command = "ifconfig -l";
 	QString inputLine = getLineFromCommandOutput(command);
@@ -65,11 +67,12 @@ bool ethernetconfig::isWifiEnabled() {
 	else
 		return false;
 }
+*/
 
 void ethernetconfig::slot_apply()
 {
 
-//   QString ifConfigLine;
+    QString ifConfigLine;
 
     if ( ! buttonApply->isEnabled() )
 	return;
@@ -83,7 +86,7 @@ void ethernetconfig::slot_apply()
       buttonApply->setEnabled(false);
       return;
     }
-
+*/
     
     if ( groupStatic->isChecked() )
     {
@@ -93,43 +96,44 @@ void ethernetconfig::slot_apply()
 	    return;
 	}
 	
-	if ( ! trueos::Utils::validateIPV4(lineIP->text() ) ) {
+    if ( ! Utils::validateIPv4(lineIP->text() ) ) {
 	    QMessageBox::warning( this, tr("Warning"),
 	    tr("IP Address is out of range! (") + lineIP->text() + tr(") Fields must be between 0-255.") );
 	   return;
                }
 	
-	if ( ! trueos::Utils::validateIPV4(lineNetmask->text() ) ) {
+    if ( ! Utils::validateIPv4(lineNetmask->text() ) ) {
 	    QMessageBox::warning( this, tr("Warning"),
 	    tr("Netmask is out of range! (") + lineNetmask->text() + tr(") Fields must be between 0-255.") );
 	   return;
                }
-
+/*
 	if ( groupWPAE->isChecked() )
 	  ifConfigLine="WPA ";
-	
+*/
 	if ( checkMAC->isChecked() ) 
 	    ifConfigLine+=lineIP->text() + " netmask " + lineNetmask->text();
 	else
 	    ifConfigLine+=lineIP->text() \
                         +" netmask " + lineNetmask->text() \
                         + " ether " + lineMAC->text();
-	
-    } else {
+    }
+/*
+    else {
 	// Using WPAE config?
 	if ( groupWPAE->isChecked() )
 	  ifConfigLine="WPA DHCP";
 	else
 	  ifConfigLine="DHCP";
     }
-
+*/
     if ( checkIPv6Enable->isChecked() ) {
        // Get rid of the ifconfig line for the ipv6 interface
        // Remove old deprecated syntax as well:
-       trueos::Utils::setConfFileValue( "/etc/rc.conf", "ipv6_ifconfig_" + DeviceName + "=", "", -1);
-       trueos::Utils::setConfFileValue( "/etc/rc.conf", "ifconfig_" + DeviceName + "_ipv6=", "", -1);
+       //trueos::Utils::setConfFileValue( "/etc/rc.conf", "ipv6_ifconfig_" + DeviceName + "=", "", -1);
+       //trueos::Utils::setConfFileValue( "/etc/rc.conf", "ifconfig_" + DeviceName + "_ipv6=", "", -1);
        // Set accept_rtadv
-       trueos::Utils::setConfFileValue( "/etc/rc.conf", "ifconfig_" + DeviceName + "_ipv6=", "ifconfig_" + DeviceName + "_ipv6=\"inet6 accept_rtadv\"", -1);
+       //trueos::Utils::setConfFileValue( "/etc/rc.conf", "ifconfig_" + DeviceName + "_ipv6=", "ifconfig_" + DeviceName + "_ipv6=\"inet6 accept_rtadv\"", -1);
     } else {
        // Set static address and disbale accept_rtadv.  This means someone will also have to set
        // the default gateway which currently is configured form the advanced tab.  This should
@@ -139,12 +143,12 @@ void ethernetconfig::slot_apply()
           if (!tmp.contains(QRegExp("^inet6 "))) {
 	     tmp.prepend("inet6 ");
           }
-          trueos::Utils::setConfFileValue( "/etc/rc.conf", "ifconfig_" + DeviceName + "_ipv6=", "ifconfig_" + DeviceName + "_ipv6=\"" + tmp + " -accept_rtadv\"", -1);
+          //trueos::Utils::setConfFileValue( "/etc/rc.conf", "ifconfig_" + DeviceName + "_ipv6=", "ifconfig_" + DeviceName + "_ipv6=\"" + tmp + " -accept_rtadv\"", -1);
        }
     }
 
-   trueos::Utils::setConfFileValue( "/etc/rc.conf", "ifconfig_" + DeviceName + "=", "ifconfig_" + DeviceName + "=\"" + ifConfigLine + "\"", -1); 
-
+   //trueos::Utils::setConfFileValue( "/etc/rc.conf", "ifconfig_" + DeviceName + "=", "ifconfig_" + DeviceName + "=\"" + ifConfigLine + "\"", -1);
+/*
    // See if we need to enable lagg on this device
    if ( isWifiEnabled() && useLagg )
       NetworkInterface::enableLagg(QString("wlan0"));
@@ -359,7 +363,7 @@ void ethernetconfig::loadInfo()
   // Connect the slot to refresh
   //QTimer::singleShot(3000,  this,  SLOT(loadInfo()));
 }
-
+/*
 QString ethernetconfig::getNameForIdent( QString ident )
 {
     NetworkInterface ifr(ident);
@@ -413,7 +417,7 @@ QString ethernetconfig::getNetmaskForIdent( QString ident )
    NetworkInterface ifr(ident);
    return ifr.netmaskAsString();
 }
-
+*/
 QString ethernetconfig::getLineFromCommandOutput( QString command )
 {
 	FILE *file = popen(command.toLatin1(),"r"); 
@@ -620,7 +624,7 @@ void ethernetconfig::slotFinishLoad()
 
   buttonApply->setEnabled(false);
 }
-
+/*
 QString ethernetconfig::getIPv6ForIdent(QString ident)
 {
 	QString command = "nice ifconfig " +ident + " | grep \"inet6 \"";
@@ -674,7 +678,7 @@ QString ethernetconfig::getMediaForIdent( QString ident )
 	
 	return status;
 }
-
+*/
 void ethernetconfig::slotCheckGlobalText()
 {
   // Done, now set the apply button to off

@@ -67,6 +67,7 @@ public slots:
 
 private:
     void runCommand( QString command );
+    /*
     QString getNetmaskForIdent( QString ident );
     QString getOutErrorsForIdent(QString ident);
     QString getOutPacketsForIdent(QString ident);
@@ -76,11 +77,12 @@ private:
     QString getMacForIdent( QString ident );
     QString getIpForIdent( QString ident );
     QString getNameForIdent( QString ident );
-    QString getLineFromCommandOutput( QString command );
     QString getGatewayForIdent(QString ident);
     QString getIPv6ForIdent(QString ident);
     QString getMediaForIdent( QString ident );
-    bool isWifiEnabled();
+    */
+    QString getLineFromCommandOutput( QString command );
+//    bool isWifiEnabled();
     void saveLaggLine(QString dev, QString config);
     void setupEthLagg(QString dev);
     bool useLagg;

@@ -24,6 +24,7 @@ SOURCES	+= ../wificonfig/wificonfigwidgetbase.cpp ../wificonfig/wifiscanssid.cpp
 #Include the backend classes for probing network info
 include("../backend/backend.pri")
 include("../NMDaemonClient/NMDaemonClient.pri")
+include("../Utils/Utils.pri")
 
 FORMS	+= netKey.ui
 FORMS	+= ../ethernetconfig/ethernetconfig.ui ../ethernetconfig/ipv4addrinput.ui

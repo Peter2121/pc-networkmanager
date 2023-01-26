@@ -16,6 +16,7 @@ HEADERS	+= ethernetconfig.h \
 SOURCES	+= main.cpp ethernetconfig.cpp \
     ipv4addrinput.cpp
 include("../NMDaemonClient/NMDaemonClient.pri")
+include("../Utils/Utils.pri")
 
 FORMS	= ethernetconfig.ui  \
     ipv4addrinput.ui

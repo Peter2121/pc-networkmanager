@@ -40,6 +40,13 @@ protected:
     static inline const std::string CMD_WIFI_SCAN = "{ \"SCOPE\" : \"WIFI\", \"CMD\" : \"WIFI_SCAN\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\" } }";
     static inline const std::string CMD_GET_IPV4_ADDRESS = "{ \"SCOPE\" : \"INTERFACE\", \"CMD\" : \"IP4_ADDR_GET\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\" } }";
     static inline const std::string CMD_GET_IPV4_DHCP_STATUS = "{ \"SCOPE\" : \"INTERFACE\", \"CMD\" : \"IP4_GET_DHCP_STATUS\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\" } }";
+    static inline const std::string CMD_SET_IPV4_ADDRESS = "{ \"SCOPE\" : \"INTERFACE\", \"CMD\" : \"IP_ADDR_SET\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\", \"IPV4 ADDRESS\" : \"%s\", \"IPV4 SUBNET MASK\" : \"%s\" } }";
+    static inline const std::string CMD_ADD_IPV4_ADDRESS = "{ \"SCOPE\" : \"INTERFACE\", \"CMD\" : \"IP_ADDR_ADD\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\", \"IPV4 ADDRESS\" : \"%s\", \"IPV4 SUBNET MASK\" : \"%s\" } }";
+    static inline const std::string CMD_REMOVE_IPV4_ADDRESS = "{ \"SCOPE\" : \"INTERFACE\", \"CMD\" : \"IP_ADDR_REMOVE\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\", \"IPV4 ADDRESS\" : \"%s\", \"IPV4 SUBNET MASK\" : \"%s\" } }";
+    static inline const std::string CMD_IF_ENABLE = "{ \"SCOPE\" : \"SYSTEM\", \"CMD\" : \"IF_ENABLE\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\" } }";
+    static inline const std::string CMD_IF_DISABLE = "{ \"SCOPE\" : \"SYSTEM\", \"CMD\" : \"IF_DISABLE\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\" } }";
+
+
     //static inline const QString CMD_GET_WPA_IF_LIST = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_LIST_IF\" }";
     //static inline const QString CMD_GWPA_TSAV = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_SAVE\", \"DATA\" : { \"INTERFACE NAME\" : \"wlan0\" } }";
     static inline const QString WIFI_SECURITY_ERROR = "ERROR";
@@ -94,6 +101,11 @@ public:
     bool checkSuccess(QJsonObject);
     QString getIPv4Address(QString);
     bool isDhcpEnabled(QString);
+    bool setIPv4Address(QString, QString, QString);
+    bool addIPv4Address(QString, QString, QString);
+    bool removeIPv4Address(QString, QString, QString);
+    bool enableInterface(QString);
+    bool disableInterface(QString);
 signals:
     void dataReady(QJsonObject);
     void connected();
