@@ -77,46 +77,49 @@ void ethernetconfig::slot_apply()
     if ( ! buttonApply->isEnabled() )
 	return;
 
-/*
-    // If the user disabled the device, do so now
     if ( checkDisableNetwork->isChecked() )
     {
-      trueos::Utils::setConfFileValue( "/etc/rc.conf", "ifconfig_" + DeviceName + "=", "", -1);
-      runCommand("ifconfig " + DeviceName + " down");
-      buttonApply->setEnabled(false);
+      if(nmd_status->disableInterface(DeviceName))
+         buttonApply->setEnabled(false);
       return;
     }
-*/
+
     
     if ( groupStatic->isChecked() )
     {
-	if ( lineIP->text() == "..." || lineNetmask->text() == "..." ) {
-	    QMessageBox::information( this, tr("Missing Fields"),
-                    tr("You must enter an IP and Netmask to continue!\n") );
-	    return;
-	}
+        if ( lineIP->text() == "..." || lineNetmask->text() == "..." )
+        {
+            QMessageBox::information( this, tr("Missing Fields"),
+                        tr("You must enter an IP and Netmask to continue!\n") );
+            return;
+        }
 	
-    if ( ! Utils::validateIPv4(lineIP->text() ) ) {
-	    QMessageBox::warning( this, tr("Warning"),
-	    tr("IP Address is out of range! (") + lineIP->text() + tr(") Fields must be between 0-255.") );
-	   return;
-               }
-	
-    if ( ! Utils::validateIPv4(lineNetmask->text() ) ) {
-	    QMessageBox::warning( this, tr("Warning"),
-	    tr("Netmask is out of range! (") + lineNetmask->text() + tr(") Fields must be between 0-255.") );
-	   return;
-               }
+        if ( ! Utils::validateIPv4(lineIP->text() ) )
+        {
+            QMessageBox::warning( this, tr("Warning"),
+            tr("IP Address is out of range! (") + lineIP->text() + tr(") Fields must be between 0-255.") );
+            return;
+        }
+
+        if ( ! Utils::validateIPv4(lineNetmask->text() ) )
+        {
+            QMessageBox::warning( this, tr("Warning"),
+            tr("Netmask is out of range! (") + lineNetmask->text() + tr(") Fields must be between 0-255.") );
+            return;
+        }
 /*
 	if ( groupWPAE->isChecked() )
 	  ifConfigLine="WPA ";
-*/
+
 	if ( checkMAC->isChecked() ) 
 	    ifConfigLine+=lineIP->text() + " netmask " + lineNetmask->text();
 	else
 	    ifConfigLine+=lineIP->text() \
                         +" netmask " + lineNetmask->text() \
                         + " ether " + lineMAC->text();
+*/
+        if( nmd_status->setIPv4Address(DeviceName, lineIP->text(), lineNetmask->text()) )
+            buttonApply->setEnabled(false);
     }
 /*
     else {
@@ -156,7 +159,7 @@ void ethernetconfig::slot_apply()
    trueos::Utils::restartNetworking();
 */
    // Done, now set the apply button to off
-   buttonApply->setEnabled(false);
+   //buttonApply->setEnabled(false);
 }
 
 void ethernetconfig::slotIPCheckbox()

@@ -106,6 +106,7 @@ public:
     bool removeIPv4Address(QString, QString, QString);
     bool enableInterface(QString);
     bool disableInterface(QString);
+    bool sendCommand(QString, QString);
 signals:
     void dataReady(QJsonObject);
     void connected();

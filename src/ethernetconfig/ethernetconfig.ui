@@ -257,6 +257,9 @@
        </item>
        <item>
         <widget class="QCheckBox" name="checkIPv6Enable">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
          <property name="text">
           <string>Obtain IPv6 address automaticall&amp;y</string>
          </property>

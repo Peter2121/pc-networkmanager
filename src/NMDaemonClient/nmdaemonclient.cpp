@@ -457,17 +457,8 @@ QString NMDaemonClient::getWifiNetworkSecurity(QString caps, QString ies)
 
 bool NMDaemonClient::saveConfig(QString ifname)
 {
-    //QJsonValue json_value;
     QString req_string = QString::asprintf(CMD_WPA_SAVE.c_str(), ifname.toStdString().c_str());
-    QJsonObject req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
-    lastJsonReceived = QJsonObject();
-    checkDataResultSource = "saveConfig";
-    connect(this, &NMDaemonClient::dataReady, this, &NMDaemonClient::slotCheckDataResult);
-    if(!sendRequest(req_object))
-    {
-        return false;
-    }
-    return true;
+    return sendCommand(req_string, "saveConfig");
 }
 
 bool NMDaemonClient::checkSuccess(QJsonObject data)
@@ -583,21 +574,26 @@ bool NMDaemonClient::isDhcpEnabled(QString ifname)
     return status;
 }
 
-bool NMDaemonClient::setIPv4Address(QString ifname, QString address, QString mask)
+bool NMDaemonClient::sendCommand(QString command, QString source)
 {
-    QString req_string = QString::asprintf(CMD_SET_IPV4_ADDRESS.c_str(),
-                                                ifname.toStdString().c_str(),
-                                                address.toStdString().c_str(),
-                                                mask.toStdString().c_str() );
-    QJsonObject req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
+    QJsonObject req_object = QJsonDocument::fromJson(command.toUtf8()).object();
     lastJsonReceived = QJsonObject();
-    checkDataResultSource = "setIPv4Address";
+    checkDataResultSource = source;
     connect(this, &NMDaemonClient::dataReady, this, &NMDaemonClient::slotCheckDataResult);
     if(!sendRequest(req_object))
     {
         return false;
     }
     return true;
+}
+
+bool NMDaemonClient::setIPv4Address(QString ifname, QString address, QString mask)
+{
+    QString req_string = QString::asprintf(CMD_SET_IPV4_ADDRESS.c_str(),
+                                                ifname.toStdString().c_str(),
+                                                address.toStdString().c_str(),
+                                                mask.toStdString().c_str() );
+    return sendCommand(req_string, "setIPv4Address");
 }
 
 bool NMDaemonClient::addIPv4Address(QString ifname, QString address, QString mask)
@@ -606,15 +602,7 @@ bool NMDaemonClient::addIPv4Address(QString ifname, QString address, QString mas
                                                 ifname.toStdString().c_str(),
                                                 address.toStdString().c_str(),
                                                 mask.toStdString().c_str() );
-    QJsonObject req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
-    lastJsonReceived = QJsonObject();
-    checkDataResultSource = "addIPv4Address";
-    connect(this, &NMDaemonClient::dataReady, this, &NMDaemonClient::slotCheckDataResult);
-    if(!sendRequest(req_object))
-    {
-        return false;
-    }
-    return true;
+    return sendCommand(req_string, "addIPv4Address");
 }
 
 bool NMDaemonClient::removeIPv4Address(QString ifname, QString address, QString mask)
@@ -623,41 +611,17 @@ bool NMDaemonClient::removeIPv4Address(QString ifname, QString address, QString 
                                                 ifname.toStdString().c_str(),
                                                 address.toStdString().c_str(),
                                                 mask.toStdString().c_str() );
-    QJsonObject req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
-    lastJsonReceived = QJsonObject();
-    checkDataResultSource = "removeIPv4Address";
-    connect(this, &NMDaemonClient::dataReady, this, &NMDaemonClient::slotCheckDataResult);
-    if(!sendRequest(req_object))
-    {
-        return false;
-    }
-    return true;
+    return sendCommand(req_string, "removeIPv4Address");
 }
 
 bool NMDaemonClient::enableInterface(QString ifname)
 {
     QString req_string = QString::asprintf(CMD_IF_ENABLE.c_str(), ifname.toStdString().c_str());
-    QJsonObject req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
-    lastJsonReceived = QJsonObject();
-    checkDataResultSource = "enableInterface";
-    connect(this, &NMDaemonClient::dataReady, this, &NMDaemonClient::slotCheckDataResult);
-    if(!sendRequest(req_object))
-    {
-        return false;
-    }
-    return true;
+    return sendCommand(req_string, "enableInterface");
 }
 
 bool NMDaemonClient::disableInterface(QString ifname)
 {
     QString req_string = QString::asprintf(CMD_IF_DISABLE.c_str(), ifname.toStdString().c_str());
-    QJsonObject req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
-    lastJsonReceived = QJsonObject();
-    checkDataResultSource = "disableInterface";
-    connect(this, &NMDaemonClient::dataReady, this, &NMDaemonClient::slotCheckDataResult);
-    if(!sendRequest(req_object))
-    {
-        return false;
-    }
-    return true;
+    return sendCommand(req_string, "disableInterface");
 }
