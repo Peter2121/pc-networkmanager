@@ -83,6 +83,12 @@ void ethernetconfig::slot_apply()
          buttonApply->setEnabled(false);
       return;
     }
+    else
+    {
+        if(nmd_status->enableInterface(DeviceName))
+           buttonApply->setEnabled(false);
+        return;
+    }
 
     
     if ( groupStatic->isChecked() )
@@ -199,6 +205,7 @@ void ethernetconfig::programInit()
    connect(pushWPAE, SIGNAL(clicked()), this, SLOT(slotConfigWPA()) );
    connect(nmd_status, SIGNAL(ifStatusUpdated()), this, SLOT(slotFinishLoad()));
 
+   // TODO: just get interfaces to show the window faster
    NMDaemonSpy* spy = new NMDaemonSpy(nmd_status, &NMDaemonCheckStatus::ifStatusUpdated);
    nmd_status->startMonitoring();
    if(!spy->wait(10000))
@@ -473,45 +480,79 @@ void ethernetconfig::slotFinishLoad()
    groupIPv6->setEnabled(false);
    QJsonArray if_status = nmd_status->getLastIfStatus();
    QString primary_ipv4 = nmd_status->getIPv4Address(DeviceName);
-   bool dhcp_enabled = nmd_status->isDhcpEnabled(DeviceName);
+   /*
+            json_value = lastJsonReceived.value(QString::fromStdString(JSON_PARAM_DATA));
+            json_object = json_value.toObject();
+            if(!json_object.empty())
+            {
+                json_value = json_object.value(QString::fromStdString(JSON_DATA_DHCP_STATUS));
+                str_status = json_value.toString();
+                if(str_status.toStdString()==JSON_DATA_ENABLED)
+                    status = true;
+            }
+    */
+
+   //bool dhcp_enabled = nmd_status->isDhcpEnabled(DeviceName);
+   bool dhcp_enabled = false;
+   bool is_up = false;
+   bool is_running = false;
    if(!if_status.empty())
    {
        foreach (const QJsonValue &v, if_status)
        {
            json_object = v.toObject();
-           json_value = json_object.value("INTERFACE NAME");
+           json_value = json_object.value(QString::fromStdString(JSON_PARAM_IF_NAME));
            dev = json_value.toString();
            if(dev != DeviceName)
                continue;
-           json_value = json_object.value("MEDIA");
+           json_value = json_object.value(QString::fromStdString(JSON_PARAM_MEDIA));
            str_value = json_value.toString();
            if(!str_value.contains("Ethernet"))
            {
                 qDebug() << "Unknown device media: " << str_value;
                 return;
            }
+           json_value = json_object.value(QString::fromStdString(JSON_PARAM_DHCP_ENABLED));
+           if(json_value.isString() && (json_value.toString().toStdString()==JSON_DATA_ENABLED) )
+               dhcp_enabled = true;
            if(dhcp_enabled)
                groupStatic->setChecked(false);
            else
                groupStatic->setChecked(true);
-           json_array = json_object.value("ADDRESSES").toArray();
+           json_value = json_object.value(QString::fromStdString(JSON_PARAM_UP));
+           if(json_value.isBool())
+               is_up = json_value.toBool();
+           json_value = json_object.value(QString::fromStdString(JSON_PARAM_RUNNING));
+           if(json_value.isBool())
+               is_running = json_value.toBool();
+           if(is_up && is_running)
+           {
+               checkDisableNetwork->setChecked(false);
+               tabMainWidget->setEnabled(true);
+           }
+           else
+           {
+               checkDisableNetwork->setChecked(true);
+               tabMainWidget->setEnabled(false);
+           }
+           json_array = json_object.value(QString::fromStdString(JSON_PARAM_ADDRESSES)).toArray();
            foreach(auto addr, json_array)
            {
                json_obj = addr.toObject();
-               str_type = json_obj.value("ADDRESS TYPE").toString();
+               str_type = json_obj.value(QString::fromStdString(JSON_PARAM_ADDR_TYPE)).toString();
                // TODO: add support for other types of addresses
-               str_value = json_obj.value(str_type).toObject().value("IPV4 ADDRESS").toString();
+               str_value = json_obj.value(str_type).toObject().value(QString::fromStdString(JSON_PARAM_IPV4_ADDR)).toString();
                if(!str_value.isEmpty())
                {
                    if(str_value == primary_ipv4)
                    {
                        lineIP->setText(str_value);
-                       str_value = json_obj.value(str_type).toObject().value("IPV4 SUBNET MASK").toString();
+                       str_value = json_obj.value(str_type).toObject().value(QString::fromStdString(JSON_PARAM_IPV4_MASK)).toString();
                        lineNetmask->setText(str_value);
                    }
                    else
                    {
-                       str_value += " / " + json_obj.value(str_type).toObject().value("IPV4 SUBNET MASK").toString();
+                       str_value += " / " + json_obj.value(str_type).toObject().value(QString::fromStdString(JSON_PARAM_IPV4_MASK)).toString();
                        listAliases->addItem(str_value);
                    }
                }
