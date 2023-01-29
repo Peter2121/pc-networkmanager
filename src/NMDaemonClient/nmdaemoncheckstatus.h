@@ -42,6 +42,7 @@ public:
     QVector<QPair<QString,int>> getLastNetsWifiPower(QString) const;
     QString getLastIfStatusString(QString) const;
     QPair<QString,QString> getIfMedia(QString) const;   // Status, Media
+    std::shared_ptr<QVector<QString>> getLastIPv4AliasesFromInterface(QString);
     signals:
         void wifiIfListUpdated();
         void ifStatusUpdated();

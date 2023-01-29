@@ -189,7 +189,7 @@ bool NMDaemonClient::connectWifiNetwork(QString ifname, QString ssid)
     return true;
 }
 
-void NMDaemonClient::cbWifiConnect(QString ifname, QString ssid)
+void NMDaemonClient::cbWifiConnect(QString, QString ssid)
 {
     QJsonValue json_value;
     if(!lastJsonReceived.empty())
@@ -625,3 +625,4 @@ bool NMDaemonClient::disableInterface(QString ifname)
     QString req_string = QString::asprintf(CMD_IF_DISABLE.c_str(), ifname.toStdString().c_str());
     return sendCommand(req_string, "disableInterface");
 }
+

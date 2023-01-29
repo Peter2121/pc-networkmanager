@@ -42,6 +42,7 @@ public:
     nmd_status = new NMDaemonCheckStatus();
 	setupUi(this);
     IsMain = false;
+    changedUpDown = false;
     }
     ~ethernetconfig()
     {
@@ -82,10 +83,12 @@ private:
     QString getMediaForIdent( QString ident );
     */
     QString getLineFromCommandOutput( QString command );
+    std::shared_ptr<QVector<QString>> getIPv4AliasesFromUi();
 //    bool isWifiEnabled();
     void saveLaggLine(QString dev, QString config);
     void setupEthLagg(QString dev);
     bool useLagg;
+    bool changedUpDown;
     QString DeviceName;
     NMDaemonCheckStatus* nmd_status;
     bool IsMain;

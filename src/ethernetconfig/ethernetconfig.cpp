@@ -79,18 +79,46 @@ void ethernetconfig::slot_apply()
 
     if ( checkDisableNetwork->isChecked() )
     {
+      if( changedUpDown )
+      {
       if(nmd_status->disableInterface(DeviceName))
          buttonApply->setEnabled(false);
       return;
+      }
     }
     else
     {
+        if( changedUpDown )
+        {
         if(nmd_status->enableInterface(DeviceName))
            buttonApply->setEnabled(false);
-        return;
+        }
     }
-
-    
+    // Apply IPv4 aliases
+    auto ui_aliases = getIPv4AliasesFromUi();
+    auto if_aliases = nmd_status->getLastIPv4AliasesFromInterface(DeviceName);
+    std::unique_ptr<QVector<QString>> aliases_to_add = std::make_unique<QVector<QString>>(0);
+    std::unique_ptr<QVector<QString>> aliases_to_remove = std::make_unique<QVector<QString>>(0);
+    foreach(const QString alias, *ui_aliases)
+    {
+        if(!if_aliases->contains(alias))
+            aliases_to_add->push_back(alias);
+    }
+    foreach(const QString alias, *if_aliases)
+    {
+        if(!ui_aliases->contains(alias))
+            aliases_to_remove->push_back(alias);
+    }
+    foreach(const QString alias, *aliases_to_add)
+    {
+        qDebug() << "Adding alias " << alias;
+        nmd_status->addIPv4Address(DeviceName, alias.split("/").value(0).trimmed(), alias.split("/").value(1).trimmed());
+    }
+    foreach(const QString alias, *aliases_to_remove)
+    {
+        qDebug() << "Removing alias " << alias;
+        nmd_status->removeIPv4Address(DeviceName, alias.split("/").value(0).trimmed(), alias.split("/").value(1).trimmed());
+    }
     if ( groupStatic->isChecked() )
     {
         if ( lineIP->text() == "..." || lineNetmask->text() == "..." )
@@ -246,6 +274,7 @@ void ethernetconfig::slotDisableCheck()
   }
    // Done, now set the apply button to on
    buttonApply->setEnabled(true);
+   changedUpDown = true;
 }
 
 void ethernetconfig::slotOK()
@@ -458,7 +487,7 @@ void ethernetconfig::slotFinishLoad()
 {
    QString tmp, tmp2;
    QJsonValue json_value;
-   QJsonObject json_object,json_obj;
+   QJsonObject json_object, json_obj;
    QJsonArray json_array;
    QString str_value,str_type;
    QString dev;
@@ -565,7 +594,7 @@ void ethernetconfig::slotFinishLoad()
                */
            }
        }
-   }
+    }
 /*
    if ( tmp.isEmpty() ) {
       checkDisableNetwork->setChecked(true);
@@ -745,6 +774,7 @@ void ethernetconfig::slotRemoveAlias()
     QListWidgetItem *it = listAliases->currentItem();
     listAliases->removeItemWidget(it);
     delete it;
+    buttonApply->setEnabled(true);
 }
 
 void ethernetconfig::slotAddAlias()
@@ -760,4 +790,15 @@ void ethernetconfig::slotAddAliasToList(QString addr, QString mask)
 {
     QString str_value = addr + " / " + mask;
     listAliases->addItem(str_value);
+    buttonApply->setEnabled(true);
+}
+
+std::shared_ptr<QVector<QString>> ethernetconfig::getIPv4AliasesFromUi()
+{
+    std::shared_ptr<QVector<QString>> ret_aliases = std::make_shared<QVector<QString>>(0);
+    for(int row = 0; row < listAliases->count(); row++)
+    {
+             ret_aliases->push_back(listAliases->item(row)->text());
+    }
+    return ret_aliases;
 }

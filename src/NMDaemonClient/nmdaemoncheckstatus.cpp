@@ -282,3 +282,42 @@ void NMDaemonCheckStatus::setInterval(int timeout)
 {
     timerMonitoring->setInterval(timeout);
 }
+
+std::shared_ptr<QVector<QString>> NMDaemonCheckStatus::getLastIPv4AliasesFromInterface(QString ifname)
+{
+    std::shared_ptr<QVector<QString>> ret_aliases = std::make_shared<QVector<QString>>(0);
+    QJsonObject json_object, json_obj;
+    QJsonValue json_value;
+    QJsonArray json_array;
+    QString dev, str_value, str_type;
+
+    if( lastIfStatus.empty() )
+        return ret_aliases;
+
+    foreach (const QJsonValue &v, lastIfStatus)
+    {
+        json_object = v.toObject();
+        json_value = json_object.value(QString::fromStdString(JSON_PARAM_IF_NAME));
+        dev = json_value.toString();
+        if(dev != ifname)
+            continue;
+        json_array = json_object.value(QString::fromStdString(JSON_PARAM_ADDRESSES)).toArray();
+        foreach(auto addr, json_array)
+        {
+            json_obj = addr.toObject();
+            if( !json_obj.value(QString::fromStdString(JSON_PARAM_ADDR_PRIMARY)).isUndefined() &&
+                    json_obj.value(QString::fromStdString(JSON_PARAM_ADDR_PRIMARY)).isBool() &&
+                    json_obj.value(QString::fromStdString(JSON_PARAM_ADDR_PRIMARY)).toBool() )
+                continue;
+            str_type = json_obj.value(QString::fromStdString(JSON_PARAM_ADDR_TYPE)).toString();
+            str_value = json_obj.value(str_type).toObject().value(QString::fromStdString(JSON_PARAM_IPV4_ADDR)).toString();
+            if(!str_value.isEmpty())
+            {
+                str_value += " / " + json_obj.value(str_type).toObject().value(QString::fromStdString(JSON_PARAM_IPV4_MASK)).toString();
+                ret_aliases->push_back(str_value);
+            }
+        }
+    }
+
+    return ret_aliases;
+}
