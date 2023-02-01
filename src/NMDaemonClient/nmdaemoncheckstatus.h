@@ -35,6 +35,7 @@ public:
     void startMonitoring();
     void stopMonitoring();
     void setInterval(int);
+    bool updateStatusInterfaces();
     QJsonArray getLastIfStatus() const { return lastIfStatus; }
     QVector<QPair<QString,QJsonObject>> getLastWifiNetStatus() const { return lastWifiNetStatus; }
     QVector<QPair<QString,QJsonObject>> getLastWifiIfStatus() const { return lastWifiIfStatus; }

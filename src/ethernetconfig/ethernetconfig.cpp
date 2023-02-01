@@ -233,13 +233,15 @@ void ethernetconfig::programInit()
    connect(pushWPAE, SIGNAL(clicked()), this, SLOT(slotConfigWPA()) );
    connect(nmd_status, SIGNAL(ifStatusUpdated()), this, SLOT(slotFinishLoad()));
 
-   // TODO: just get interfaces to show the window faster
+   nmd_status->updateStatusInterfaces();
+   /*
    NMDaemonSpy* spy = new NMDaemonSpy(nmd_status, &NMDaemonCheckStatus::ifStatusUpdated);
    nmd_status->startMonitoring();
    if(!spy->wait(10000))
        qDebug() << "Signal NMDaemonCheckStatus::ifStatusUpdated was not received in time";
    delete spy;
    nmd_status->stopMonitoring();
+   */
 //   QTimer::singleShot(30,  this,  SLOT(loadInfo()));
 //   QTimer::singleShot(30,  this,  SLOT(slotFinishLoad()));
 }

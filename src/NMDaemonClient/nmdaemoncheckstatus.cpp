@@ -52,46 +52,62 @@ void NMDaemonCheckStatus::stopMonitoring()
     isMonitoring = false;
 }
 
+bool NMDaemonCheckStatus::updateStatusInterfaces()
+{
+    std::unique_ptr<NMDaemonSpy> spy = nullptr;
+    QJsonValue json_value;
+    QJsonArray json_array;
+    if(!doConnect())
+        return false;
+    timerMonitoring->stop();
+    lastIfStatus = QJsonArray();
+    QJsonObject req_object = QJsonDocument::fromJson(CMD_GET_SYS_IF_STATUS.toUtf8()).object();
+    spy = std::make_unique<NMDaemonSpy>(this, &NMDaemonClient::dataReady);
+    if(!sendRequest(req_object))
+    {
+        timerMonitoring->start();
+        return false;
+    }
+    if(!spy->wait(DEFAULT_READ_WAIT_TIME_MSEC))
+        writeSocket.release();
+    if(!lastJsonReceived.empty())
+    {
+        json_value = lastJsonReceived.value(QString::fromStdString(JSON_PARAM_RESULT));
+        if( json_value.toString() == QString::fromStdString(JSON_PARAM_SUCC) )
+        {
+            json_value = lastJsonReceived.value(QString::fromStdString(JSON_PARAM_DATA));
+            json_array = json_value.toArray();
+            lastIfStatus = json_array;
+            emit ifStatusUpdated();
+            timerMonitoring->start();
+            return true;
+        }
+    }
+    timerMonitoring->start();
+    return false;
+}
+
 void NMDaemonCheckStatus::updateStatus()
 {
     std::unique_ptr<NMDaemonSpy> spy = nullptr;
-    timerMonitoring->stop();
-    if(!doConnect())
-        return;
     QString if_name;
     QString req_string;
     QJsonObject json_object;
     QJsonValue json_value;
     QJsonArray json_array;
+    QJsonObject req_object;
     bool iflistupdated = false;
     bool netstatusupdated = false;
     bool ifstatusupdated = false;
     // Get list of all netwok interfaces
-    lastIfStatus = QJsonArray();
-    QJsonObject req_object = QJsonDocument::fromJson(CMD_GET_SYS_IF_STATUS.toUtf8()).object();
-    //spy = new NMDaemonSpy(this, &NMDaemonCheckStatus::dataReady);
-    spy = std::make_unique<NMDaemonSpy>(this, &NMDaemonClient::dataReady);
-    if(!sendRequest(req_object))
-        goto label_exit;
-    if(!spy->wait(DEFAULT_READ_WAIT_TIME_MSEC))
-        writeSocket.release();
-    if(!lastJsonReceived.empty())
-    {
-        json_value = lastJsonReceived.value("RESULT");
-        if(json_value.toString() == "SUCCESS")
-        {
-            json_value = lastJsonReceived.value("DATA");
-            json_array = json_value.toArray();
-            lastIfStatus = json_array;
-            //emit ifStatusUpdated();
-            ifstatusupdated = true;
-        }
-    }
+    ifstatusupdated=updateStatusInterfaces();
+    timerMonitoring->stop();
+    if(!doConnect())
+        return;
     // Get list of wireless interfaces available for wpa_supplicant
     req_object = QJsonDocument::fromJson(CMD_GET_WPA_IF_LIST.toUtf8()).object();
     lastJsonReceived = QJsonObject();
     wifiInterfaces.clear();
-    //spy = new NMDaemonSpy(this, &NMDaemonCheckStatus::dataReady);
     spy = std::make_unique<NMDaemonSpy>(this, &NMDaemonClient::dataReady);
     if(!sendRequest(req_object))
         goto label_exit;
