@@ -32,7 +32,7 @@
 #define _ETHERNETCONFIG_H_
 
 
-class ethernetconfig : public QDialog, private Ui::ethernetconfig
+class ethernetconfig : public QDialog, protected Ui::ethernetconfig
 {
     Q_OBJECT
 

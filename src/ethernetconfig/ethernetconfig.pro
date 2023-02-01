@@ -11,9 +11,11 @@ LIBS	+= -L/usr/local/lib -ltrueos-utils -ltrueos-ui
 LIBS    += /usr/local/lib/libsockpp.a
 
 HEADERS	+= ethernetconfig.h \
+    ethernetconfigdata.h \
     ipv4addrinput.h
 
 SOURCES	+= main.cpp ethernetconfig.cpp \
+    ethernetconfigdata.cpp \
     ipv4addrinput.cpp
 include("../NMDaemonClient/NMDaemonClient.pri")
 include("../Utils/Utils.pri")
