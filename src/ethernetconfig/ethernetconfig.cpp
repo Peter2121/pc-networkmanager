@@ -324,7 +324,7 @@ void ethernetconfig::slotMacClicked()
    // Done, now set the apply button to on
    buttonApply->setEnabled(true);
 }
-
+/*
 void ethernetconfig::loadInfo()
 {
   QString tmp;
@@ -339,22 +339,6 @@ void ethernetconfig::loadInfo()
   {
       foreach (const QJsonValue &v, if_status)
       {
-          json_object = v.toObject();
-          json_value = json_object.value("INTERFACE NAME");
-          dev = json_value.toString();
-          if(dev != DeviceName)
-              continue;
-          json_value = json_object.value("MEDIA");
-          str_value = json_value.toString();
-          if(!str_value.contains("Ethernet"))
-          {
-               qDebug() << "Unknown device media: " << str_value;
-               return;
-          }
-          str_value = json_object.value("STATUS").toString();
-          textStatus->setText(str_value);
-          str_value = json_object.value("MEDIA").toString();
-          textMedia->setText(str_value);
           json_array = json_object.value("ADDRESSES").toArray();
           textIP->setText("");
           foreach(auto addr, json_array)
@@ -403,11 +387,11 @@ void ethernetconfig::loadInfo()
   //textIP->setText(getIpForIdent(fDev) );
   //textNetmask->setText(getNetmaskForIdent(fDev) );
   //textStatus->setText(getStatusForIdent( DeviceName ) );
-/*
-  textMac->setText(getMacForIdent( DeviceName ) );
-  textIPv6->setText(getIPv6ForIdent( DeviceName) );
-  textGateway->setText(getGatewayForIdent(fDev) );
-*/
+
+//  textMac->setText(getMacForIdent( DeviceName ) );
+//  textIPv6->setText(getIPv6ForIdent( DeviceName) );
+//  textGateway->setText(getGatewayForIdent(fDev) );
+
   //tmp = getMediaForIdent(DeviceName);
   //tmp.truncate(20);
   //textMedia->setText(tmp);
@@ -421,6 +405,7 @@ void ethernetconfig::loadInfo()
   // Connect the slot to refresh
   //QTimer::singleShot(3000,  this,  SLOT(loadInfo()));
 }
+*/
 /*
 QString ethernetconfig::getNameForIdent( QString ident )
 {
@@ -504,12 +489,14 @@ void ethernetconfig::showInfo()
 
 void ethernetconfig::slotFinishLoad()
 {
+   /*
    QString tmp, tmp2;
    QJsonValue json_value;
    QJsonObject json_object, json_obj;
    QJsonArray json_array;
    QString str_value,str_type;
    QString dev;
+   */
    //QSettings settings("PCBSD");
    //useLagg = settings.value("/pc-netmanager/useLagg", false).toBool();
 
@@ -524,98 +511,45 @@ void ethernetconfig::slotFinishLoad()
    //if ( tmp.indexOf("WPA") != -1 )
    //   groupWPAE->setChecked(true);
 
-   runningConfigData = std::make_unique<EthernetConfigData>(DeviceName, nmd_status);
+   runningConfigData = std::make_unique<EthernetConfigData>(this, nmd_status);
+   if(!runningConfigData->isInitialized)
+       return;
+   textStatus->setText(runningConfigData->ifStatus);
+   textMedia->setText(runningConfigData->mediaStatus);
 
-   checkIPv6Enable->setChecked(true);   // TODO: Check it in rc.conf
+   checkIPv6Enable->setChecked(true);   // TODO: Check it!!
    groupIPv6->setEnabled(false);
-   QJsonArray if_status = nmd_status->getLastIfStatus();
-   QString primary_ipv4 = nmd_status->getIPv4Address(DeviceName);
-   /*
-            json_value = lastJsonReceived.value(QString::fromStdString(JSON_PARAM_DATA));
-            json_object = json_value.toObject();
-            if(!json_object.empty())
-            {
-                json_value = json_object.value(QString::fromStdString(JSON_DATA_DHCP_STATUS));
-                str_status = json_value.toString();
-                if(str_status.toStdString()==JSON_DATA_ENABLED)
-                    status = true;
-            }
-    */
-
-   //bool dhcp_enabled = nmd_status->isDhcpEnabled(DeviceName);
-   bool dhcp_enabled = false;
-   bool is_up = false;
-   bool is_running = false;
-   if(!if_status.empty())
+   if(runningConfigData->isIpv4Static)
    {
-       foreach (const QJsonValue &v, if_status)
-       {
-           json_object = v.toObject();
-           json_value = json_object.value(QString::fromStdString(JSON_PARAM_IF_NAME));
-           dev = json_value.toString();
-           if(dev != DeviceName)
-               continue;
-           json_value = json_object.value(QString::fromStdString(JSON_PARAM_MEDIA));
-           str_value = json_value.toString();
-           if(!str_value.contains("Ethernet"))
-           {
-                qDebug() << "Unknown device media: " << str_value;
-                return;
-           }
-           json_value = json_object.value(QString::fromStdString(JSON_PARAM_DHCP_ENABLED));
-           if(json_value.isString() && (json_value.toString().toStdString()==JSON_DATA_ENABLED) )
-               dhcp_enabled = true;
-           if(dhcp_enabled)
-               groupStatic->setChecked(false);
-           else
-               groupStatic->setChecked(true);
-           json_value = json_object.value(QString::fromStdString(JSON_PARAM_UP));
-           if(json_value.isBool())
-               is_up = json_value.toBool();
-           json_value = json_object.value(QString::fromStdString(JSON_PARAM_RUNNING));
-           if(json_value.isBool())
-               is_running = json_value.toBool();
-           if(is_up && is_running)
-           {
-               checkDisableNetwork->setChecked(false);
-               tabMainWidget->setEnabled(true);
-           }
-           else
-           {
-               checkDisableNetwork->setChecked(true);
-               tabMainWidget->setEnabled(false);
-           }
-           json_array = json_object.value(QString::fromStdString(JSON_PARAM_ADDRESSES)).toArray();
-           foreach(auto addr, json_array)
-           {
-               json_obj = addr.toObject();
-               str_type = json_obj.value(QString::fromStdString(JSON_PARAM_ADDR_TYPE)).toString();
-               // TODO: add support for other types of addresses
-               str_value = json_obj.value(str_type).toObject().value(QString::fromStdString(JSON_PARAM_IPV4_ADDR)).toString();
-               if(!str_value.isEmpty())
-               {
-                   if(str_value == primary_ipv4)
-                   {
-                       lineIP->setText(str_value);
-                       str_value = json_obj.value(str_type).toObject().value(QString::fromStdString(JSON_PARAM_IPV4_MASK)).toString();
-                       lineNetmask->setText(str_value);
-                   }
-                   else
-                   {
-                       str_value += " / " + json_obj.value(str_type).toObject().value(QString::fromStdString(JSON_PARAM_IPV4_MASK)).toString();
-                       listAliases->addItem(str_value);
-                   }
-               }
-               /*
-               str_value = json_obj.value(str_type).toObject().value("IPV6 ADDRESS").toString();
-               if(!str_value.isEmpty())
-               {
-                   textIPv6->setText(str_value);
-               }
-               */
-           }
-       }
-    }
+       groupStatic->setChecked(true);
+   }
+   else
+   {
+       groupStatic->setChecked(false);
+   }
+   if(runningConfigData->isUpAndRunning)
+   {
+       checkDisableNetwork->setChecked(false);
+       tabMainWidget->setEnabled(true);
+   }
+   else
+   {
+       checkDisableNetwork->setChecked(true);
+       tabMainWidget->setEnabled(false);
+   }
+   lineIP->setText(runningConfigData->ipv4Address);
+   lineNetmask->setText(runningConfigData->ipv4Mask);
+   textIP->setText(runningConfigData->ipv4Address+" / "+runningConfigData->ipv4Mask);
+   listAliases->clear();
+   foreach(const QString alias, *(runningConfigData->ipv4Aliases))
+   {
+       listAliases->addItem(alias);
+       textIP->setText(textIP->text()+"\n"+alias);
+   }
+   lineIPv6Address->setText(runningConfigData->ipv6Address);
+   textIPv6->setText(runningConfigData->ipv6Address);
+   lineMAC->setText(runningConfigData->macAddress);
+   textMac->setText(runningConfigData->macAddress);
 /*
    if ( tmp.isEmpty() ) {
       checkDisableNetwork->setChecked(true);
@@ -684,8 +618,6 @@ void ethernetconfig::slotFinishLoad()
 		} 
 
 	}
-
-
    }
 */
 /*
@@ -712,10 +644,9 @@ void ethernetconfig::slotFinishLoad()
 
   slotIPv6clicked();
 */
+
   // Starts grabbing information for the info tab
-  loadInfo();
-
-
+  //loadInfo();
   buttonApply->setEnabled(false);
 }
 /*

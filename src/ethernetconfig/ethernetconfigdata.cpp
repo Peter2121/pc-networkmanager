@@ -1,10 +1,11 @@
 #include "ethernetconfigdata.h"
 
-EthernetConfigData::EthernetConfigData(QString ifname, NMDaemonCheckStatus* nmd)
+EthernetConfigData::EthernetConfigData(ethernetconfig* ethc, NMDaemonCheckStatus* nmd)
 {
     isInitialized = false;
     ipv4Aliases = std::make_shared<QVector<QString>>(0);
     isMacDefault = true;
+    isIpv4Static = true;
     isIpv6Static = false;
 
     QJsonValue json_value;
@@ -15,9 +16,9 @@ EthernetConfigData::EthernetConfigData(QString ifname, NMDaemonCheckStatus* nmd)
 
     try
     {
-        ifName = ifname;
-        ipv4Address = nmd->getIPv4Address(ifname);
-        ipv4Aliases = nmd->getLastIPv4AliasesFromInterface(ifname);
+        ifName = ethc->getDeviceName();
+        ipv4Address = nmd->getIPv4Address(ifName);
+        ipv4Aliases = nmd->getLastIPv4AliasesFromInterface(ifName);
         QJsonArray last_if_status = nmd->getLastIfStatus();
 
         if(!last_if_status.empty())
@@ -31,15 +32,15 @@ EthernetConfigData::EthernetConfigData(QString ifname, NMDaemonCheckStatus* nmd)
                     continue;
                 json_value = json_object.value(QString::fromStdString(JSON_PARAM_MEDIA));
                 str_value = json_value.toString();
-                if(!str_value.contains("Ethernet"))
-                     return;
+//                if(!str_value.contains("Ethernet"))
+//                     return;
                 str_value = json_object.value(QString::fromStdString(JSON_PARAM_STATUS)).toString();
                 ifStatus = str_value;
                 str_value = json_object.value(QString::fromStdString(JSON_PARAM_MEDIA)).toString();
                 mediaStatus = str_value;
                 json_value = json_object.value(QString::fromStdString(JSON_PARAM_DHCP_ENABLED));
-                if(json_value.isString() && (json_value.toString().toStdString()==JSON_DATA_ENABLED) )
-                    isIpv4Static = false;
+                if(json_value.isBool())
+                    isIpv4Static = !json_value.toBool();
                 else
                     isIpv4Static = true;
                 json_value = json_object.value(QString::fromStdString(JSON_PARAM_UP));
@@ -50,6 +51,7 @@ EthernetConfigData::EthernetConfigData(QString ifname, NMDaemonCheckStatus* nmd)
                     is_running = json_value.toBool();
                 isUpAndRunning = is_up && is_running;
                 json_array = json_object.value(QString::fromStdString(JSON_PARAM_ADDRESSES)).toArray();
+                ipv4Aliases->clear();
                 foreach(auto addr, json_array)
                 {
                     json_obj = addr.toObject();
@@ -84,7 +86,7 @@ EthernetConfigData::EthernetConfigData(QString ifname, NMDaemonCheckStatus* nmd)
     }
     catch(std::exception& e)
     {
-//        emit dataError(QString("Cannot parse NMDaemon data: ")+QString(e.what()), QString("EthernetConfigData"));
+        QMessageBox::critical(ethc, QString("Cannot parse NMDaemon data: ")+QString(e.what()), QString("EthernetConfigData"));
     }
 }
 
@@ -112,6 +114,6 @@ EthernetConfigData::EthernetConfigData(ethernetconfig* ethc)
     }
     catch(std::exception& e)
     {
-//        emit dataError(QString("Cannot parse EthernetConfig data: ")+QString(e.what()), QString("EthernetConfigData"));
+        QMessageBox::critical(ethc, QString("Cannot parse EthernetConfig data: ")+QString(e.what()), QString("EthernetConfigData"));
     }
 }

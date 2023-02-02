@@ -40,7 +40,8 @@ public:
    NetworkTray(NMDaemonCheckStatus* nmds);
    ~NetworkTray();
    void programInit(QString);
-   
+   std::unique_ptr<ethernetconfig> dialogEthernetConfig;
+
 private slots:
 //   void openNetManager();
 //   void openDeviceInfo();
@@ -100,7 +101,7 @@ protected:
    QIcon IconScan;
    QIcon IconSave;
    QDateTime LastUpdateTime;
-   std::unique_ptr<ethernetconfig> dialogEthernetConfig;
+   ethernetconfig *EthConfig;
 private:
    backend::NetDevice *DEVICE;
    QString IfName;

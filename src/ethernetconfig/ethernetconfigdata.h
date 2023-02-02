@@ -2,6 +2,7 @@
 #define ETHERNETCONFIGDATA_H
 
 #include <QString>
+#include <QMessageBox>
 #include "../NMDaemonClient/nmdaemoncheckstatus.h"
 #include "ethernetconfig.h"
 
@@ -10,11 +11,10 @@
 class EthernetConfigData
 {
 public:
-    EthernetConfigData(QString, NMDaemonCheckStatus*);
+    EthernetConfigData(ethernetconfig*, NMDaemonCheckStatus*);
     EthernetConfigData(ethernetconfig*);
-signals:
-    void dataError(QString, QString);
-protected:
+
+public:
     bool isInitialized;
     QString ifName;
     QString ipv4Address;

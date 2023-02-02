@@ -89,7 +89,7 @@ private:
     bool IsMain;
 
 private slots:
-    void loadInfo();
+//    void loadInfo();
     void slotFinishLoad();
     void slotCheckGlobalText();
     void slotConfigWPA();

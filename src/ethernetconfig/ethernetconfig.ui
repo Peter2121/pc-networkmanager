@@ -378,31 +378,6 @@
        <property name="title">
         <string>Configuration info</string>
        </property>
-       <widget class="QLabel" name="textLabel3_2">
-        <property name="geometry">
-         <rect>
-          <x>12</x>
-          <y>105</y>
-          <width>67</width>
-          <height>22</height>
-         </rect>
-        </property>
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="text">
-         <string>Netmask:</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-        </property>
-        <property name="wordWrap">
-         <bool>false</bool>
-        </property>
-       </widget>
        <widget class="QLabel" name="textLabel3">
         <property name="geometry">
          <rect>
@@ -601,35 +576,13 @@
          <bool>false</bool>
         </property>
        </widget>
-       <widget class="QLabel" name="textNetmask">
-        <property name="geometry">
-         <rect>
-          <x>95</x>
-          <y>105</y>
-          <width>271</width>
-          <height>20</height>
-         </rect>
-        </property>
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="text">
-         <string/>
-        </property>
-        <property name="wordWrap">
-         <bool>false</bool>
-        </property>
-       </widget>
        <widget class="QLabel" name="textIP">
         <property name="geometry">
          <rect>
           <x>95</x>
           <y>30</y>
           <width>271</width>
-          <height>61</height>
+          <height>101</height>
          </rect>
         </property>
         <property name="sizePolicy">

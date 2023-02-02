@@ -44,6 +44,7 @@ NetworkTray::NetworkTray(NMDaemonCheckStatus* nmds) : QDialog()
          SeparatorActions[i] = nullptr;
      }
      dialogEthernetConfig=std::make_unique<ethernetconfig>();
+     EthConfig = nullptr;
 }
 
 NetworkTray::~NetworkTray()
@@ -68,6 +69,8 @@ NetworkTray::~NetworkTray()
         if(SeparatorActions[i] != nullptr)
             delete SeparatorActions[i];
     }
+    if(EthConfig!=nullptr)
+        delete EthConfig;
 }
 
 void NetworkTray::onActivated(QSystemTrayIcon::ActivationReason reason)
@@ -210,8 +213,6 @@ This signal is emitted just before the menu is hidden from the user.
   connect(nmdStatus, &NMDaemonCheckStatus::wifiNetStatusUpdated, this, &NetworkTray::updateStatus);
   connect(nmdStatus, &NMDaemonCheckStatus::wifiIfStatusUpdated, this, &NetworkTray::updateStatus);
   connect(nmdStatus, &NMDaemonCheckStatus::dataError, this, &NetworkTray::slotShowError);
-//  connect(dialogEthernetConfig->runningConfigData, &EthernetConfigData::dataError, this, &NetworkTray::slotShowError);
-//  connect(dialogEthernetConfig->dialogConfigData, &EthernetConfigData::dataError, this, &NetworkTray::slotShowError);
   connect(TrayIconMenu, &QMenu::aboutToShow, this, &NetworkTray::setActiveScanTimeout);
   connect(TrayIconMenu, &QMenu::aboutToHide, this, &NetworkTray::setIdleScanTimeout);
 //  connect(TrayIcon, &QSystemTrayIcon::activated, this, &NetworkTray::onActivated);
@@ -533,7 +534,9 @@ QIcon NetworkTray::getWifiIcon(int power)
 }
 
 void  NetworkTray::openConfigDlg() {
-    ethernetconfig *eth_config = nullptr;
+    //std::shared_ptr<ethernetconfig> eth_config = std::make_shared<ethernetconfig>();
+    //ethernetconfig *eth_config = nullptr;
+    /*
     wificonfigwidgetbase *wifi_config = nullptr;
     if(IsWireless)
     {
@@ -541,12 +544,15 @@ void  NetworkTray::openConfigDlg() {
     }
     else
     {
-        eth_config = new ethernetconfig();
-        eth_config->setDevice(IfName);
-        eth_config->setWindowTitle(IfName + " " + "configuration");
-        eth_config->programInit();
-        eth_config->show();
-    }
+    */
+        if(EthConfig!=nullptr)
+            delete EthConfig;   // TODO: What if we open multiple EthConfig dialogs??
+        EthConfig = new ethernetconfig();
+        EthConfig->setDevice(IfName);
+        EthConfig->setWindowTitle(IfName + " " + "configuration");
+        EthConfig->programInit();
+        EthConfig->show();
+//    }
 }
 
 void NetworkTray::resetWpaSupplicant() {

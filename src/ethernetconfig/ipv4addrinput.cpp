@@ -7,6 +7,7 @@ Ipv4addrinput::Ipv4addrinput(QWidget *parent) :
 {
     ui->setupUi(this);
     connect( this, SIGNAL( accepted() ), this, SLOT( slotApply() ) );
+    ui->IPv4addr->setFocus();
 }
 
 Ipv4addrinput::~Ipv4addrinput()
