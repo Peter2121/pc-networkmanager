@@ -10,6 +10,7 @@
 #include "../backend/backend-network.h"
 #include "../NMDaemonClient/nmdaemoncheckstatus.h"
 #include "../ethernetconfig/ethernetconfig.h"
+#include "../ethernetconfig/ethernetconfigdata.h"
 #include "../wificonfig/wificonfigwidgetbase.h"
 
 //#define PROGPATH QString("/usr/local/share/trueos/pc-netmanager")
@@ -99,6 +100,7 @@ protected:
    QIcon IconScan;
    QIcon IconSave;
    QDateTime LastUpdateTime;
+   std::unique_ptr<ethernetconfig> dialogEthernetConfig;
 private:
    backend::NetDevice *DEVICE;
    QString IfName;

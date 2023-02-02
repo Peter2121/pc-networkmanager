@@ -3,13 +3,17 @@
 
 #include <QString>
 #include "../NMDaemonClient/nmdaemoncheckstatus.h"
+#include "ethernetconfig.h"
+
+//class ethernetconfig;
 
 class EthernetConfigData
 {
 public:
     EthernetConfigData(QString, NMDaemonCheckStatus*);
     EthernetConfigData(ethernetconfig*);
-
+signals:
+    void dataError(QString, QString);
 protected:
     bool isInitialized;
     QString ifName;

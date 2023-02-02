@@ -43,11 +43,28 @@
 #include "../Utils/utils.h"
 #include "ethernetconfig.h"
 #include "ui_ethernetconfig.h"
+#include "ethernetconfigdata.h"
 
 #include "ipv4addrinput.h"
 #include "ui_ipv4addrinput.h"
 
 using namespace std;
+
+ethernetconfig::ethernetconfig() : QDialog()
+{
+nmd_status = new NMDaemonCheckStatus();
+setupUi(this);
+IsMain = false;
+changedUpDown = false;
+runningConfigData = nullptr;
+dialogConfigData = nullptr;
+}
+
+ethernetconfig::~ethernetconfig()
+{
+    nmd_status->stopMonitoring();
+    delete nmd_status;
+}
 
 void ethernetconfig::slot_close()
 {
@@ -506,6 +523,8 @@ void ethernetconfig::slotFinishLoad()
    // Using WPAE config?
    //if ( tmp.indexOf("WPA") != -1 )
    //   groupWPAE->setChecked(true);
+
+   runningConfigData = std::make_unique<EthernetConfigData>(DeviceName, nmd_status);
 
    checkIPv6Enable->setChecked(true);   // TODO: Check it in rc.conf
    groupIPv6->setEnabled(false);

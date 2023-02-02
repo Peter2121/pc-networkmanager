@@ -43,6 +43,7 @@ NetworkTray::NetworkTray(NMDaemonCheckStatus* nmds) : QDialog()
      {
          SeparatorActions[i] = nullptr;
      }
+     dialogEthernetConfig=std::make_unique<ethernetconfig>();
 }
 
 NetworkTray::~NetworkTray()
@@ -209,6 +210,8 @@ This signal is emitted just before the menu is hidden from the user.
   connect(nmdStatus, &NMDaemonCheckStatus::wifiNetStatusUpdated, this, &NetworkTray::updateStatus);
   connect(nmdStatus, &NMDaemonCheckStatus::wifiIfStatusUpdated, this, &NetworkTray::updateStatus);
   connect(nmdStatus, &NMDaemonCheckStatus::dataError, this, &NetworkTray::slotShowError);
+//  connect(dialogEthernetConfig->runningConfigData, &EthernetConfigData::dataError, this, &NetworkTray::slotShowError);
+//  connect(dialogEthernetConfig->dialogConfigData, &EthernetConfigData::dataError, this, &NetworkTray::slotShowError);
   connect(TrayIconMenu, &QMenu::aboutToShow, this, &NetworkTray::setActiveScanTimeout);
   connect(TrayIconMenu, &QMenu::aboutToHide, this, &NetworkTray::setIdleScanTimeout);
 //  connect(TrayIcon, &QSystemTrayIcon::activated, this, &NetworkTray::onActivated);

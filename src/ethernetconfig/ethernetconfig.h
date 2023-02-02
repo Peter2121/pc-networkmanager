@@ -27,32 +27,28 @@
 #include "ui_ipv4addrinput.h"
 #include "../NMDaemonClient/nmdaemoncheckstatus.h"
 #include "../NMDaemonClient/nmdaemonspy.h"
+//#include "ethernetconfigdata.h"
 
 #ifndef _ETHERNETCONFIG_H_
 #define _ETHERNETCONFIG_H_
 
+class EthernetConfigData;
 
-class ethernetconfig : public QDialog, protected Ui::ethernetconfig
+class ethernetconfig : public QDialog, public Ui::ethernetconfig
 {
     Q_OBJECT
 
 public:
-    ethernetconfig() : QDialog()
-    {
-    nmd_status = new NMDaemonCheckStatus();
-	setupUi(this);
-    IsMain = false;
-    changedUpDown = false;
-    }
-    ~ethernetconfig()
-    {
-        nmd_status->stopMonitoring();
-        delete nmd_status;
-    }
+    ethernetconfig();
+    ~ethernetconfig();
     virtual void setDevice(QString Device);
     virtual void showInfo();
     virtual void programInit();
+    QString getDeviceName() { return DeviceName; }
     void setIsMain(bool);
+    std::shared_ptr<QVector<QString>> getIPv4AliasesFromUi();
+    std::unique_ptr<EthernetConfigData> runningConfigData;
+    std::unique_ptr<EthernetConfigData> dialogConfigData;
 
 public slots:
     virtual void slotIPCheckbox();
@@ -83,7 +79,6 @@ private:
     QString getMediaForIdent( QString ident );
     */
     QString getLineFromCommandOutput( QString command );
-    std::shared_ptr<QVector<QString>> getIPv4AliasesFromUi();
 //    bool isWifiEnabled();
     void saveLaggLine(QString dev, QString config);
     void setupEthLagg(QString dev);

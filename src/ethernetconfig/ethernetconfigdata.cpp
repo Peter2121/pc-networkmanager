@@ -16,7 +16,7 @@ EthernetConfigData::EthernetConfigData(QString ifname, NMDaemonCheckStatus* nmd)
     try
     {
         ifName = ifname;
-        ipv4Address = nmd_status->getIPv4Address(DeviceName);
+        ipv4Address = nmd->getIPv4Address(ifname);
         ipv4Aliases = nmd->getLastIPv4AliasesFromInterface(ifname);
         QJsonArray last_if_status = nmd->getLastIfStatus();
 
@@ -82,21 +82,36 @@ EthernetConfigData::EthernetConfigData(QString ifname, NMDaemonCheckStatus* nmd)
             isInitialized = true;
          }
     }
-    catch()
+    catch(std::exception& e)
     {
-
+//        emit dataError(QString("Cannot parse NMDaemon data: ")+QString(e.what()), QString("EthernetConfigData"));
     }
 }
 
 EthernetConfigData::EthernetConfigData(ethernetconfig* ethc)
 {
     isInitialized = false;
+
+    isMacDefault = true;
+    isIpv6Static = false;
+
     try
     {
+        ifName = ethc->getDeviceName();
+        ipv4Address = ethc->lineIP->text();
+        ipv4Mask = ethc->lineNetmask->text();
         ipv4Aliases = ethc->getIPv4AliasesFromUi();
-    }
-    catch()
-    {
+        macAddress = ethc->textMac->text();
+        ipv6Address = ethc->textIPv6->text();
+        mediaStatus = ethc->textMedia->text();
+        ifStatus = ethc->textStatus->text();
+        isUpAndRunning = ethc->checkDisableNetwork->isChecked();
+        isIpv4Static = ethc->groupStatic->isChecked();
 
+        isInitialized = true;
+    }
+    catch(std::exception& e)
+    {
+//        emit dataError(QString("Cannot parse EthernetConfig data: ")+QString(e.what()), QString("EthernetConfigData"));
     }
 }
