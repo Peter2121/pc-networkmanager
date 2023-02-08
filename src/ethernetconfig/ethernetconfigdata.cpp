@@ -117,3 +117,48 @@ EthernetConfigData::EthernetConfigData(ethernetconfig* ethc)
         QMessageBox::critical(ethc, QString("Cannot parse EthernetConfig data: ")+QString(e.what()), QString("EthernetConfigData"));
     }
 }
+
+bool EthernetConfigData::operator ==(const EthernetConfigData &ecd) const
+{
+    if( (!isInitialized) && (!ecd.isInitialized) )
+        return true;
+    if( (!isInitialized) || (!ecd.isInitialized) )
+        return false;
+
+    // QString ifName;          IGNORED!!!
+    // bool isUpAndRunning;     IGNORED!!!
+    // QString mediaStatus;     IGNORED!!!
+    // QString ifStatus;        IGNORED!!!
+    if( isIpv4Static != ecd.isIpv4Static)
+        return false;
+    if( isIpv6Static != ecd.isIpv6Static)
+        return false;
+    if( isMacDefault != ecd.isMacDefault)
+        return false;
+    if( macAddress != ecd.macAddress)
+        return false;
+    if( ipv6Address != ecd.ipv6Address)
+        return false;
+    if( ipv4Aliases->size() != ecd.ipv4Aliases->size() )
+        return false;
+    if( (ipv4Aliases->size()==0) && (ecd.ipv4Aliases->size()==0) )
+    {
+    if( ipv4Address != ecd.ipv4Address)
+        return false;
+    if( ipv4Mask != ecd.ipv4Mask)
+        return false;
+    return true;
+    }
+    std::unique_ptr<QVector<QString>> my_aliases = std::make_unique<QVector<QString>>(*ipv4Aliases.get());
+    my_aliases->push_back(ipv4Address + " / " + ipv4Mask);
+    std::sort(my_aliases->begin(), my_aliases->end());
+    std::unique_ptr<QVector<QString>> other_aliases = std::make_unique<QVector<QString>>(*ecd.ipv4Aliases.get());
+    other_aliases->push_back(ecd.ipv4Address + " / " + ecd.ipv4Mask);
+    std::sort(other_aliases->begin(), other_aliases->end());
+    return my_aliases==other_aliases;
+}
+
+bool EthernetConfigData::operator !=(const EthernetConfigData &ecd) const
+{
+    return !(*this==ecd);
+}

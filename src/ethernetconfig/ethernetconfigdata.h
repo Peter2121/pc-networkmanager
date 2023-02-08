@@ -1,6 +1,7 @@
 #ifndef ETHERNETCONFIGDATA_H
 #define ETHERNETCONFIGDATA_H
 
+#include <algorithm>
 #include <QString>
 #include <QMessageBox>
 #include "../NMDaemonClient/nmdaemoncheckstatus.h"
@@ -13,6 +14,9 @@ class EthernetConfigData
 public:
     EthernetConfigData(ethernetconfig*, NMDaemonCheckStatus*);
     EthernetConfigData(ethernetconfig*);
+
+    bool operator ==(const EthernetConfigData &) const;
+    bool operator !=(const EthernetConfigData &) const;
 
 public:
     bool isInitialized;
