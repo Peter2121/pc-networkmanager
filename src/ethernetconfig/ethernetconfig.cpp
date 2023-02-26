@@ -90,6 +90,7 @@ void ethernetconfig::slot_apply()
 {
 
     QString ifConfigLine;
+    std::unique_ptr<QVector<QString>> ipv4_jail_addresses = std::make_unique<QVector<QString>>(0);
 
     if ( ! buttonApply->isEnabled() )
 	return;
@@ -114,6 +115,11 @@ void ethernetconfig::slot_apply()
     // Apply IPv4 aliases
     auto ui_aliases = getIPv4AliasesFromUi();
     auto if_aliases = nmd_status->getLastIPv4AliasesFromInterface(DeviceName);
+    ipv4_jail_addresses = nmd_status->getLastJailsIPv4();
+    foreach (const auto &jail_addr, *ipv4_jail_addresses.get())
+    {
+        if_aliases->removeOne(jail_addr);
+    }
     std::unique_ptr<QVector<QString>> aliases_to_add = std::make_unique<QVector<QString>>(0);
     std::unique_ptr<QVector<QString>> aliases_to_remove = std::make_unique<QVector<QString>>(0);
     foreach(const QString alias, *ui_aliases)
@@ -249,7 +255,7 @@ void ethernetconfig::programInit()
    connect(lineMAC, SIGNAL(textChanged(const QString &)), this, SLOT(slotCheckGlobalText() ) );
    connect(pushWPAE, SIGNAL(clicked()), this, SLOT(slotConfigWPA()) );
    connect(nmd_status, SIGNAL(ifStatusUpdated()), this, SLOT(slotFinishLoad()));
-
+   nmd_status->updateStatusJails();
    nmd_status->updateStatusInterfaces();
    /*
    NMDaemonSpy* spy = new NMDaemonSpy(nmd_status, &NMDaemonCheckStatus::ifStatusUpdated);

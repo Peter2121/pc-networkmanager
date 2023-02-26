@@ -13,12 +13,32 @@ EthernetConfigData::EthernetConfigData(ethernetconfig* ethc, NMDaemonCheckStatus
     QJsonArray json_array;
     QString str_value,str_type,dev;
     bool is_up=false, is_running=false;
+    std::unique_ptr<QVector<QString>> ipv4_jail_addresses = std::make_unique<QVector<QString>>(0);
 
     try
     {
         ifName = ethc->getDeviceName();
         ipv4Address = nmd->getIPv4Address(ifName);
         ipv4Aliases = nmd->getLastIPv4AliasesFromInterface(ifName);
+        ipv4_jail_addresses = nmd->getLastJailsIPv4();
+        auto end = std::remove_if(  ipv4Aliases->begin(), ipv4Aliases->end(),
+                                    [&ipv4_jail_addresses](QString const &addr_and_mask)
+                                    {
+                                        QString addr;
+                                        if(int i = addr_and_mask.indexOf("/")-1; i>0)
+                                            addr = addr_and_mask.left(i);
+                                        else
+                                            addr = addr_and_mask;
+                                        return ipv4_jail_addresses->contains(addr);
+                                    }
+                                 );
+        ipv4Aliases->erase(end, ipv4Aliases->end());
+
+        foreach (const auto &jail_addr, *ipv4_jail_addresses.get())
+        {
+            ipv4Aliases->removeOne(jail_addr);
+        }
+
         QJsonArray last_if_status = nmd->getLastIfStatus();
 
         if(!last_if_status.empty())
@@ -51,11 +71,12 @@ EthernetConfigData::EthernetConfigData(ethernetconfig* ethc, NMDaemonCheckStatus
                     is_running = json_value.toBool();
                 isUpAndRunning = is_up && is_running;
                 json_array = json_object.value(QString::fromStdString(JSON_PARAM_ADDRESSES)).toArray();
-                ipv4Aliases->clear();
-                foreach(auto addr, json_array)
+//                ipv4Aliases->clear();
+                foreach(const auto &addr, json_array)
                 {
                     json_obj = addr.toObject();
                     str_type = json_obj.value(QString::fromStdString(JSON_PARAM_ADDR_TYPE)).toString();
+                    /*
                     str_value = json_obj.value(str_type).toObject().value(QString::fromStdString(JSON_PARAM_IPV4_ADDR)).toString();
                     if(!str_value.isEmpty())
                     {
@@ -69,6 +90,7 @@ EthernetConfigData::EthernetConfigData(ethernetconfig* ethc, NMDaemonCheckStatus
                             ipv4Aliases->push_back(str_value);
                         }
                     }
+                    */
                     str_value = json_obj.value(str_type).toObject().value(QString::fromStdString(JSON_PARAM_LINK_ADDR)).toString();
                     if(!str_value.isEmpty())
                     {

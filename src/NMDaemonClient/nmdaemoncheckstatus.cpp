@@ -99,8 +99,11 @@ void NMDaemonCheckStatus::updateStatus()
     bool iflistupdated = false;
     bool netstatusupdated = false;
     bool ifstatusupdated = false;
+    bool jailstatusupdated = false;
     // Get list of all netwok interfaces
-    ifstatusupdated=updateStatusInterfaces();
+    ifstatusupdated = updateStatusInterfaces();
+    jailstatusupdated = updateStatusJails();
+    // TODO: move the code into updateStatusWifi();
     timerMonitoring->stop();
     if(!doConnect())
         return;
@@ -130,7 +133,6 @@ void NMDaemonCheckStatus::updateStatus()
             }
         }
     }
-    //emit wifiIfListUpdated();
     iflistupdated = true;
     lastWifiNetStatus.clear();
     // Get list of wireless networks for each wireless interface
@@ -155,7 +157,6 @@ void NMDaemonCheckStatus::updateStatus()
             }
         }
     }
-    //emit wifiNetStatusUpdated();
     netstatusupdated = true;
     lastWifiIfStatus.clear();
     // Get status of each wireless interface
@@ -181,8 +182,8 @@ void NMDaemonCheckStatus::updateStatus()
         }
     }
 label_exit:
-    if(ifstatusupdated)
-        emit ifStatusUpdated();
+//    if(ifstatusupdated)  ****** updateStatusInterfaces() emits this signal if the data is updated!!
+//        emit ifStatusUpdated();
     if(netstatusupdated)
         emit wifiNetStatusUpdated();
     if(iflistupdated)
@@ -318,7 +319,7 @@ std::shared_ptr<QVector<QString>> NMDaemonCheckStatus::getLastIPv4AliasesFromInt
         if(dev != ifname)
             continue;
         json_array = json_object.value(QString::fromStdString(JSON_PARAM_ADDRESSES)).toArray();
-        foreach(auto addr, json_array)
+        foreach(const auto &addr, json_array)
         {
             json_obj = addr.toObject();
             if( !json_obj.value(QString::fromStdString(JSON_PARAM_ADDR_PRIMARY)).isUndefined() &&
@@ -336,4 +337,79 @@ std::shared_ptr<QVector<QString>> NMDaemonCheckStatus::getLastIPv4AliasesFromInt
     }
 
     return ret_aliases;
+}
+
+std::unique_ptr<QVector<QString>> NMDaemonCheckStatus::getLastJailsIPv4()
+{
+    QJsonObject json_object;
+    QJsonValue json_value;
+    QJsonArray json_array;
+    std::unique_ptr<QVector<QString>> ret_addr4 = std::make_unique<QVector<QString>>(0);
+    foreach(const auto &jail, lastJailStatus)
+    {
+        json_object = jail.toObject();
+        json_array = json_object.value(QString::fromStdString(JSON_PARAM_ADDRESSES)).toArray();
+        foreach (const auto &addr, json_array) {
+            if( const auto ipv4addr=addr.toObject().value(QString::fromStdString(JSON_PARAM_IPV4_ADDR)).toString(); !ipv4addr.isEmpty() )
+            {
+                ret_addr4->push_back(ipv4addr);
+            }
+        }
+    }
+    return ret_addr4;
+}
+
+std::unique_ptr<QVector<QString>> NMDaemonCheckStatus::getLastJailsIPv6()
+{
+    QJsonObject json_object;
+    QJsonValue json_value;
+    QJsonArray json_array;
+    std::unique_ptr<QVector<QString>> ret_addr6 = std::make_unique<QVector<QString>>(0);
+    foreach(const auto &jail, lastJailStatus)
+    {
+        json_object = jail.toObject();
+        json_array = json_object.value(QString::fromStdString(JSON_PARAM_ADDRESSES)).toArray();
+        foreach (const auto &addr, json_array) {
+            if( const auto ipv6addr=addr.toObject().value(QString::fromStdString(JSON_PARAM_IPV6_ADDR)).toString(); !ipv6addr.isEmpty() )
+            {
+                ret_addr6->push_back(ipv6addr);
+            }
+        }
+    }
+    return ret_addr6;
+}
+
+bool NMDaemonCheckStatus::updateStatusJails()
+{
+    std::unique_ptr<NMDaemonSpy> spy = nullptr;
+    QJsonValue json_value;
+    QJsonArray json_array;
+    if(!doConnect())
+        return false;
+    timerMonitoring->stop();
+    QJsonObject req_object = QJsonDocument::fromJson(CMD_GET_SYS_JAIL_LIST.toUtf8()).object();
+    spy = std::make_unique<NMDaemonSpy>(this, &NMDaemonClient::dataReady);
+    if(!sendRequest(req_object))
+    {
+        timerMonitoring->start();
+        return false;
+    }
+    if(!spy->wait(DEFAULT_READ_WAIT_TIME_MSEC))
+        writeSocket.release();
+    if(!lastJsonReceived.empty())
+    {
+//        lastJailStatus = QJsonArray();
+        json_value = lastJsonReceived.value(QString::fromStdString(JSON_PARAM_RESULT));
+        if( json_value.toString() == QString::fromStdString(JSON_PARAM_SUCC) )
+        {
+            json_value = lastJsonReceived.value(QString::fromStdString(JSON_PARAM_DATA)).toObject().value(QString::fromStdString(JSON_PARAM_JAILS));
+            json_array = json_value.toArray();
+            lastJailStatus = json_array;
+            emit jailStatusUpdated();
+            timerMonitoring->start();
+            return true;
+        }
+    }
+    timerMonitoring->start();
+    return false;
 }

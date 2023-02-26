@@ -14,8 +14,10 @@ protected:
     static inline const QString CMD_GET_SYS_IF_STATUS = "{ \"SCOPE\" : \"SYSTEM\", \"CMD\" : \"IF_LIST\" }";
     static inline const std::string CMD_WIFI_SCAN = "{ \"SCOPE\" : \"WIFI\", \"CMD\" : \"WIFI_SCAN\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\" } }";
     static inline const std::string CMD_WIFI_STATUS = "{ \"SCOPE\" : \"WIFI\", \"CMD\" : \"WIFI_STATUS\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\" } }";
+    static inline const QString CMD_GET_SYS_JAIL_LIST = "{ \"SCOPE\" : \"SYSTEM\", \"CMD\" : \"JAIL_LIST\" }";
     long refreshTime;   // msec
     QJsonArray lastIfStatus;
+    QJsonArray lastJailStatus;
     QVector<QPair<QString,QJsonObject>> lastWifiNetStatus;  // <ifname,status>
     QVector<QPair<QString,QJsonObject>> lastWifiIfStatus;  // <ifname,status>
     QVector<QString> wifiInterfaces;
@@ -36,7 +38,9 @@ public:
     void stopMonitoring();
     void setInterval(int);
     bool updateStatusInterfaces();
+    bool updateStatusJails();
     QJsonArray getLastIfStatus() const { return lastIfStatus; }
+    QJsonArray getLastJailStatus() const { return lastJailStatus; }
     QVector<QPair<QString,QJsonObject>> getLastWifiNetStatus() const { return lastWifiNetStatus; }
     QVector<QPair<QString,QJsonObject>> getLastWifiIfStatus() const { return lastWifiIfStatus; }
     QPair<QString,int> getLastIfWifiNetwork(QString ifname) const;  // <SSID,power>
@@ -44,9 +48,12 @@ public:
     QString getLastIfStatusString(QString) const;
     QPair<QString,QString> getIfMedia(QString) const;   // Status, Media
     std::shared_ptr<QVector<QString>> getLastIPv4AliasesFromInterface(QString);
+    std::unique_ptr<QVector<QString>> getLastJailsIPv4();
+    std::unique_ptr<QVector<QString>> getLastJailsIPv6();
     signals:
         void wifiIfListUpdated();
         void ifStatusUpdated();
+        void jailStatusUpdated();
         void wifiNetStatusUpdated();
         void wifiIfStatusUpdated();
 };
