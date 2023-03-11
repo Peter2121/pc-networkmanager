@@ -88,38 +88,41 @@ bool ethernetconfig::isWifiEnabled() {
 
 void ethernetconfig::slot_apply()
 {
+    bool action = false;
+    bool validate_input = true;
+    dialogConfigData = std::make_unique<EthernetConfigData>(this);
+    if(!dialogConfigData->isInitialized)
+        return;
+    if(dialogConfigData == runningConfigData)
+        return;
 
-    QString ifConfigLine;
+//    QString ifConfigLine;
     std::unique_ptr<QVector<QString>> ipv4_jail_addresses = std::make_unique<QVector<QString>>(0);
 
-    if ( ! buttonApply->isEnabled() )
-	return;
+    if ( !buttonApply->isEnabled() )
+        return;
 
-    if ( checkDisableNetwork->isChecked() )
+    if( dialogConfigData->isUpAndRunning != runningConfigData->isUpAndRunning )
     {
-      if( changedUpDown )
-      {
-      if(nmd_status->disableInterface(DeviceName))
-         buttonApply->setEnabled(false);
-      return;
-      }
+        if(dialogConfigData->isUpAndRunning)
+            nmd_status->enableInterface(DeviceName);
+        else
+            nmd_status->disableInterface(DeviceName);
+        action = true;
     }
-    else
-    {
-        if( changedUpDown )
-        {
-        if(nmd_status->enableInterface(DeviceName))
-           buttonApply->setEnabled(false);
-        }
-    }
+
     // Apply IPv4 aliases
-    auto ui_aliases = getIPv4AliasesFromUi();
-    auto if_aliases = nmd_status->getLastIPv4AliasesFromInterface(DeviceName);
+//    auto ui_aliases = getIPv4AliasesFromUi();
+    auto ui_aliases = dialogConfigData->ipv4Aliases;
+//    auto if_aliases = nmd_status->getLastIPv4AliasesFromInterface(DeviceName);
+    auto if_aliases = runningConfigData->ipv4Aliases;
+    /*
     ipv4_jail_addresses = nmd_status->getLastJailsIPv4();
     foreach (const auto &jail_addr, *ipv4_jail_addresses.get())
     {
         if_aliases->removeOne(jail_addr);
     }
+    */
     std::unique_ptr<QVector<QString>> aliases_to_add = std::make_unique<QVector<QString>>(0);
     std::unique_ptr<QVector<QString>> aliases_to_remove = std::make_unique<QVector<QString>>(0);
     foreach(const QString alias, *ui_aliases)
@@ -136,12 +139,49 @@ void ethernetconfig::slot_apply()
     {
         qDebug() << "Adding alias " << alias;
         nmd_status->addIPv4Address(DeviceName, alias.split("/").value(0).trimmed(), alias.split("/").value(1).trimmed());
+        action = true;
     }
     foreach(const QString alias, *aliases_to_remove)
     {
         qDebug() << "Removing alias " << alias;
         nmd_status->removeIPv4Address(DeviceName, alias.split("/").value(0).trimmed(), alias.split("/").value(1).trimmed());
+        action = true;
     }
+
+    // Manage static IPv4 address
+    if( (dialogConfigData->isIpv4Static != runningConfigData->isIpv4Static) ||
+        (dialogConfigData->ipv4Address != runningConfigData->ipv4Address) ||
+        (dialogConfigData->ipv4Mask != runningConfigData->ipv4Mask) )
+    {
+        if(dialogConfigData->isIpv4Static)
+        {
+            validate_input = true;
+            if ( lineIP->text() == "..." || lineNetmask->text() == "..." )
+            {
+                QMessageBox::information( this, tr("Missing Fields"), tr("You must enter an IP and Netmask to continue!\n") );
+                validate_input = false;
+            }
+            if ( ! Utils::validateIPv4(lineIP->text() ) )
+            {
+                QMessageBox::warning( this, tr("Warning"),
+                tr("IP Address is out of range! (") + lineIP->text() + tr(") Fields must be between 0-255.") );
+                validate_input = false;
+            }
+            if ( ! Utils::validateIPv4(lineNetmask->text() ) )
+            {
+                QMessageBox::warning( this, tr("Warning"),
+                tr("Netmask is out of range! (") + lineNetmask->text() + tr(") Fields must be between 0-255.") );
+                validate_input = false;
+            }
+            if( validate_input && nmd_status->setIPv4Address(DeviceName, lineIP->text(), lineNetmask->text()) )
+                action = true;
+        }
+        else
+        {
+        // TODO: enable DHCP for this interface
+        }
+    }
+/*
     if ( groupStatic->isChecked() )
     {
         if ( lineIP->text() == "..." || lineNetmask->text() == "..." )
@@ -164,7 +204,7 @@ void ethernetconfig::slot_apply()
             tr("Netmask is out of range! (") + lineNetmask->text() + tr(") Fields must be between 0-255.") );
             return;
         }
-/*
+
 	if ( groupWPAE->isChecked() )
 	  ifConfigLine="WPA ";
 
@@ -174,11 +214,12 @@ void ethernetconfig::slot_apply()
 	    ifConfigLine+=lineIP->text() \
                         +" netmask " + lineNetmask->text() \
                         + " ether " + lineMAC->text();
-*/
+
         if( nmd_status->setIPv4Address(DeviceName, lineIP->text(), lineNetmask->text()) )
             buttonApply->setEnabled(false);
+
     }
-/*
+
     else {
 	// Using WPAE config?
 	if ( groupWPAE->isChecked() )
@@ -198,13 +239,16 @@ void ethernetconfig::slot_apply()
        // Set static address and disbale accept_rtadv.  This means someone will also have to set
        // the default gateway which currently is configured form the advanced tab.  This should
        // move here or all should move to a dedicated IPv6 tab like "General" is IPv4ish.
+       /*
        if (lineIPv6Address->text() != "") {
-	  QString tmp = lineIPv6Address->text();
-          if (!tmp.contains(QRegExp("^inet6 "))) {
-	     tmp.prepend("inet6 ");
-          }
+            QString tmp = lineIPv6Address->text();
+            if (!tmp.contains(QRegExp("^inet6 "))) {
+                tmp.prepend("inet6 ");
+            }
+
           //trueos::Utils::setConfFileValue( "/etc/rc.conf", "ifconfig_" + DeviceName + "_ipv6=", "ifconfig_" + DeviceName + "_ipv6=\"" + tmp + " -accept_rtadv\"", -1);
        }
+       */
     }
 
    //trueos::Utils::setConfFileValue( "/etc/rc.conf", "ifconfig_" + DeviceName + "=", "ifconfig_" + DeviceName + "=\"" + ifConfigLine + "\"", -1);
@@ -215,8 +259,8 @@ void ethernetconfig::slot_apply()
     
    trueos::Utils::restartNetworking();
 */
-   // Done, now set the apply button to off
-   //buttonApply->setEnabled(false);
+    if(action)
+        buttonApply->setEnabled(false);
 }
 
 void ethernetconfig::slotIPCheckbox()

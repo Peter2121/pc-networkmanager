@@ -33,12 +33,12 @@ EthernetConfigData::EthernetConfigData(ethernetconfig* ethc, NMDaemonCheckStatus
                                     }
                                  );
         ipv4Aliases->erase(end, ipv4Aliases->end());
-
+/*
         foreach (const auto &jail_addr, *ipv4_jail_addresses.get())
         {
             ipv4Aliases->removeOne(jail_addr);
         }
-
+*/
         QJsonArray last_if_status = nmd->getLastIfStatus();
 
         if(!last_if_status.empty())
