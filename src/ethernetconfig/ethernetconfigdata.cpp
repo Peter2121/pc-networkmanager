@@ -52,8 +52,6 @@ EthernetConfigData::EthernetConfigData(ethernetconfig* ethc, NMDaemonCheckStatus
                     continue;
                 json_value = json_object.value(QString::fromStdString(JSON_PARAM_MEDIA));
                 str_value = json_value.toString();
-//                if(!str_value.contains("Ethernet"))
-//                     return;
                 str_value = json_object.value(QString::fromStdString(JSON_PARAM_STATUS)).toString();
                 ifStatus = str_value;
                 str_value = json_object.value(QString::fromStdString(JSON_PARAM_MEDIA)).toString();
@@ -71,26 +69,15 @@ EthernetConfigData::EthernetConfigData(ethernetconfig* ethc, NMDaemonCheckStatus
                     is_running = json_value.toBool();
                 isUpAndRunning = is_up && is_running;
                 json_array = json_object.value(QString::fromStdString(JSON_PARAM_ADDRESSES)).toArray();
-//                ipv4Aliases->clear();
                 foreach(const auto &addr, json_array)
                 {
                     json_obj = addr.toObject();
                     str_type = json_obj.value(QString::fromStdString(JSON_PARAM_ADDR_TYPE)).toString();
-                    /*
                     str_value = json_obj.value(str_type).toObject().value(QString::fromStdString(JSON_PARAM_IPV4_ADDR)).toString();
-                    if(!str_value.isEmpty())
+                    if( !str_value.isEmpty() && (str_value == ipv4Address) )
                     {
-                        if(str_value == ipv4Address)
-                        {
-                            ipv4Mask = json_obj.value(str_type).toObject().value(QString::fromStdString(JSON_PARAM_IPV4_MASK)).toString();
-                        }
-                        else
-                        {
-                            str_value += " / " + json_obj.value(str_type).toObject().value(QString::fromStdString(JSON_PARAM_IPV4_MASK)).toString();
-                            ipv4Aliases->push_back(str_value);
-                        }
+                        ipv4Mask = json_obj.value(str_type).toObject().value(QString::fromStdString(JSON_PARAM_IPV4_MASK)).toString();
                     }
-                    */
                     str_value = json_obj.value(str_type).toObject().value(QString::fromStdString(JSON_PARAM_LINK_ADDR)).toString();
                     if(!str_value.isEmpty())
                     {

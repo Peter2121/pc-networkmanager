@@ -57,6 +57,7 @@ bool NMDaemonCheckStatus::updateStatusInterfaces()
     std::unique_ptr<NMDaemonSpy> spy = nullptr;
     QJsonValue json_value;
     QJsonArray json_array;
+    QJsonObject json_obj;
     if(!doConnect())
         return false;
     timerMonitoring->stop();
@@ -76,6 +77,8 @@ bool NMDaemonCheckStatus::updateStatusInterfaces()
         if( json_value.toString() == QString::fromStdString(JSON_PARAM_SUCC) )
         {
             json_value = lastJsonReceived.value(QString::fromStdString(JSON_PARAM_DATA));
+            json_obj = json_value.toObject();
+            json_value = json_obj.value(QString::fromStdString(JSON_PARAM_INTERFACES));
             json_array = json_value.toArray();
             lastIfStatus = json_array;
             emit ifStatusUpdated();
