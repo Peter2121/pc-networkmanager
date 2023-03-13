@@ -13,6 +13,8 @@
 #include "dialogwpapersonal.h"
 #include "ui_wificonfigwidgetbase.h"
 #include <QProcess>
+#include "../NMDaemonClient/nmdaemoncheckstatus.h"
+#include "../NMDaemonClient/nmdaemonspy.h"
 
 
 // Setup our encryption type defines
@@ -38,14 +40,12 @@ class wificonfigwidgetbase : public QWidget, private Ui::wificonfigwidgetbase
         Q_OBJECT
 
 public:
-        wificonfigwidgetbase() : QWidget()
-        {
-          setupUi(this);
-	  WPAONLY=false;
-        }
+        wificonfigwidgetbase();
+        wificonfigwidgetbase(NMDaemonCheckStatus*);
 
     void setDevice( QString Device );
     void showInfo();
+    void setIsMain(bool);
     // Are we just editing WPA supplicant? 
     void setModeWPAOnly();
     void autoConnectSSID(QString ssid);
@@ -99,6 +99,9 @@ private:
     void updateWPASupp();
     QString DeviceName;
     QString Country;
+    bool IsMain;
+    bool OwnNmdStatus;
+    NMDaemonCheckStatus* nmd_status;
 
     QProcess *netifProc;
 

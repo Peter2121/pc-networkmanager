@@ -45,6 +45,7 @@ NetworkTray::NetworkTray(NMDaemonCheckStatus* nmds) : QDialog()
      }
      dialogEthernetConfig=std::make_unique<ethernetconfig>();
      EthConfig = nullptr;
+     WlanConfig = nullptr;
 }
 
 NetworkTray::~NetworkTray()
@@ -124,6 +125,11 @@ void NetworkTray::programInit(QString device)
     if(device.startsWith(IF_WIFI_PREFIX))
     {
         IsWireless = true;
+
+        ConfigWlanAction  = new QAction(tr("&Configure") + " Wireless Network", this);
+        ConfigWlanAction->setIcon(IconConfigure);
+        connect(ConfigWlanAction, &QAction::triggered, this, &NetworkTray::openWlanConfigDlg);
+
         ResetAction  = new QAction(tr("&Reset Status"), this);
         ResetAction->setIcon(IconReset);
         connect(ResetAction, &QAction::triggered, this, &NetworkTray::resetWpaSupplicant);
@@ -141,6 +147,7 @@ void NetworkTray::programInit(QString device)
     TrayIconMenu->addAction(ConfigAction);
     if(device.startsWith(IF_WIFI_PREFIX))
     {
+        TrayIconMenu->addAction(ConfigWlanAction);
         TrayIconMenu->addAction(ResetAction);
         TrayIconMenu->addAction(ScanAction);
     }
@@ -534,17 +541,6 @@ QIcon NetworkTray::getWifiIcon(int power)
 }
 
 void  NetworkTray::openConfigDlg() {
-    //std::shared_ptr<ethernetconfig> eth_config = std::make_shared<ethernetconfig>();
-    //ethernetconfig *eth_config = nullptr;
-    /*
-    wificonfigwidgetbase *wifi_config = nullptr;
-    if(IsWireless)
-    {
-        wifi_config = new wificonfigwidgetbase();
-    }
-    else
-    {
-    */
         if(EthConfig!=nullptr)
             delete EthConfig;   // TODO: What if we open multiple EthConfig dialogs??
         EthConfig = new ethernetconfig();
@@ -552,7 +548,16 @@ void  NetworkTray::openConfigDlg() {
         EthConfig->setWindowTitle(IfName + " " + "configuration");
         EthConfig->programInit();
         EthConfig->show();
-//    }
+}
+
+void  NetworkTray::openWlanConfigDlg() {
+        if(WlanConfig!=nullptr)
+            delete WlanConfig;   // TODO: What if we open multiple WlanConfig dialogs??
+        WlanConfig = new wificonfigwidgetbase(nmdStatus);
+        WlanConfig->setDevice(IfName);
+        WlanConfig->setWindowTitle("WLAN " + IfName + " " + "configuration");
+//        WlanConfig->programInit();
+        WlanConfig->show();
 }
 
 void NetworkTray::resetWpaSupplicant() {

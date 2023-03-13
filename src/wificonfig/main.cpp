@@ -39,6 +39,7 @@ int main( int argc, char ** argv )
 	 
 	 QString Device = argv[2];
 	 w.setDevice(Device);
+     w.setIsMain(true);
 	 w.showInfo();
 	 w.show();
      } else if( argc ==4){

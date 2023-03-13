@@ -1,13 +1,20 @@
 TEMPLATE	= app
 LANGUAGE	= C++
-QT += core gui widgets
+QT += core gui widgets network concurrent
+QT += testlib
+
 CONFIG	+= qt warn_on release
+CONFIG += qtc_runnable
+CONFIG += c++17
 
 LIBS	+= -L/usr/local/lib -ltrueos-utils -ltrueos-ui
+LIBS    += /usr/local/lib/libsockpp.a
 
 HEADERS	+= dialogwpaenterprise.h dialogwpapersonal.h wepconfig.h wificonfigwidgetbase.h wifiscanssid.h wifiselectiondialog.h
 
 SOURCES	+= dialogwpaenterprise.cpp dialogwpapersonal.cpp main.cpp wepconfig.cpp wificonfigwidgetbase.cpp wifiscanssid.cpp wifiselectiondialog.cpp
+include("../NMDaemonClient/NMDaemonClient.pri")
+include("../Utils/Utils.pri")
 
 FORMS += dialogwpaenterprise.ui dialogwpapersonal.ui wepconfig.ui wificonfigwidgetbase.ui wifiscanssid.ui wifiselectiondialog.ui
 

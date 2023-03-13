@@ -47,6 +47,7 @@ private slots:
 //   void openDeviceInfo();
    void onActivated(QSystemTrayIcon::ActivationReason);
    void openConfigDlg();
+   void openWlanConfigDlg();
    void resetWpaSupplicant();
 //   void monitorStatus(bool noloop=false);
    void updateStatus();
@@ -79,6 +80,7 @@ protected:
    QAction* QuitAction;
    QAction* SaveAction;
    QAction* ConfigAction;
+   QAction* ConfigWlanAction;
    QAction* ResetAction;
    QAction* ScanAction;
    QAction* StatusAction;
@@ -102,6 +104,7 @@ protected:
    QIcon IconSave;
    QDateTime LastUpdateTime;
    ethernetconfig *EthConfig;
+   wificonfigwidgetbase *WlanConfig;
 private:
    backend::NetDevice *DEVICE;
    QString IfName;

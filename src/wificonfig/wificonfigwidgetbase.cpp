@@ -25,9 +25,28 @@
 
 QString saveSSID; //need this to pass to a couple slots rather than requiring a currently available wifi
 
+wificonfigwidgetbase::wificonfigwidgetbase() : QWidget()
+{
+    setupUi(this);
+    WPAONLY=false;
+    nmd_status = new NMDaemonCheckStatus();
+    OwnNmdStatus = true;
+}
+
+wificonfigwidgetbase::wificonfigwidgetbase(NMDaemonCheckStatus* nmd) : QWidget()
+{
+    setupUi(this);
+    WPAONLY=false;
+    nmd_status = nmd;
+    OwnNmdStatus = false;
+}
+
 void wificonfigwidgetbase::slotClose()
 {
-    exit(0);
+    if(IsMain)
+      exit(0);
+    else
+      this->close();
 }
 
 void wificonfigwidgetbase::autoConnectSSID(QString ssid){
@@ -282,6 +301,10 @@ void wificonfigwidgetbase::slotCheckDHCPBox()
     pushApply->setEnabled(true);
 }
 
+void wificonfigwidgetbase::setIsMain(bool is_main)
+{
+    IsMain = is_main;
+}
 
 // Function which is called at the program init
 void wificonfigwidgetbase::setDevice( QString Device )
@@ -302,15 +325,15 @@ void wificonfigwidgetbase::setDevice( QString Device )
   DeviceName = Device;
 
   // Center the dialog window
-  QDesktopWidget *d = QApplication::desktop();
-  move(d->width() / 3, d->height() / 4);
+  //QDesktopWidget *d = QApplication::desktop();
+  //move(d->width() / 3, d->height() / 4);
 
   // Connect the slot to refresh
   QTimer::singleShot(100,  this,  SLOT(slotFinishLoading() ) );
 
   // Check if we are using the lagg0 device
-  QSettings settings("PCBSD");
-  usingLagg = settings.value("/pc-netmanager/useLagg", false).toBool();
+  //QSettings settings("PCBSD");
+  //usingLagg = settings.value("/pc-netmanager/useLagg", false).toBool();
 
   //Load the available wifi access points
   slotRescan();
@@ -366,10 +389,20 @@ void wificonfigwidgetbase::slotRescan()
     // Clear the list box and disable the add button
     listNewWifi->clear();
     pushAddWifi->setEnabled(false);
+    QVector<QPair<QString,int>> wifi_networks = nmd_status->getLastNetsWifiPower(DeviceName);
 
     // Start the scan and get the output
-    ifconfout = trueos::Utils::runShellCommand("ifconfig -v " + DeviceName + " up list scan");
+    //ifconfout = trueos::Utils::runShellCommand("ifconfig -v " + DeviceName + " up list scan");
 
+    foreach(const auto &net, wifi_networks)
+    {
+        ssid = net.first;
+        strength = net.second;
+        FileLoad = ":object-locked.png";
+        listNewWifi->addItem(new QListWidgetItem(QIcon(FileLoad), ssid + " (signal: " +strength + ")") );
+        foundItem = 1;
+    }
+/*
     //display the info for each wifi access point
     for(int i=1; i<ifconfout.size(); i++){    //Skip the header line by starting at 1
       ifline = NetworkInterface::parseWifiScanLine(ifconfout[i],true); //get a single line
@@ -416,6 +449,7 @@ void wificonfigwidgetbase::slotRescan()
       }
       } //End of check for empty SSID entry points
     }
+*/
 
     if ( foundItem == 1 ){
       listNewWifi->setCurrentRow(-1);
