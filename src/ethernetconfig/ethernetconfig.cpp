@@ -112,17 +112,8 @@ void ethernetconfig::slot_apply()
     }
 
     // Apply IPv4 aliases
-//    auto ui_aliases = getIPv4AliasesFromUi();
     auto ui_aliases = dialogConfigData->ipv4Aliases;
-//    auto if_aliases = nmd_status->getLastIPv4AliasesFromInterface(DeviceName);
     auto if_aliases = runningConfigData->ipv4Aliases;
-    /*
-    ipv4_jail_addresses = nmd_status->getLastJailsIPv4();
-    foreach (const auto &jail_addr, *ipv4_jail_addresses.get())
-    {
-        if_aliases->removeOne(jail_addr);
-    }
-    */
     std::unique_ptr<QVector<QString>> aliases_to_add = std::make_unique<QVector<QString>>(0);
     std::unique_ptr<QVector<QString>> aliases_to_remove = std::make_unique<QVector<QString>>(0);
     foreach(const QString alias, *ui_aliases)
@@ -145,6 +136,8 @@ void ethernetconfig::slot_apply()
     {
         qDebug() << "Removing alias " << alias;
         nmd_status->removeIPv4Address(DeviceName, alias.split("/").value(0).trimmed(), alias.split("/").value(1).trimmed());
+        if(dialogConfigData->isUpAndRunning)
+            nmd_status->enableInterface(DeviceName);
         action = true;
     }
 
@@ -178,56 +171,10 @@ void ethernetconfig::slot_apply()
         }
         else
         {
-        // TODO: enable DHCP for this interface
+            if(nmd_status->enableDhcp4(DeviceName))
+                action = true;
         }
     }
-/*
-    if ( groupStatic->isChecked() )
-    {
-        if ( lineIP->text() == "..." || lineNetmask->text() == "..." )
-        {
-            QMessageBox::information( this, tr("Missing Fields"),
-                        tr("You must enter an IP and Netmask to continue!\n") );
-            return;
-        }
-	
-        if ( ! Utils::validateIPv4(lineIP->text() ) )
-        {
-            QMessageBox::warning( this, tr("Warning"),
-            tr("IP Address is out of range! (") + lineIP->text() + tr(") Fields must be between 0-255.") );
-            return;
-        }
-
-        if ( ! Utils::validateIPv4(lineNetmask->text() ) )
-        {
-            QMessageBox::warning( this, tr("Warning"),
-            tr("Netmask is out of range! (") + lineNetmask->text() + tr(") Fields must be between 0-255.") );
-            return;
-        }
-
-	if ( groupWPAE->isChecked() )
-	  ifConfigLine="WPA ";
-
-	if ( checkMAC->isChecked() ) 
-	    ifConfigLine+=lineIP->text() + " netmask " + lineNetmask->text();
-	else
-	    ifConfigLine+=lineIP->text() \
-                        +" netmask " + lineNetmask->text() \
-                        + " ether " + lineMAC->text();
-
-        if( nmd_status->setIPv4Address(DeviceName, lineIP->text(), lineNetmask->text()) )
-            buttonApply->setEnabled(false);
-
-    }
-
-    else {
-	// Using WPAE config?
-	if ( groupWPAE->isChecked() )
-	  ifConfigLine="WPA DHCP";
-	else
-	  ifConfigLine="DHCP";
-    }
-*/
     if ( checkIPv6Enable->isChecked() ) {
        // Get rid of the ifconfig line for the ipv6 interface
        // Remove old deprecated syntax as well:

@@ -540,7 +540,7 @@ QString NMDaemonClient::getIPv4Address(QString ifname)
     return addr;
 }
 
-bool NMDaemonClient::isDhcpEnabled(QString ifname)
+bool NMDaemonClient::isDhcp4Enabled(QString ifname)
 {
     QString req_string = QString::asprintf(CMD_GET_IPV4_DHCP_STATUS.c_str(), ifname.toStdString().c_str());
     QJsonObject req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
@@ -616,13 +616,25 @@ bool NMDaemonClient::removeIPv4Address(QString ifname, QString address, QString 
 
 bool NMDaemonClient::enableInterface(QString ifname)
 {
-    QString req_string = QString::asprintf(CMD_IF_ENABLE.c_str(), ifname.toStdString().c_str());
+    QString req_string = QString::asprintf(CMD_SET_IF_ENABLE.c_str(), ifname.toStdString().c_str());
     return sendCommand(req_string, "enableInterface");
 }
 
 bool NMDaemonClient::disableInterface(QString ifname)
 {
-    QString req_string = QString::asprintf(CMD_IF_DISABLE.c_str(), ifname.toStdString().c_str());
+    QString req_string = QString::asprintf(CMD_SET_IF_DISABLE.c_str(), ifname.toStdString().c_str());
     return sendCommand(req_string, "disableInterface");
+}
+
+bool NMDaemonClient::enableDhcp4(QString ifname)
+{
+    QString req_string = QString::asprintf(CMD_SET_IPV4_DHCP_ENABLE.c_str(), ifname.toStdString().c_str());
+    return sendCommand(req_string, "enableDhcp4");
+}
+
+bool NMDaemonClient::disableDhcp4(QString ifname)
+{
+    QString req_string = QString::asprintf(CMD_SET_IPV4_DHCP_DISABLE.c_str(), ifname.toStdString().c_str());
+    return sendCommand(req_string, "disableDhcp4");
 }
 

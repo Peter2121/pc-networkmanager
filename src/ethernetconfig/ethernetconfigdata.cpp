@@ -116,7 +116,7 @@ EthernetConfigData::EthernetConfigData(ethernetconfig* ethc)
         ipv6Address = ethc->textIPv6->text();
         mediaStatus = ethc->textMedia->text();
         ifStatus = ethc->textStatus->text();
-        isUpAndRunning = ethc->checkDisableNetwork->isChecked();
+        isUpAndRunning = !ethc->checkDisableNetwork->isChecked();
         isIpv4Static = ethc->groupStatic->isChecked();
 
         isInitialized = true;
