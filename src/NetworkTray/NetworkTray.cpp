@@ -126,7 +126,7 @@ void NetworkTray::programInit(QString device)
     {
         IsWireless = true;
 
-        ConfigWlanAction  = new QAction(tr("&Configure") + " Wireless Network", this);
+        ConfigWlanAction  = new QAction(tr("&Configure") + " Wi-Fi", this);
         ConfigWlanAction->setIcon(IconConfigure);
         connect(ConfigWlanAction, &QAction::triggered, this, &NetworkTray::openWlanConfigDlg);
 

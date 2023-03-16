@@ -389,17 +389,21 @@ void wificonfigwidgetbase::slotRescan()
     // Clear the list box and disable the add button
     listNewWifi->clear();
     pushAddWifi->setEnabled(false);
-    QVector<QPair<QString,int>> wifi_networks = nmd_status->getLastNetsWifiPower(DeviceName);
+    QVector<WifiNetworkDetails> wifi_networks = nmd_status->getLastNetsWifiDetails(DeviceName);
 
     // Start the scan and get the output
     //ifconfout = trueos::Utils::runShellCommand("ifconfig -v " + DeviceName + " up list scan");
 
     foreach(const auto &net, wifi_networks)
     {
-        ssid = net.first;
-        strength = net.second;
-        FileLoad = ":object-locked.png";
-        listNewWifi->addItem(new QListWidgetItem(QIcon(FileLoad), ssid + " (signal: " +strength + ")") );
+        ssid = net.SSID;
+//        strength = net.Power;
+//      TODO: manage WIFI_SECURITY_ERROR case (don't load any icon)
+        if(net.Security == NMDaemonClient::WIFI_SECURITY_OPEN)
+            FileLoad = ":object-unlocked.png";
+        else
+            FileLoad = ":object-locked.png";
+        listNewWifi->addItem(new QListWidgetItem(QIcon(FileLoad), ssid + " (signal: " + QString(std::to_string(net.Power).c_str()) + "%)") );
         foundItem = 1;
     }
 /*

@@ -4,6 +4,13 @@
 #include "nmdaemonclient.h"
 #include <QTimer>
 
+struct WifiNetworkDetails
+{
+    QString SSID;
+    QString Security;
+    int Power;
+};
+
 class NMDaemonCheckStatus : public NMDaemonClient
 {
     Q_OBJECT
@@ -45,6 +52,7 @@ public:
     QVector<QPair<QString,QJsonObject>> getLastWifiIfStatus() const { return lastWifiIfStatus; }
     QPair<QString,int> getLastIfWifiNetwork(QString ifname) const;  // <SSID,power>
     QVector<QPair<QString,int>> getLastNetsWifiPower(QString) const;
+    QVector<WifiNetworkDetails> getLastNetsWifiDetails(QString) const;
     QString getLastIfStatusString(QString) const;
     QPair<QString,QString> getIfMedia(QString) const;   // Status, Media
     std::shared_ptr<QVector<QString>> getLastIPv4AliasesFromInterface(QString);

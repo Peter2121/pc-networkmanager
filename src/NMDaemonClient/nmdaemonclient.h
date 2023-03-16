@@ -51,11 +51,6 @@ protected:
 
     //static inline const QString CMD_GET_WPA_IF_LIST = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_LIST_IF\" }";
     //static inline const QString CMD_GWPA_TSAV = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_SAVE\", \"DATA\" : { \"INTERFACE NAME\" : \"wlan0\" } }";
-    static inline const QString WIFI_SECURITY_ERROR = "ERROR";
-    static inline const QString WIFI_SECURITY_OPEN = "OPEN";
-    static inline const QString WIFI_SECURITY_WEP = "WEP";
-    static inline const QString WIFI_SECURITY_WPA_PSK = "WPA-PSK";
-    static inline const QString WIFI_SECURITY_WPA2_PSK = "WPA2-PSK";
     static inline const QString NMD_SOCKET_DEFAULT = "/var/run/nmd.socket";
     static constexpr int NM_MAXBUF = 8192;
     static constexpr int SOCKET_CONNECT_TIMEOUT_MSEC = 500;
@@ -84,6 +79,12 @@ protected:
     void cbSendSuccessWifiNetEnable(QString ssid) { emit successWifiNetEnable(ssid); }
     void cbSendSuccessWifiNetAdd(QString ssid) { emit successWifiNetAdd(ssid); }
 public:
+    static inline const QString WIFI_SECURITY_ERROR = "ERROR";
+    static inline const QString WIFI_SECURITY_OPEN = "OPEN";
+    static inline const QString WIFI_SECURITY_WEP = "WEP";
+    static inline const QString WIFI_SECURITY_WPA_PSK = "WPA-PSK";
+    static inline const QString WIFI_SECURITY_WPA2_PSK = "WPA2-PSK";
+
     NMDaemonClient();
     NMDaemonClient(bool);
     NMDaemonClient(QString, bool);
@@ -99,7 +100,7 @@ public:
     bool enableNetwork(QString, QString);
     int getWpaNetworkId(QString, QString);
     QJsonObject getJsonForSsid(QString);
-    QString getWifiNetworkSecurity(QString, QString);
+    QString getWifiNetworkSecurity(QString, QString) const;
     bool checkSuccess(QJsonObject);
     QString getIPv4Address(QString);
     bool isDhcp4Enabled(QString);

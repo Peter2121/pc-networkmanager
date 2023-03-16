@@ -263,6 +263,46 @@ QVector<QPair<QString,int>> NMDaemonCheckStatus::getLastNetsWifiPower(QString if
     return nets_power;
 }
 
+QVector<WifiNetworkDetails> NMDaemonCheckStatus::getLastNetsWifiDetails(QString ifname) const
+{
+    QVector<WifiNetworkDetails> nets_details;
+    WifiNetworkDetails details;
+    QJsonObject json_object;
+    QJsonArray json_array;
+    QJsonValue json_value;
+    int isig=0, inoi=0;
+    QString caps, ies;
+
+    foreach(const auto &netst, lastWifiNetStatus)
+    {
+        if(netst.first == ifname)
+        {
+            json_array = netst.second.value("NETWORKS").toArray();
+            foreach(const auto &net, json_array)
+            {
+                isig = qAbs(net.toObject().value("SIGNAL").toInt());
+                inoi = qAbs(net.toObject().value("NOISE").toInt());
+                details.SSID = net.toObject().value("SSID").toString();
+                if(details.SSID.isEmpty())
+                    details.SSID = net.toObject().value("BSSID").toString();
+                details.Power = (inoi-isig)*4;
+                if(details.Power>5)
+                {
+                    caps = net.toObject().value("CAPS").toString();
+                    ies = net.toObject().value("IES").toString();
+                    if( (!caps.isEmpty()) && (!ies.isEmpty()) )
+                    {
+                        details.Security = getWifiNetworkSecurity(caps, ies);
+                    }
+                    nets_details.push_back(details);
+                }
+            }
+        }
+    }
+
+    return nets_details;
+}
+
 QString NMDaemonCheckStatus::getLastIfStatusString(QString ifname) const
 {
     QString ret_string;
@@ -416,3 +456,4 @@ bool NMDaemonCheckStatus::updateStatusJails()
     timerMonitoring->start();
     return false;
 }
+

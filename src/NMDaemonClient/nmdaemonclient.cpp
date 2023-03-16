@@ -423,7 +423,7 @@ void NMDaemonClient::cbWifiNetAdd(QString ifname, QString ssid)
 }
 
 // Used code from trueos-utils-qt5 QString NetworkInterface::parseWifiSecurity( QString caps, QString etc )
-QString NMDaemonClient::getWifiNetworkSecurity(QString caps, QString ies)
+QString NMDaemonClient::getWifiNetworkSecurity(QString caps, QString ies) const
 {
     bool isDisabled = !caps.contains("P") && caps.contains("ES");
     bool isWEP = caps.contains("EP");
