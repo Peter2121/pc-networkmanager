@@ -461,7 +461,23 @@ void wificonfigwidgetbase::slotRescan()
     } else {
       pushAddWifi->setEnabled(false);
     }
+//    listNetworks();
+}
 
+void wificonfigwidgetbase::listNetworks()
+{
+    WPAConfiguredNetworks = nmd_status->getWpaNetworkList(DeviceName);
+    listWifi->clear();
+    foreach (const auto &net, WPAConfiguredNetworks)
+    {
+        QString ssid = net.value(QString::fromStdString(JSON_PARAM_SSID).toLower()).toString();
+        QString flags = net.value(QString::fromStdString(JSON_PARAM_FLAGS).toLower()).toString();
+        bool is_disabled = flags.contains("DISABLED");
+        QString net_line = ssid;
+        if(is_disabled)
+            net_line += " (DISABLED)";
+        listWifi->addItem(new QListWidgetItem(net_line));
+    }
 }
 
 // Slot which moves a SSID higher in the connection priority
@@ -1458,7 +1474,8 @@ void wificonfigwidgetbase::slotFinishLoading()
 // Slot which reads the arrays and displays the list of WIFI profiles
 void wificonfigwidgetbase::slotRefreshSSIDList()
 {
-
+    listNetworks();
+/*
   listWifi->clear();
 
   int curItem=0;
@@ -1481,7 +1498,7 @@ void wificonfigwidgetbase::slotRefreshSSIDList()
 	break;
      }
   }
-
+*/
 }
 
 

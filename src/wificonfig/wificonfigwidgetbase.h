@@ -49,6 +49,7 @@ public:
     // Are we just editing WPA supplicant? 
     void setModeWPAOnly();
     void autoConnectSSID(QString ssid);
+    void listNetworks();
 
 public slots:
 
@@ -102,6 +103,7 @@ private:
     bool IsMain;
     bool OwnNmdStatus;
     NMDaemonCheckStatus* nmd_status;
+    QVector<QJsonObject> WPAConfiguredNetworks;
 
     QProcess *netifProc;
 

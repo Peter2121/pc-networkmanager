@@ -112,6 +112,7 @@ public:
     bool sendCommand(QString, QString);
     bool enableDhcp4(QString);
     bool disableDhcp4(QString);
+    QVector<QJsonObject> getWpaNetworkList(QString);
 signals:
     void dataReady(QJsonObject);
     void connected();

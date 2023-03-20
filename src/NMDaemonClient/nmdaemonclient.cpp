@@ -315,6 +315,42 @@ int NMDaemonClient::getWpaNetworkId(QString ifname, QString ssid)
     return net_id;
 }
 
+QVector<QJsonObject> NMDaemonClient::getWpaNetworkList(QString ifname)
+{
+    QVector<QJsonObject> ret_nets;
+    QString req_string = QString::asprintf(CMD_WPA_LIST_NETWORKS.c_str(), ifname.toStdString().c_str());
+    QJsonObject req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
+    lastJsonReceived = QJsonObject();
+    std::unique_ptr<NMDaemonSpy> readspy = std::make_unique<NMDaemonSpy>(this, &NMDaemonClient::dataReady);
+    QJsonObject json_object;
+    QJsonValue json_value;
+    QJsonArray json_array;
+
+    if(!sendRequest(req_object))
+    {
+        return ret_nets;
+    }
+    readspy->wait(DEFAULT_READ_WAIT_TIME_MSEC);
+    if(!lastJsonReceived.empty())
+    {
+        json_value = lastJsonReceived.value(QString::fromStdString(JSON_PARAM_RESULT));
+        if(json_value.toString().toStdString() == JSON_PARAM_SUCC)
+        {
+            json_value = lastJsonReceived.value(QString::fromStdString(JSON_PARAM_DATA));
+            json_object = json_value.toObject();
+            json_value = json_object.value(QString::fromStdString(JSON_PARAM_NETWORKS));
+            json_array = json_value.toArray();
+            foreach (const QJsonValue &v, json_array)
+            {
+                json_object = v.toObject();
+                if(!json_object.isEmpty())
+                    ret_nets.push_back(json_object);
+            }
+        }
+    }
+    return ret_nets;
+}
+
 bool NMDaemonClient::updatePsk(QString ifname, QString ssid, QString psk, bool hexkey)
 {
     if(hexkey)
