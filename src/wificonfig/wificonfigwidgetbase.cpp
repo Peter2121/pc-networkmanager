@@ -472,11 +472,15 @@ void wificonfigwidgetbase::listNetworks()
     {
         QString ssid = net.value(QString::fromStdString(JSON_PARAM_SSID).toLower()).toString();
         QString flags = net.value(QString::fromStdString(JSON_PARAM_FLAGS).toLower()).toString();
-        bool is_disabled = flags.contains("DISABLED");
-        QString net_line = ssid;
-        if(is_disabled)
-            net_line += " (DISABLED)";
-        listWifi->addItem(new QListWidgetItem(net_line));
+        QString net_line = ssid + " " + flags;
+        QString key_mgmt = net.value(QString::fromStdString("key_mgmt").toLower()).toString();
+        if( key_mgmt.contains(NMDaemonClient::WIFI_SECURITY_WEP) ||
+            key_mgmt.contains(NMDaemonClient::WIFI_SECURITY_WPA_PSK) ||
+            key_mgmt.contains(NMDaemonClient::WIFI_SECURITY_WPA2_PSK)
+          )
+            listWifi->addItem(new QListWidgetItem(QIcon(":object-locked.png"), net_line ) );
+        else
+            listWifi->addItem(new QListWidgetItem(QIcon(":object-unlocked.png"), net_line ) );
     }
 }
 
