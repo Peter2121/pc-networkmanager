@@ -15,6 +15,7 @@
 #include <QProcess>
 #include "../NMDaemonClient/nmdaemoncheckstatus.h"
 #include "../NMDaemonClient/nmdaemonspy.h"
+#include "wpasuppnetwork.h"
 
 
 // Setup our encryption type defines
@@ -95,6 +96,7 @@ private:
     QString getGatewayForIdent( QString ident );
     QString getMediaForIdent( QString ident );
     QString getWifiParent( QString dev );
+    int getWpaNetworks(QVector<WpaSuppNetwork>& nets);
     void loadCountryCodes();
     void runCommand( QString Command );
     void updateWPASupp();
@@ -104,6 +106,8 @@ private:
     bool OwnNmdStatus;
     NMDaemonCheckStatus* nmd_status;
     QVector<QJsonObject> WPAConfiguredNetworks;
+    QVector<WpaSuppNetwork> WPANetworksSystem;
+    QVector<WpaSuppNetwork> WPANetworksDialog;
 
     QProcess *netifProc;
 

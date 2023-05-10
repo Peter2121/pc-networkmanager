@@ -467,17 +467,26 @@ void wificonfigwidgetbase::slotRescan()
 void wificonfigwidgetbase::listNetworks()
 {
     WPAConfiguredNetworks = nmd_status->getWpaNetworkList(DeviceName);
+    getWpaNetworks(WPANetworksSystem);
+    getWpaNetworks(WPANetworksDialog);
     listWifi->clear();
-    foreach (const auto &net, WPAConfiguredNetworks)
+    //foreach (const auto &net, WPAConfiguredNetworks)
+    foreach (const auto &net, WPANetworksSystem)
     {
-        QString ssid = net.value(QString::fromStdString(JSON_PARAM_SSID).toLower()).toString();
-        QString flags = net.value(QString::fromStdString(JSON_PARAM_FLAGS).toLower()).toString();
-        QString net_line = ssid + " " + flags;
-        QString key_mgmt = net.value(QString::fromStdString("key_mgmt").toLower()).toString();
-        if( key_mgmt.contains(NMDaemonClient::WIFI_SECURITY_WEP) ||
-            key_mgmt.contains(NMDaemonClient::WIFI_SECURITY_WPA_PSK) ||
-            key_mgmt.contains(NMDaemonClient::WIFI_SECURITY_WPA2_PSK)
-          )
+//        QString ssid = net.value(QString::fromStdString(JSON_PARAM_SSID).toLower()).toString();
+        QString ssid = net.GetSsid();
+//        QString flags = net.value(QString::fromStdString(JSON_PARAM_FLAGS).toLower()).toString();
+        QString net_line = ssid;
+        if(!net.IsEnabled())
+            net_line += " [disabled]";
+        if(net.IsCurrent())
+            net_line += " [current]";
+//        QString key_mgmt = net.value(QString::fromStdString("key_mgmt").toLower()).toString();
+//        if( key_mgmt.contains(NMDaemonClient::WIFI_SECURITY_WEP) ||
+//            key_mgmt.contains(NMDaemonClient::WIFI_SECURITY_WPA_PSK) ||
+//            key_mgmt.contains(NMDaemonClient::WIFI_SECURITY_WPA2_PSK)
+//          )
+        if(net.IsProtected())
             listWifi->addItem(new QListWidgetItem(QIcon(":object-locked.png"), net_line ) );
         else
             listWifi->addItem(new QListWidgetItem(QIcon(":object-unlocked.png"), net_line ) );
@@ -1572,4 +1581,29 @@ void wificonfigwidgetbase::setModeWPAOnly()
     pushAddHidden->setText(tr("Add &network"));
     setWindowTitle("WPA Supplicant Configuration");
     tabMainWidget->setTabText(0, tr("WPA Configuration") );
+}
+
+int wificonfigwidgetbase::getWpaNetworks(QVector<WpaSuppNetwork>& networks)
+{
+    networks.clear();
+    foreach (const auto &net, WPAConfiguredNetworks)
+    {
+        QString ssid = net.value(QString::fromStdString(JSON_PARAM_SSID).toLower()).toString();
+        QString flags = net.value(QString::fromStdString(JSON_PARAM_FLAGS).toLower()).toString();
+        bool enabled = !flags.contains(QString::fromStdString("DISABLED"));
+        bool current = flags.contains(QString::fromStdString("CURRENT"));
+        int priority = net.value(QString::fromStdString("PRIORITY").toLower()).toInt();
+        bool protectedd = false;
+        QString key_mgmt = net.value(QString::fromStdString("key_mgmt").toLower()).toString();
+        if( key_mgmt.contains(NMDaemonClient::WIFI_SECURITY_WEP) ||
+            key_mgmt.contains(NMDaemonClient::WIFI_SECURITY_WPA_PSK) ||
+            key_mgmt.contains(NMDaemonClient::WIFI_SECURITY_WPA2_PSK)
+          )
+            protectedd = true;
+        else
+            protectedd = false;
+        WpaSuppNetwork addnet = WpaSuppNetwork(ssid, priority, enabled, current, protectedd);
+        networks.push_back(addnet);
+    }
+    return networks.count();
 }

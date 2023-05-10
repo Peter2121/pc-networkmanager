@@ -10,9 +10,11 @@ CONFIG += c++17
 LIBS	+= -L/usr/local/lib -ltrueos-utils -ltrueos-ui
 LIBS    += /usr/local/lib/libsockpp.a
 
-HEADERS	+= dialogwpaenterprise.h dialogwpapersonal.h wepconfig.h wificonfigwidgetbase.h wifiscanssid.h wifiselectiondialog.h
+HEADERS	+= dialogwpaenterprise.h dialogwpapersonal.h wepconfig.h wificonfigwidgetbase.h wifiscanssid.h wifiselectiondialog.h \
+    wpasuppnetwork.h
 
-SOURCES	+= dialogwpaenterprise.cpp dialogwpapersonal.cpp main.cpp wepconfig.cpp wificonfigwidgetbase.cpp wifiscanssid.cpp wifiselectiondialog.cpp
+SOURCES	+= dialogwpaenterprise.cpp dialogwpapersonal.cpp main.cpp wepconfig.cpp wificonfigwidgetbase.cpp wifiscanssid.cpp wifiselectiondialog.cpp \
+    wpasuppnetwork.cpp
 include("../NMDaemonClient/NMDaemonClient.pri")
 include("../Utils/Utils.pri")
 
