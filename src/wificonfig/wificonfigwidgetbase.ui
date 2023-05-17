@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>397</width>
+    <width>480</width>
     <height>558</height>
    </rect>
   </property>
@@ -184,7 +184,15 @@
               <string>Enable</string>
              </property>
              <property name="icon">
-              <iconset theme="/usr/local/share/icons/HighContrast/48x48/actions/object-select.png"/>
+              <iconset theme="/usr/local/share/icons/HighContrast/48x48/actions/object-select.png">
+               <normaloff>.</normaloff>.</iconset>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="pushDisable">
+             <property name="text">
+              <string>Disable</string>
              </property>
             </widget>
            </item>

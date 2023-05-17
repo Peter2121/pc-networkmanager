@@ -62,6 +62,8 @@ private slots:
     void slotAddNewProfile();
     void slotEditProfile();
     void slotRemoveProfile();
+    void slotEnableProfile();
+    void slotDisableProfile();
     void slotRemoveProfileSSID(QString RemoveSSID);
     void slotAddNewProfileSSID(QString ssidc);
     void slotAddNewProfileOpen( QString SSID, bool isBSSID );
@@ -108,6 +110,7 @@ private:
     QVector<QJsonObject> WPAConfiguredNetworks;
     QVector<WpaSuppNetwork> WPANetworksSystem;
     QVector<WpaSuppNetwork> WPANetworksDialog;
+    void refreshNetworksList();
 
     QProcess *netifProc;
 

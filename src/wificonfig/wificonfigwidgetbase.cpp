@@ -313,6 +313,8 @@ void wificonfigwidgetbase::setDevice( QString Device )
   // Connect our add / remove buttons for wifi
   connect( pushDown, SIGNAL( clicked() ), this, SLOT( slotMoveDown() ) );
   connect( pushUp, SIGNAL( clicked() ), this, SLOT( slotMoveUp() ) );
+  connect( pushEnable, SIGNAL( clicked() ), this, SLOT( slotEnableProfile() ) );
+  connect( pushDisable, SIGNAL( clicked() ), this, SLOT( slotDisableProfile() ) );
   connect( pushAddWifi, SIGNAL( clicked() ), this, SLOT( slotAddNewProfile() ) );
   connect( pushEditWifi, SIGNAL( clicked() ), this, SLOT( slotEditProfile() ) );
   connect( pushRemoveWifi, SIGNAL( clicked() ), this, SLOT( slotRemoveProfile() ) );
@@ -469,23 +471,20 @@ void wificonfigwidgetbase::listNetworks()
     WPAConfiguredNetworks = nmd_status->getWpaNetworkList(DeviceName);
     getWpaNetworks(WPANetworksSystem);
     getWpaNetworks(WPANetworksDialog);
+    refreshNetworksList();
+}
+
+void wificonfigwidgetbase::refreshNetworksList()
+{
     listWifi->clear();
-    //foreach (const auto &net, WPAConfiguredNetworks)
-    foreach (const auto &net, WPANetworksSystem)
+    foreach (const auto &net, WPANetworksDialog)
     {
-//        QString ssid = net.value(QString::fromStdString(JSON_PARAM_SSID).toLower()).toString();
         QString ssid = net.GetSsid();
-//        QString flags = net.value(QString::fromStdString(JSON_PARAM_FLAGS).toLower()).toString();
         QString net_line = ssid;
         if(!net.IsEnabled())
             net_line += " [disabled]";
         if(net.IsCurrent())
             net_line += " [current]";
-//        QString key_mgmt = net.value(QString::fromStdString("key_mgmt").toLower()).toString();
-//        if( key_mgmt.contains(NMDaemonClient::WIFI_SECURITY_WEP) ||
-//            key_mgmt.contains(NMDaemonClient::WIFI_SECURITY_WPA_PSK) ||
-//            key_mgmt.contains(NMDaemonClient::WIFI_SECURITY_WPA2_PSK)
-//          )
         if(net.IsProtected())
             listWifi->addItem(new QListWidgetItem(QIcon(":object-locked.png"), net_line ) );
         else
@@ -1606,4 +1605,40 @@ int wificonfigwidgetbase::getWpaNetworks(QVector<WpaSuppNetwork>& networks)
         networks.push_back(addnet);
     }
     return networks.count();
+}
+
+void wificonfigwidgetbase::slotEnableProfile()
+{
+    if ( listWifi->currentRow() != -1 )
+    {
+        QString enable_ssid = listWifi->item(listWifi->currentRow())->text().split('[')[0].trimmed();
+        for (int i=0; i<WPANetworksDialog.count(); i++)
+        {
+            if ( WPANetworksDialog[i].GetSsid() == enable_ssid )
+            {
+                WPANetworksDialog[i].Enable();
+                break;
+            }
+        }
+        refreshNetworksList();
+        pushApply->setEnabled(true);
+    }
+}
+
+void wificonfigwidgetbase::slotDisableProfile()
+{
+    if ( listWifi->currentRow() != -1 )
+    {
+        QString disable_ssid = listWifi->item(listWifi->currentRow())->text().split('[')[0].trimmed();
+        for (int i=0; i<WPANetworksDialog.count(); i++)
+        {
+            if ( WPANetworksDialog[i].GetSsid() == disable_ssid )
+            {
+                WPANetworksDialog[i].Disable();
+                break;
+            }
+        }
+        refreshNetworksList();
+        pushApply->setEnabled(true);
+    }
 }
