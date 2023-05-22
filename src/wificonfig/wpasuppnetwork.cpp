@@ -9,24 +9,14 @@ WpaSuppNetwork::WpaSuppNetwork(QString ssid, int priority, bool enabled, bool cu
 {
 }
 
-void WpaSuppNetwork::operator ++ ()
+void WpaSuppNetwork::IncreasePriority()
 {
     Priority++;
 }
 
-void WpaSuppNetwork::operator -- ()
+void WpaSuppNetwork::DecreasePriority()
 {
     Priority--;
-}
-
-bool WpaSuppNetwork::operator == (const WpaSuppNetwork& net)
-{
-    return (Priority == net.GetPriority());
-}
-
-bool WpaSuppNetwork::operator < (const WpaSuppNetwork& net)
-{
-    return (Priority < net.GetPriority());
 }
 
 void WpaSuppNetwork::Enable()
@@ -82,4 +72,24 @@ bool WpaSuppNetwork::IsCurrent() const
 bool WpaSuppNetwork::IsProtected() const
 {
     return Protected;
+}
+
+bool operator == (const WpaSuppNetwork& net1, const WpaSuppNetwork& net2)
+{
+    return (net1.GetPriority() == net2.GetPriority());
+}
+
+bool operator < (const WpaSuppNetwork& net1, const WpaSuppNetwork& net2)
+{
+    return (net1.GetPriority() < net2.GetPriority());
+}
+
+void operator ++ (WpaSuppNetwork& net)
+{
+    net.IncreasePriority();
+}
+
+void operator -- (WpaSuppNetwork& net)
+{
+    net.DecreasePriority();
 }

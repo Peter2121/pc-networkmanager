@@ -481,17 +481,94 @@ void wificonfigwidgetbase::refreshNetworksList()
     {
         QString ssid = net.GetSsid();
         QString net_line = ssid;
+        QString net_tip = "SSID: " + ssid + "\nPriority: " + QString::number(net.GetPriority());
+        QListWidgetItem* item_net_line = nullptr;
         if(!net.IsEnabled())
+        {
             net_line += " [disabled]";
+            net_tip += "\n[disabled]";
+        }
         if(net.IsCurrent())
+        {
             net_line += " [current]";
+            net_tip += "\n[current]";
+        }
         if(net.IsProtected())
-            listWifi->addItem(new QListWidgetItem(QIcon(":object-locked.png"), net_line ) );
+        {
+            item_net_line = new QListWidgetItem(QIcon(":object-locked.png"), net_line);
+            item_net_line->setToolTip(net_tip);
+            listWifi->addItem(item_net_line);
+        }
         else
-            listWifi->addItem(new QListWidgetItem(QIcon(":object-unlocked.png"), net_line ) );
+        {
+            item_net_line = new QListWidgetItem(QIcon(":object-unlocked.png"), net_line);
+            item_net_line->setToolTip(net_tip);
+            listWifi->addItem(item_net_line);
+        }
+    }
+    listWifi->setMouseTracking(true);
+}
+
+
+// Slot which moves a SSID higher in the connection priority
+void wificonfigwidgetbase::slotMoveUp()
+{
+    int itomove = -1;
+
+    if ( listWifi->currentRow() != -1 )
+    {
+        QString move_ssid = listWifi->item(listWifi->currentRow())->text().split('[')[0].trimmed();
+        for (int i=0; i<WPANetworksDialog.count(); i++)
+        {
+            if ( WPANetworksDialog[i].GetSsid() == move_ssid )
+            {
+                itomove = i;
+                break;
+            }
+        }
+        if(itomove > 0)
+        {
+            if(WPANetworksDialog[itomove-1].GetPriority()==WPANetworksDialog[itomove].GetPriority())
+                WPANetworksDialog[itomove].IncreasePriority();
+            else if(WPANetworksDialog[itomove-1].GetPriority()>WPANetworksDialog[itomove].GetPriority())
+                WPANetworksDialog[itomove].SetPriority(WPANetworksDialog[itomove-1].GetPriority()+1);
+            std::sort(WPANetworksDialog.begin(), WPANetworksDialog.end());
+            std::reverse(WPANetworksDialog.begin(), WPANetworksDialog.end());
+            refreshNetworksList();
+            pushApply->setEnabled(true);
+        }
     }
 }
 
+void wificonfigwidgetbase::slotMoveDown()
+{
+    int itomove = -1;
+
+    if ( listWifi->currentRow() != -1 )
+    {
+        QString move_ssid = listWifi->item(listWifi->currentRow())->text().split('[')[0].trimmed();
+        for (int i=0; i<WPANetworksDialog.count(); i++)
+        {
+            if ( WPANetworksDialog[i].GetSsid() == move_ssid )
+            {
+                itomove = i;
+                break;
+            }
+        }
+        if( (itomove > 0) && (itomove < WPANetworksDialog.count()-1))
+        {
+            if(WPANetworksDialog[itomove+1].GetPriority()==WPANetworksDialog[itomove].GetPriority())
+                WPANetworksDialog[itomove].DecreasePriority();
+            else if(WPANetworksDialog[itomove+1].GetPriority()<WPANetworksDialog[itomove].GetPriority())
+                WPANetworksDialog[itomove].SetPriority(WPANetworksDialog[itomove+1].GetPriority()-1);
+            std::sort(WPANetworksDialog.begin(), WPANetworksDialog.end());
+            std::reverse(WPANetworksDialog.begin(), WPANetworksDialog.end());
+            refreshNetworksList();
+            pushApply->setEnabled(true);
+        }
+    }
+}
+/*
 // Slot which moves a SSID higher in the connection priority
 void wificonfigwidgetbase::slotMoveUp()
 {
@@ -589,8 +666,9 @@ void wificonfigwidgetbase::slotMoveUp()
       }
     }
 }
+*/
 
-
+/*
 // Slot which moves a SSID lower in the connection priority
 void wificonfigwidgetbase::slotMoveDown()
 {
@@ -689,6 +767,7 @@ void wificonfigwidgetbase::slotMoveDown()
 
     }
 }
+*/
 
 void wificonfigwidgetbase::slotEditProfile()
 {
@@ -1591,7 +1670,8 @@ int wificonfigwidgetbase::getWpaNetworks(QVector<WpaSuppNetwork>& networks)
         QString flags = net.value(QString::fromStdString(JSON_PARAM_FLAGS).toLower()).toString();
         bool enabled = !flags.contains(QString::fromStdString("DISABLED"));
         bool current = flags.contains(QString::fromStdString("CURRENT"));
-        int priority = net.value(QString::fromStdString("PRIORITY").toLower()).toInt();
+        //QString qstr_priority = net.value(QString::fromStdString("PRIORITY").toLower()).toString();
+        int priority = net.value(QString::fromStdString("PRIORITY").toLower()).toString().toInt();
         bool protectedd = false;
         QString key_mgmt = net.value(QString::fromStdString("key_mgmt").toLower()).toString();
         if( key_mgmt.contains(NMDaemonClient::WIFI_SECURITY_WEP) ||
@@ -1604,6 +1684,8 @@ int wificonfigwidgetbase::getWpaNetworks(QVector<WpaSuppNetwork>& networks)
         WpaSuppNetwork addnet = WpaSuppNetwork(ssid, priority, enabled, current, protectedd);
         networks.push_back(addnet);
     }
+    std::sort(networks.begin(), networks.end());
+    std::reverse(networks.begin(), networks.end());
     return networks.count();
 }
 

@@ -8,10 +8,6 @@ class WpaSuppNetwork
 public:
     WpaSuppNetwork();
     WpaSuppNetwork(QString, int, bool, bool, bool);
-    void operator ++ ();
-    void operator -- ();
-    bool operator == (const WpaSuppNetwork&);
-    bool operator < (const WpaSuppNetwork&);
     void Enable();
     void Disable();
 
@@ -19,6 +15,8 @@ public:
     void SetSsid(const QString &newSsid);
     int GetPriority() const;
     void SetPriority(int newPriority);
+    void IncreasePriority();
+    void DecreasePriority();
     void SetCurrent();
     void UnsetCurrent();
     bool IsEnabled() const;
@@ -32,5 +30,11 @@ protected:
     bool Current;
     bool Protected;
 };
+
+bool operator == (const WpaSuppNetwork&, const WpaSuppNetwork&);
+bool operator < (const WpaSuppNetwork&, const WpaSuppNetwork&);
+void operator ++ (WpaSuppNetwork&);
+void operator -- (WpaSuppNetwork&);
+
 
 #endif // WPASUPPNETWORK_H
