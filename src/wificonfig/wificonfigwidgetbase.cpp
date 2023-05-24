@@ -568,206 +568,6 @@ void wificonfigwidgetbase::slotMoveDown()
         }
     }
 }
-/*
-// Slot which moves a SSID higher in the connection priority
-void wificonfigwidgetbase::slotMoveUp()
-{
-    QString tmpString;
-    int tmpInt;
-    bool tmpBool;
-    int curRow = 1;
-    bool MovedItem = false;
-
-    // Check if we have a selection to work with
-    if ( listWifi->currentRow() != -1 )
-    {
-      // Locate the SSID we want to remove
-      QString editSSID = listWifi->item(listWifi->currentRow())->text();
-      for ( int i = 0; i < 145; i++)
-      {
-          if ( SSIDList[i] == editSSID && i != 0 )
-          {
-            // We found the ssid we need to move up
-            tmpString = SSIDList[i-1];
-            SSIDList[i-1] = SSIDList[i] ;
-            SSIDList[i] = tmpString;
-
-            tmpInt = SSIDEncType[i-1];
-            SSIDEncType[i-1] = SSIDEncType[i];
-            SSIDEncType[i] = tmpInt;
-
-            tmpBool = BSSID[i-1];
-            BSSID[i-1] = BSSID[i];
-            BSSID[i] = tmpBool;
-
-            tmpString = WEPKey[i-1];
-            WEPKey[i-1] = WEPKey[i];
-            WEPKey[i] = tmpString;
-
-            tmpInt = WEPIndex[i-1];
-            WEPIndex[i-1] = WEPIndex[i];
-            WEPIndex[i] = tmpInt;
-
-            tmpBool = WEPHex[i-1];
-            WEPHex[i-1] = WEPHex[i];
-            WEPHex[i] = tmpBool;
-
-            tmpString = WPAPersonalKey[i-1];
-            WPAPersonalKey[i-1] = WPAPersonalKey[i];
-            WPAPersonalKey[i] = tmpString;
-
-            tmpString = WPAEIdent[i-1];
-            WPAEIdent[i-1] = WPAEIdent[i];
-            WPAEIdent[i] = tmpString;
-
-            tmpString = WPAEAnonIdent[i-1];
-            WPAEAnonIdent[i-1] = WPAEAnonIdent[i];
-            WPAEAnonIdent[i] = tmpString;
-
-            tmpString = WPAECACert[i-1];
-            WPAECACert[i-1] = WPAECACert[i];
-            WPAECACert[i] = tmpString;
-
-            tmpString = WPAEClientCert[i-1];
-            WPAEClientCert[i-1] = WPAEClientCert[i];
-            WPAEClientCert[i] = tmpString;
-
-            tmpString = WPAEPrivKeyFile[i-1];
-            WPAEPrivKeyFile[i-1] = WPAEPrivKeyFile[i];
-            WPAEPrivKeyFile[i] = tmpString;
-
-            tmpString = WPAEPassword[i-1];
-            WPAEPassword[i-1] = WPAEPassword[i];
-            WPAEPassword[i] = tmpString;
-
-            tmpInt = WPAEType[i-1];
-            WPAEType[i-1] = WPAEType[i];
-            WPAEType[i] = tmpInt;
-
-            tmpInt = WPAEKeyMgmt[i-1];
-            WPAEKeyMgmt[i-1] = WPAEKeyMgmt[i];
-            WPAEKeyMgmt[i] = tmpInt;
-
-            tmpInt = WPAEPhase2[i-1];
-            WPAEPhase2[i-1] = WPAEPhase2[i];
-            WPAEPhase2[i] = tmpInt;
-
-            curRow=i-1;
-            MovedItem=true;
-            break;
-          }
-      }
-
-      // Refresh the SSID list and enable the apply button
-      if ( MovedItem) {
-        slotRefreshSSIDList();
-        pushApply->setEnabled(true);
-        listWifi->setCurrentRow(curRow);
-      }
-    }
-}
-*/
-
-/*
-// Slot which moves a SSID lower in the connection priority
-void wificonfigwidgetbase::slotMoveDown()
-{
-    QString tmpString;
-    int tmpInt;
-    bool tmpBool;
-    int curRow = 1;
-    bool MovedItem = false;
-
-    // Check if we have a selection to work with
-    if ( listWifi->currentRow() != -1 )
-    {
-      // Locate the SSID we want to remove
-      QString editSSID = listWifi->item(listWifi->currentRow())->text();
-      for ( int i = 0; i < 145; i++)
-      {
-          if ( SSIDList[i] == editSSID && ! SSIDList[i+1].isEmpty())
-          {
-            // We found the ssid we need to move down
-            tmpString = SSIDList[i+1];
-            SSIDList[i+1] = SSIDList[i] ;
-            SSIDList[i] = tmpString;
-
-            tmpInt = SSIDEncType[i+1];
-            SSIDEncType[i+1] = SSIDEncType[i];
-            SSIDEncType[i] = tmpInt;
-
-            tmpBool = BSSID[i+1];
-            BSSID[i+1] = BSSID[i];
-            BSSID[i] = tmpBool;
-
-            tmpString = WEPKey[i+1];
-            WEPKey[i+1] = WEPKey[i];
-            WEPKey[i] = tmpString;
-
-            tmpInt = WEPIndex[i+1];
-            WEPIndex[i+1] = WEPIndex[i];
-            WEPIndex[i] = tmpInt;
-
-            tmpBool = WEPHex[i+1];
-            WEPHex[i+1] = WEPHex[i];
-            WEPHex[i] = tmpBool;
-
-            tmpString = WPAPersonalKey[i+1];
-            WPAPersonalKey[i+1] = WPAPersonalKey[i];
-            WPAPersonalKey[i] = tmpString;
-
-            tmpString = WPAEIdent[i+1];
-            WPAEIdent[i+1] = WPAEIdent[i];
-            WPAEIdent[i] = tmpString;
-
-            tmpString = WPAEAnonIdent[i+1];
-            WPAEAnonIdent[i+1] = WPAEAnonIdent[i];
-            WPAEAnonIdent[i] = tmpString;
-
-            tmpString = WPAECACert[i+1];
-            WPAECACert[i+1] = WPAECACert[i];
-            WPAECACert[i] = tmpString;
-
-            tmpString = WPAEClientCert[i+1];
-            WPAEClientCert[i+1] = WPAEClientCert[i];
-            WPAEClientCert[i] = tmpString;
-
-            tmpString = WPAEPrivKeyFile[i+1];
-            WPAEPrivKeyFile[i+1] = WPAEPrivKeyFile[i];
-            WPAEPrivKeyFile[i] = tmpString;
-
-            tmpString = WPAEPassword[i+1];
-            WPAEPassword[i+1] = WPAEPassword[i];
-            WPAEPassword[i] = tmpString;
-
-            tmpInt = WPAEType[i+1];
-            WPAEType[i+1] = WPAEType[i];
-            WPAEType[i] = tmpInt;
-
-            tmpInt = WPAEKeyMgmt[i+1];
-            WPAEKeyMgmt[i+1] = WPAEKeyMgmt[i];
-            WPAEKeyMgmt[i] = tmpInt;
-
-            tmpInt = WPAEPhase2[i+1];
-            WPAEPhase2[i+1] = WPAEPhase2[i];
-            WPAEPhase2[i] = tmpInt;
-
-            curRow=i+1;
-	    MovedItem=true;
-            break;
-          }
-      }
-
-      // Refresh the SSID list and enable the apply button
-      if ( MovedItem) {
-        slotRefreshSSIDList();
-        pushApply->setEnabled(true);
-        listWifi->setCurrentRow(curRow);
-       }
-
-    }
-}
-*/
 
 void wificonfigwidgetbase::slotEditProfile()
 {
@@ -832,19 +632,13 @@ void wificonfigwidgetbase::slotEditProfile()
 
 void wificonfigwidgetbase::slotRemoveProfile()
 {
-    // Check if we have a selection to work with
     if ( listWifi->currentRow() != -1 )
     {
-      // Locate the SSID we want to remove
-      QString removeSSID = listWifi->item(listWifi->currentRow())->text();
-      slotRemoveProfileSSID(removeSSID);
-
-      // Refresh the SSID list and enable the apply button
-      slotRefreshSSIDList();
-      pushApply->setEnabled(true);
-
+        QString remove_ssid = listWifi->item(listWifi->currentRow())->text().split('[')[0].trimmed();
+        slotRemoveProfileSSID(remove_ssid);
+        refreshNetworksList();
+        pushApply->setEnabled(true);
     }
-
 }
 
 void wificonfigwidgetbase::slotAddHiddenProfile(){
@@ -923,50 +717,20 @@ void wificonfigwidgetbase::slotWPAPSave(QString newkey)
 
 void wificonfigwidgetbase::runCommand( QString Command )
 {
-        FILE *file = popen(Command.toLatin1(),"r");
+    FILE *file = popen(Command.toLatin1(),"r");
 	pclose(file);
 }
 
-void wificonfigwidgetbase::slotRemoveProfileSSID(QString RemoveSSID)
+void wificonfigwidgetbase::slotRemoveProfileSSID(QString remove_ssid)
 {
-   bool foundSSID=false;
-
-   // Loop through, remove selected SSID, and move any entries after it up
-   for (int remItem = 0; remItem < 145; remItem++)
-   {
-
-     if ( RemoveSSID == SSIDList[remItem] ) {
-       foundSSID=true;
-     }
-
-     if(foundSSID)
-     {
-       SSIDList[remItem] = SSIDList[remItem+1] ;
-       SSIDEncType[remItem] = SSIDEncType[remItem+1];
-       BSSID[remItem] = BSSID[remItem+1];
-       WEPKey[remItem] = WEPKey[remItem+1];
-       WEPIndex[remItem] = WEPIndex[remItem+1];
-       WEPHex[remItem] = WEPHex[remItem+1];
-       WPAPersonalKey[remItem] = WPAPersonalKey[remItem+1];
-       WPAEIdent[remItem] = WPAEIdent[remItem+1];
-       WPAEAnonIdent[remItem] = WPAEAnonIdent[remItem+1];
-       WPAECACert[remItem] = WPAECACert[remItem+1];
-       WPAEClientCert[remItem] = WPAEClientCert[remItem+1];
-       WPAEPrivKeyFile[remItem] = WPAEPrivKeyFile[remItem+1];
-       WPAEPassword[remItem] = WPAEPassword[remItem+1];
-       WPAEType[remItem] = WPAEType[remItem+1];
-       WPAEKeyMgmt[remItem] = WPAEKeyMgmt[remItem+1];
-       WPAEPhase2[remItem] = WPAEPhase2[remItem+1];
-     }
-
-     if ( SSIDList[remItem+1].isEmpty() )
-     {
-       break;
-     }
-
-   }
-
-
+    for (int i=0; i<WPANetworksDialog.count(); i++)
+    {
+        if ( WPANetworksDialog[i].GetSsid() == remove_ssid )
+        {
+            WPANetworksDialog.removeAt(i);
+            break;
+        }
+    }
 }
 
 void wificonfigwidgetbase::slotAddNewProfileOpen(QString SSID, bool isBSSID)
@@ -1566,30 +1330,6 @@ void wificonfigwidgetbase::slotFinishLoading()
 void wificonfigwidgetbase::slotRefreshSSIDList()
 {
     listNetworks();
-/*
-  listWifi->clear();
-
-  int curItem=0;
-
-  while( ! SSIDList[curItem].isEmpty() )
-  {
-     if ( SSIDEncType[curItem] == NO_ENCRYPTION )
-     {
-       listWifi->addItem(new QListWidgetItem(QIcon(":object-unlocked.png"), SSIDList[curItem] ) );
-     } else {
-
-       listWifi->addItem(new QListWidgetItem(QIcon(":object-locked.png"), SSIDList[curItem] ) );
-     }
-
-     curItem++;
-
-     // We only need 145 wireless networks
-     if ( curItem > 145 )
-     {
-	break;
-     }
-  }
-*/
 }
 
 
