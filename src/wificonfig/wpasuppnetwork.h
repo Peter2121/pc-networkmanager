@@ -7,7 +7,7 @@ class WpaSuppNetwork
 {
 public:
     WpaSuppNetwork();
-    WpaSuppNetwork(QString, int, bool, bool, bool);
+    WpaSuppNetwork(int, QString, int, bool, bool, bool);
     void Enable();
     void Disable();
 
@@ -22,8 +22,10 @@ public:
     bool IsEnabled() const;
     bool IsCurrent() const;
     bool IsProtected() const;
+    int GetId() const;
 
 protected:
+    int Id;
     QString Ssid;
     int Priority;
     bool Enabled;

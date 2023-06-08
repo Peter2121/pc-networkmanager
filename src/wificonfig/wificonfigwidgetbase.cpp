@@ -62,81 +62,50 @@ void wificonfigwidgetbase::slotApply()
 {
     QString tmp;
     QString ifConfigLine;
-    if ( ! pushApply->isEnabled() ) {
-	return;
-    }
-
-    // Get ifConfig Line
-    if (! checkDHCP->isChecked() )
-    {
-	if ( lineIP->text() == "..." || lineNetmask->text() == "..." )
-	{
-	    QMessageBox::information( this, tr("Missing Fields"),
-                    tr("You must enter an IP and Netmask to continue!\n") );
-	    return;
-	}
-
-	if ( ! trueos::Utils::validateIPV4(lineIP->text()) ) {
-	    QMessageBox::warning( this, tr("Warning"),
-	    tr("IP Address is out of range! (") + lineIP->text() + tr(") Fields must be between 0-255.") );
-	   return;
-               }
-
-	if ( ! trueos::Utils::validateIPV4(lineNetmask->text()) ) {
-	    QMessageBox::warning( this, tr("Warning"),
-	    tr("Netmask is out of range! (") + lineNetmask->text() + tr(") Fields must be between 0-255.") );
-	   return;
-               }
-
-	if ( checkMAC->isChecked() )
-	    ifConfigLine=lineIP->text() + " netmask " + lineNetmask->text();
-	else
-	    ifConfigLine=lineIP->text() + " netmask " + lineNetmask->text() + " ether " + lineMAC->text();
-
-    } else {
-	ifConfigLine="SYNCDHCP";
-    }
+    QVector<int> IndexToModify;
+    if ( ! pushApply->isEnabled() )
+        return;
 
     // See if we need to enable a country code
+/*
     if ( groupCountryCode->isChecked() )
     {
        tmp = comboCountryCode->currentText().section("(", 1, 1);
        tmp = tmp.section(")", 0, 0);
        ifConfigLine+=" country " + tmp;
     }
+*/
 
-    // Now create the wpa_supplicant file based on saved configuration
-    updateWPASupp();
-
-    // Only updating WPA supp?
-    if (WPAONLY)
-       return;
-
-    // If the user disabled the device, do so now
-    if ( checkDisableWireless->isChecked() )
-    {
-	 trueos::Utils::setConfFileValue( "/etc/rc.conf", "ifconfig_" + DeviceName, "", -1);
-	 runCommand("ifconfig " + DeviceName + " down");
-         pushApply->setEnabled(false);
-	 return;
-    }
-
-    // Save the config
-    trueos::Utils::setConfFileValue( "/etc/rc.conf", "ifconfig_lagg0", "", -1);
-    trueos::Utils::setConfFileValue( "/etc/rc.conf", "ifconfig_" + DeviceName, \
-	 "ifconfig_" + DeviceName + "=\"WPA " + ifConfigLine + "\"", -1);
-
+/*
     // Check if we need to enable LAGG
     if ( usingLagg )
       NetworkInterface::enableLagg(DeviceName);
-
-    // Set perms on wpa_supplicant.conf
-    system("chmod 600 /etc/wpa_supplicant.conf");
-
-    // Restart the network
-    buttonCancel->setEnabled(false);
-    trueos::Utils::restartNetworking();
-
+*/
+    int imax = WPANetworksSystem.length();
+    foreach (auto net, WPANetworksDialog) {
+        for(int i=0; i<imax; i++)
+        {
+            if(WPANetworksSystem[i].GetId() == net.GetId())
+            {
+                if(WPANetworksSystem[i].GetSsid() != net.GetSsid())
+                    // Normally impossible!!
+                    continue;
+                if( (WPANetworksSystem[i].GetPriority() != net.GetPriority()) ||
+                     (WPANetworksSystem[i].IsEnabled() != net.IsEnabled()) )
+                {
+                    WPANetworksSystem[i].SetPriority(net.GetPriority());
+                    net.IsEnabled() ? WPANetworksSystem[i].Enable() : WPANetworksSystem[i].Disable();
+                    IndexToModify.push_back(i);
+                }
+            }
+        }
+    }
+    foreach (int i, IndexToModify) {
+        int netid = WPANetworksSystem[i].GetId();
+        nmd_status -> SetNetworkEnabled(DeviceName, netid, WPANetworksSystem[i].IsEnabled());
+        nmd_status -> SetNetworkPriority(DeviceName, netid, WPANetworksSystem[i].GetPriority());
+        nmd_status -> saveConfig(DeviceName);
+    }
     buttonCancel->setEnabled(true);
     pushApply->setEnabled(false);
 }
@@ -289,18 +258,6 @@ void wificonfigwidgetbase::updateWPASupp()
 
 }
 
-
-void wificonfigwidgetbase::slotCheckDHCPBox()
-{
-   if ( checkDHCP->isChecked() ) {
-	groupBoxIP->setEnabled(false);
-   } else {
-	groupBoxIP->setEnabled(true);
-   }
-
-    pushApply->setEnabled(true);
-}
-
 void wificonfigwidgetbase::setIsMain(bool is_main)
 {
     IsMain = is_main;
@@ -320,7 +277,6 @@ void wificonfigwidgetbase::setDevice( QString Device )
   connect( pushRemoveWifi, SIGNAL( clicked() ), this, SLOT( slotRemoveProfile() ) );
   connect( pushRescan, SIGNAL( clicked() ), this, SLOT( slotRescan() ) );
   connect( pushAddHidden, SIGNAL( clicked() ), this, SLOT( slotAddHiddenProfile() ) );
-  connect( checkDHCP, SIGNAL( clicked() ), this, SLOT( slotCheckDHCPBox() ) );
   connect( groupCountryCode, SIGNAL( clicked() ), this, SLOT( slotCheckGlobalText() ) );
 
   // Save the device name for later
@@ -463,15 +419,6 @@ void wificonfigwidgetbase::slotRescan()
     } else {
       pushAddWifi->setEnabled(false);
     }
-//    listNetworks();
-}
-
-void wificonfigwidgetbase::listNetworks()
-{
-    WPAConfiguredNetworks = nmd_status->getWpaNetworkList(DeviceName);
-    getWpaNetworks(WPANetworksSystem);
-    getWpaNetworks(WPANetworksDialog);
-    refreshNetworksList();
 }
 
 void wificonfigwidgetbase::refreshNetworksList()
@@ -628,7 +575,6 @@ void wificonfigwidgetbase::slotEditProfile()
 
     }
 }
-
 
 void wificonfigwidgetbase::slotRemoveProfile()
 {
@@ -863,20 +809,6 @@ void wificonfigwidgetbase::slotAddNewProfileWPAE( QString SSID, bool isBSSID, in
 
 }
 
-
-void wificonfigwidgetbase::slotCheckDisabled()
-{
-	if ( checkDisableWireless->isChecked() )
-        {
-	    tabMainWidget->setEnabled(false);
-	} else {
-	    tabMainWidget->setEnabled(true);
-	}
-
-	 pushApply->setEnabled(true);
-}
-
-
 void wificonfigwidgetbase::slotOK()
 {
     if ( pushApply->isEnabled() )
@@ -983,61 +915,6 @@ QString wificonfigwidgetbase::getNameForIdent( QString ident )
    return ifr.desc();
 }
 
-void wificonfigwidgetbase::loadInfo()
-{
-  QString tmp;
-
-  // Get all the device information for the info tab
-  if ( textInfoName->text().isEmpty() ) {
-    if ( DeviceName.indexOf("wlan") != -1 )
-    {
-      tmp = NetworkInterface::getWifiParent(DeviceName);
-
-      // Get HW Identify line
-      tmp = getNameForIdent(tmp);
-
-      // If the name comes up bogus for some reason
-      if( tmp.isEmpty() ) {
-         tmp = tr("Unknown Wireless Device");
-      }
-
-      tmp.truncate(20);
-      textInfoName->setText(tmp);
-
-    } else {
-      textInfoName->setText(getNameForIdent(DeviceName));
-    }
-  }
-
-
-  if ( usingLagg ) {
-    textIP->setText(getIpForIdent("lagg0") );
-    textNetmask->setText(getNetmaskForIdent( "lagg0" ) );
-    textGateway->setText(getGatewayForIdent( "lagg0" ) );
-  } else {
-    textIP->setText(getIpForIdent(DeviceName) );
-    textNetmask->setText(getNetmaskForIdent( DeviceName ) );
-    textGateway->setText(getGatewayForIdent( DeviceName ) );
-  }
-
-  textMac->setText(getMacForIdent( DeviceName ) );
-  textStatus->setText(getStatusForIdent( DeviceName ) );
-  textIPv6->setText(getIPv6ForIdent( DeviceName) );
-  tmp = getMediaForIdent(DeviceName);
-  tmp.truncate(20);
-  textMedia->setText(tmp);
-
-  // Get the packet status for this device
-  textPacketsIn->setText(getInPacketsForIdent( DeviceName) );
-  textPacketsInErrors->setText( getInErrorsForIdent( DeviceName) );
-  textPacketsOut->setText(getOutPacketsForIdent( DeviceName) );
-  textPacketsOutErrors->setText(getOutErrorsForIdent( DeviceName) );
-
-  // Connect the slot to refresh
-  QTimer::singleShot(3000,  this,  SLOT(loadInfo() ) );
-}
-
-
 void wificonfigwidgetbase::showInfo()
 {
      tabMainWidget->setCurrentWidget( tabMainWidget->widget(2) );
@@ -1047,24 +924,9 @@ void wificonfigwidgetbase::showInfo()
 void wificonfigwidgetbase::slotFinishLoading()
 {
    QString tmp, tmp2;
-   bool ok;
 
-   // Get the ifconfig string
-   if ( usingLagg )
-     tmp = trueos::Utils::getConfFileValue( "/etc/rc.conf", "ifconfig_lagg0=", 1 );
-
-   if ( tmp.isEmpty() )
-     tmp = trueos::Utils::getConfFileValue( "/etc/rc.conf", "ifconfig_" + DeviceName + "=", 1 );
-
-   if ( tmp.isEmpty() || tmp.indexOf("OFF") != -1 )  {
-      checkDisableWireless->setChecked(true);
-      tabMainWidget->setEnabled(false);
-   } else if ( tmp.indexOf("DHCP") != -1 ) {
-      checkDHCP->setChecked(true);
-      lineNetmask->setText("255.255.255.0");
-      slotCheckDHCPBox();
-
-            // Look for the mac address change
+/*
+   // Look for the mac address change
 	if ( tmp.indexOf("ether") != -1 ) {
 		tmp2 = tmp;
 		tmp2 = tmp2.remove(0, tmp.indexOf("ether") + 6 );
@@ -1075,44 +937,9 @@ void wificonfigwidgetbase::slotFinishLoading()
 		checkMAC->setChecked(false);
 		groupMAC->setEnabled(true);
 	}
+*/
 
-
-   } else {
-     // Look for an IP configuration
-     tmp2 = tmp;
-     tmp2 = tmp2.simplified();
-
-     if ( tmp.indexOf("laggport") != -1 )
-       tmp2.remove(0, tmp2.lastIndexOf("laggport") + 9);
-
-     if ( tmp.indexOf("country") != -1 )
-       tmp2.remove(0, tmp2.lastIndexOf("country") + 10);
-
-     if ( tmp.indexOf("WPA") == 0)
-       tmp2.remove(0, tmp2.indexOf(" ") + 1);
-
-     if ( ! tmp2.isEmpty()) {
-        // Get the IP address first
-        lineIP->setText(tmp2.section(" ", 0, 0));
-
-          // Look for the netmask
-          if ( tmp.indexOf("netmask") != -1 ) {
-             tmp2 = tmp;
-             tmp2 = tmp2.remove(0, tmp.indexOf("netmask") + 8 );
-             if ( tmp.indexOf("ether") != -1 ) {
-                tmp2.truncate(tmp.indexOf("ether") );
-             }
-             tmp2 = tmp2.simplified();
-
-             lineNetmask->setText(tmp2);
-
-          } else {
-             // No netmask specified, default it instead
-             lineNetmask->setText("255.255.255.0");
-          }
-      }
-   }
-
+/*
    // Look for a country code
    tmp = trueos::Utils::getConfFileValue( "/etc/rc.conf", "ifconfig_" + DeviceName + "=", 1 );
    if ( tmp.indexOf("country ") != -1 ) {
@@ -1120,207 +947,13 @@ void wificonfigwidgetbase::slotFinishLoading()
        Country = tmp.section(" ", 0,0);
        groupCountryCode->setChecked(true);
    }
-
-   // Look for the wpa_supplicant.conf file
-   QFile file( "/etc/wpa_supplicant.conf" );
-   if ( file.open( QIODevice::ReadOnly ) ) {
-      int curItem=0;
-      QTextStream stream( &file );
-      QString line;
-      while ( !stream.atEnd() ) {
-
-            line = stream.readLine(); // line of text excluding '\n'
-
-	    // Check if we are at the end of a network profile block
-            if ( line.indexOf("}") == 0)
-	    {
-		curItem++;
-	    }
-
- 	    if ( line.indexOf(" ssid=") != -1 )
- 	    {
-		tmp2 = line.remove(0, line.indexOf("\"") +1 );
-		tmp2.truncate(tmp2.indexOf("\"") );
-		SSIDList[curItem] = tmp2;
-		BSSID[curItem] = false;
-		SSIDEncType[curItem]=NO_ENCRYPTION;
-   	    }
-
- 	    if ( line.indexOf(" bssid=") != -1 )
- 	    {
-		tmp2 = line.remove(0, line.indexOf("=") +1 );
-		SSIDList[curItem] = tmp2;
-		BSSID[curItem] = true;
-		SSIDEncType[curItem]=NO_ENCRYPTION;
-   	    }
-
-
- 	    // Check if we are using a WEP key for this network
-	    if ( line.indexOf("wep_key") != -1 )
-	    {
-                if (line.indexOf("\"") != -1 )
-                {
-		   tmp2 = line.remove(0, line.indexOf("\"") + 1 );
-		   tmp2.truncate(tmp2.indexOf("\""));
-                   WEPHex[curItem]=false;
-                } else {
-		   tmp2 = line.remove(0, line.indexOf("=") + 1 );
-                   WEPHex[curItem]=true;
-                }
-		// Save the keycode
-		WEPKey[curItem] = tmp2;
-		SSIDEncType[curItem]=WEP_ENCRYPTION;
- 	    }
-
-           // Check for the WEP tx key id
-	   if ( line.indexOf("wep_tx_keyidx") != -1 )
-	   {
-		tmp2 = line.remove(0, line.indexOf("wep_tx_keyidx") +1 );
-		// Save the keycode
-		tmp2.truncate(tmp2.indexOf("=") );
-		ok = tmp2.toInt(&ok);
-		if ( ok ) {
-		    WEPIndex[curItem] = tmp2.toInt(&ok);
-		    WEPIndex[curItem]++;
-		}
-	   }
-
-           // Check if we are using WPA-Personal
-	   if ( line.indexOf("psk=") != -1 )
-	   {
-		tmp2 = line.remove(0, line.indexOf("\"") + 1 );
-		tmp2.truncate( tmp2.indexOf("\"") );
-
-
-    	        // Save the keycode
-		WPAPersonalKey[curItem] = tmp2;
-		SSIDEncType[curItem]=WPA_ENCRYPTION;
-	   }
-
-	   // Check if we are using WPA-Enterprise
-           if ( line.indexOf("eap=") != -1 )
-	   {
-		tmp2 = line.remove(0, line.indexOf("=") + 1 );
-
-		//Check to see whic type of WPA-Ent we are using
-		if ( tmp2 == "TLS") {
-		    WPAEType[curItem] = 1;
-		} else if (tmp2 == "TTLS" ) {
-		    WPAEType[curItem] = 2;
-		} else if (tmp2 == "PEAP" ) {
-		    WPAEType[curItem] = 3;
-		}
-
-		SSIDEncType[curItem]=WPAE_ENCRYPTION;
-	   }
-
-           // Check for a identity= line and not anonymous_identity
-           if ( line.indexOf("identity=") != -1 and
-                line.indexOf("anonymous_identity=") == -1 )
-	   {
-		tmp2 = line.remove(0, line.indexOf("\"") + 1 );
-		tmp2.truncate( tmp2.indexOf("\"") );
-
-		// Save the keycode
-		WPAEIdent[curItem] = tmp2;
-	   }
-
-           // Check for a anonymous_identity= line
-           if ( line.indexOf("anonymous_identity=") != -1 )
-       {
-        tmp2 = line.remove(0, line.indexOf("\"") + 1 );
-        tmp2.truncate( tmp2.indexOf("\"") );
-
-        // Save the keycode
-        WPAEAnonIdent[curItem] = tmp2;
-       }
-
-	   // Check for a ca_cert= line
-           if ( line.indexOf("ca_cert=") != -1 )
-	   {
-		tmp2 = line.remove(0, line.indexOf("\"") + 1 );
-		tmp2.truncate( tmp2.indexOf("\"") );
-
-		// Save the keycode
-		WPAECACert[curItem] = tmp2;
-	   }
-
-	   // Check for a client_cert= line
-	   if ( line.indexOf("client_cert=") != -1 )
-	   {
-		tmp2 = line.remove(0, line.indexOf("\"") + 1 );
-		tmp2.truncate( tmp2.indexOf("\"") );
-
-		// Save the keycode
-		WPAEClientCert[curItem] = tmp2;
-	   }
-
-          // Check for a private_key= line
-           if ( line.indexOf("private_key=") != -1 )
-	   {
-		tmp2 = line.remove(0, line.indexOf("\"") + 1 );
-		tmp2.truncate( tmp2.indexOf("\"") );
-
-		// Save the keycode
-		WPAEPrivKeyFile[curItem] = tmp2;
-	   }
-
-          // Check for a private_key_passwd= line
-          if ( line.indexOf("private_key_passwd=") != -1 )
-          {
-		tmp2 = line.remove(0, line.indexOf("\"") + 1 );
-		tmp2.truncate( tmp2.indexOf("\"") );
-
-		// Save the keycode
-		WPAEPassword[curItem] = tmp2;
-          }
-
-          // Figure out the key mgmt
-          if ( line.indexOf("key_mgmt=WPA-EAP") != -1 )
-		WPAEKeyMgmt[curItem] = KEYWPAEAP;
-          if ( line.indexOf("key_mgmt=IEEE8021X") != -1 )
-		WPAEKeyMgmt[curItem] = KEY8021X;
-
-          // Figure out the phase2
-          if ( line.indexOf("phase2=\"auth=MD5\"") != -1 )
-		WPAEPhase2[curItem] = KEYPHASE2MD5;
-          if ( line.indexOf("phase2=\"auth=MSCHAPV2\"") != -1 )
-		WPAEPhase2[curItem] = KEYPHASE2MSCHAPV2;
-          if ( line.indexOf("phase2=\"auth=GTC\"") != -1 )
- 		WPAEPhase2[curItem] = KEYPHASE2GTC;
-          if ( line.indexOf("phase2=\"auth=OTP\"") != -1 )
- 		WPAEPhase2[curItem] = KEYPHASE2OTP;
-          if ( line.indexOf("phase2=\"auth=PAP\"") != -1 )
- 		WPAEPhase2[curItem] = KEYPHASE2PAP;
-          if ( line.indexOf("phase2=\"auth=CHAP\"") != -1 )
- 		WPAEPhase2[curItem] = KEYPHASE2CHAP;
-          if ( line.indexOf("phase2=\"auth=MSCHAP\"") != -1 )
- 		WPAEPhase2[curItem] = KEYPHASE2MSCHAP;
-
-         // Check for a private_key_passwd= line
-         if ( line.indexOf("password=") != -1 )
-         {
-		tmp2 = line.remove(0, line.indexOf("\"") + 1 );
-		tmp2.truncate( tmp2.indexOf("\"") );
-
-		// Save the keycode
-		WPAEPassword[curItem] = tmp2;
-         }
-
-      }
-
-   }
-
+*/
 
    // Refresh the ssid profile list
    slotRefreshSSIDList();
 
    // Load the list of country codes we can set
    loadCountryCodes();
-
-
-   // Start loading the info tab
-   loadInfo();
 
    pushApply->setEnabled(false);
 }
@@ -1329,7 +962,10 @@ void wificonfigwidgetbase::slotFinishLoading()
 // Slot which reads the arrays and displays the list of WIFI profiles
 void wificonfigwidgetbase::slotRefreshSSIDList()
 {
-    listNetworks();
+    WPAConfiguredNetworks = nmd_status->getWpaNetworkList(DeviceName);
+    getWpaNetworks(WPANetworksSystem);
+    getWpaNetworks(WPANetworksDialog);
+    refreshNetworksList();
 }
 
 
@@ -1343,8 +979,6 @@ QString wificonfigwidgetbase::getIPv6ForIdent( QString ident )
 
 		ip = inputLine.remove(0, inputLine.indexOf("inet6 ") + 5);
 		ip.truncate(ip.indexOf("%"));
-
-
 	}
 
 	return ip;
@@ -1393,7 +1027,6 @@ void wificonfigwidgetbase::setModeWPAOnly()
     tabMainWidget->removeTab(1);
     pushRescan->setHidden(true);
     labelAvailWifi->setHidden(true);
-    checkDisableWireless->setHidden(true);
     listNewWifi->setHidden(true);
     pushAddWifi->setHidden(true);
     pushAddHidden->setText(tr("Add &network"));
@@ -1406,6 +1039,7 @@ int wificonfigwidgetbase::getWpaNetworks(QVector<WpaSuppNetwork>& networks)
     networks.clear();
     foreach (const auto &net, WPAConfiguredNetworks)
     {
+        int id = net.value(QString::fromStdString("NETWORK ID").toLower()).toString().toInt();
         QString ssid = net.value(QString::fromStdString(JSON_PARAM_SSID).toLower()).toString();
         QString flags = net.value(QString::fromStdString(JSON_PARAM_FLAGS).toLower()).toString();
         bool enabled = !flags.contains(QString::fromStdString("DISABLED"));
@@ -1421,7 +1055,7 @@ int wificonfigwidgetbase::getWpaNetworks(QVector<WpaSuppNetwork>& networks)
             protectedd = true;
         else
             protectedd = false;
-        WpaSuppNetwork addnet = WpaSuppNetwork(ssid, priority, enabled, current, protectedd);
+        WpaSuppNetwork addnet = WpaSuppNetwork(id, ssid, priority, enabled, current, protectedd);
         networks.push_back(addnet);
     }
     std::sort(networks.begin(), networks.end());

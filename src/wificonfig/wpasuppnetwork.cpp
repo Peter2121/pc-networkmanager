@@ -1,11 +1,11 @@
 #include "wpasuppnetwork.h"
 
-WpaSuppNetwork::WpaSuppNetwork() : WpaSuppNetwork("", 0, false, false, false)
+WpaSuppNetwork::WpaSuppNetwork() : WpaSuppNetwork(0, "", 0, false, false, false)
 {
 }
 
-WpaSuppNetwork::WpaSuppNetwork(QString ssid, int priority, bool enabled, bool current, bool protectedd) :
-    Ssid(ssid), Priority(priority), Enabled(enabled), Current(current), Protected(protectedd)
+WpaSuppNetwork::WpaSuppNetwork(int id, QString ssid, int priority, bool enabled, bool current, bool protectedd) :
+    Id(id), Ssid(ssid), Priority(priority), Enabled(enabled), Current(current), Protected(protectedd)
 {
 }
 
@@ -72,6 +72,11 @@ bool WpaSuppNetwork::IsCurrent() const
 bool WpaSuppNetwork::IsProtected() const
 {
     return Protected;
+}
+
+int WpaSuppNetwork::GetId() const
+{
+    return Id;
 }
 
 bool operator == (const WpaSuppNetwork& net1, const WpaSuppNetwork& net2)

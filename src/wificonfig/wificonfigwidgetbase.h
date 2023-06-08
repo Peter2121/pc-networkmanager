@@ -50,14 +50,12 @@ public:
     // Are we just editing WPA supplicant? 
     void setModeWPAOnly();
     void autoConnectSSID(QString ssid);
-    void listNetworks();
 
 public slots:
 
 private slots:
     void slotClose();
     void slotApply();
-    void slotCheckDHCPBox();
     void slotAddHiddenProfile();
     void slotAddNewProfile();
     void slotEditProfile();
@@ -70,10 +68,8 @@ private slots:
     void slotAddNewProfileWEP( QString SSID, bool isBSSID, QString newKey, int newIndex, bool hexkey );
     void slotAddNewProfileWPA( QString SSID, bool isBSSID, QString newKey );
     void slotAddNewProfileWPAE( QString SSID, bool isBSSID, int type, QString EAPIdent, QString AnonIdent, QString CACert, QString ClientCert, QString PrivKeyFile, QString PrivKeyPass, int keyMgmt, int EAPPhase2 );
-    void slotCheckDisabled();
     void slotOK();
     void slotMACClicked();
-    void loadInfo();
     void slotFinishLoading();
     void slotCheckGlobalText();
     void slotRefreshSSIDList();

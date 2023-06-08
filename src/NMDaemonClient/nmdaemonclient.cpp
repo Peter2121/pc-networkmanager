@@ -674,3 +674,39 @@ bool NMDaemonClient::disableDhcp4(QString ifname)
     return sendCommand(req_string, "disableDhcp4");
 }
 
+bool NMDaemonClient::SetNetworkEnabled(QString ifname, int netid, bool is_enabled)
+{
+    QString req_string;
+    if(is_enabled)
+        req_string = QString::asprintf(CMD_WPA_ENABLE_NETWORK.c_str(), ifname.toStdString().c_str(), netid);
+    else
+        req_string = QString::asprintf(CMD_WPA_DISABLE_NETWORK.c_str(), ifname.toStdString().c_str(), netid);
+
+    QJsonObject req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
+    lastJsonReceived = QJsonObject();
+    checkDataResultSource = "SetNetworkEnabled";
+    callbackFunctionSuccess = nullptr;
+    connect(this, &NMDaemonClient::dataReady, this, &NMDaemonClient::slotCheckDataResult);
+    if(!sendRequest(req_object))
+    {
+        return false;
+    }
+    return true;
+}
+
+bool NMDaemonClient::SetNetworkPriority(QString ifname, int netid, int priority)
+{
+    QString req_string = QString::asprintf(CMD_WPA_SET_NETWORK_PRI.c_str(), ifname.toStdString().c_str(), netid, priority);
+
+    QJsonObject req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
+    lastJsonReceived = QJsonObject();
+    checkDataResultSource = "SetNetworkPriority";
+    callbackFunctionSuccess = nullptr;
+    connect(this, &NMDaemonClient::dataReady, this, &NMDaemonClient::slotCheckDataResult);
+    if(!sendRequest(req_object))
+    {
+        return false;
+    }
+    return true;
+}
+
