@@ -37,6 +37,7 @@ protected:
     static inline const std::string CMD_WPA_SAVE = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_SAVE\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\" } }";
     static inline const std::string CMD_WPA_ENABLE_NETWORK = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_SETPARAM\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\", \"NETID\" : %d, \"PARAM_NAME\" : \"disabled\", \"PARAM_VALUE\" : \"0\", \"PARAM_QUOTES\" : false } }";
     static inline const std::string CMD_WPA_DISABLE_NETWORK = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_SETPARAM\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\", \"NETID\" : %d, \"PARAM_NAME\" : \"disabled\", \"PARAM_VALUE\" : \"1\", \"PARAM_QUOTES\" : false } }";
+    static inline const std::string CMD_WPA_REMOVE_NETWORK = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_REMOVE\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\", \"NETID\" : %d } }";
     static inline const std::string CMD_WIFI_SCAN_RESULTS = "{ \"SCOPE\" : \"WIFI\", \"CMD\" : \"WIFI_SCAN_RESULTS\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\" } }";
     static inline const std::string CMD_WIFI_SCAN = "{ \"SCOPE\" : \"WIFI\", \"CMD\" : \"WIFI_SCAN\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\" } }";
     static inline const std::string CMD_GET_IPV4_ADDRESS = "{ \"SCOPE\" : \"INTERFACE\", \"CMD\" : \"IP4_ADDR_GET\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\" } }";
@@ -116,6 +117,7 @@ public:
     QVector<QJsonObject> getWpaNetworkList(QString);
     bool SetNetworkEnabled(QString, int, bool);
     bool SetNetworkPriority(QString, int, int);
+    bool RemoveNetwork(QString, int);
 signals:
     void dataReady(QJsonObject);
     void connected();

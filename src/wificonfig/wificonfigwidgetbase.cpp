@@ -63,6 +63,7 @@ void wificonfigwidgetbase::slotApply()
     QString tmp;
     QString ifConfigLine;
     QVector<int> IndexToModify;
+    QVector<int> IdToRemove;
     if ( ! pushApply->isEnabled() )
         return;
 
@@ -106,11 +107,33 @@ void wificonfigwidgetbase::slotApply()
         nmd_status -> SetNetworkPriority(DeviceName, netid, WPANetworksSystem[i].GetPriority());
         nmd_status -> saveConfig(DeviceName);
     }
+
+    imax = WPANetworksDialog.length();
+    foreach (auto net, WPANetworksSystem) {
+        bool found = false;
+        for(int i=0; i<imax; i++)
+        {
+            if(WPANetworksDialog[i].GetId() == net.GetId())
+            {
+                found = true;
+                break;
+            }
+        }
+        if(!found)
+        {
+            IdToRemove.push_back(net.GetId());
+        }
+    }
+    foreach (int id, IdToRemove) {
+        nmd_status -> RemoveNetwork(DeviceName, id);
+        nmd_status -> saveConfig(DeviceName);
+    }
+
     buttonCancel->setEnabled(true);
     pushApply->setEnabled(false);
 }
 
-
+/*
 void wificonfigwidgetbase::updateWPASupp()
 {
     bool listEmpty = false;
@@ -257,6 +280,7 @@ void wificonfigwidgetbase::updateWPASupp()
     }
 
 }
+*/
 
 void wificonfigwidgetbase::setIsMain(bool is_main)
 {

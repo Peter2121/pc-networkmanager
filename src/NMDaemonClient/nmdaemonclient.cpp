@@ -710,3 +710,18 @@ bool NMDaemonClient::SetNetworkPriority(QString ifname, int netid, int priority)
     return true;
 }
 
+bool NMDaemonClient::RemoveNetwork(QString ifname, int netid)
+{
+    QString req_string = QString::asprintf(CMD_WPA_REMOVE_NETWORK.c_str(), ifname.toStdString().c_str(), netid);
+
+    QJsonObject req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
+    lastJsonReceived = QJsonObject();
+    checkDataResultSource = "RemoveNetwork";
+    callbackFunctionSuccess = nullptr;
+    connect(this, &NMDaemonClient::dataReady, this, &NMDaemonClient::slotCheckDataResult);
+    if(!sendRequest(req_object))
+    {
+        return false;
+    }
+    return true;
+}

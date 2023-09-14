@@ -97,7 +97,7 @@ private:
     int getWpaNetworks(QVector<WpaSuppNetwork>& nets);
     void loadCountryCodes();
     void runCommand( QString Command );
-    void updateWPASupp();
+    //void updateWPASupp();
     QString DeviceName;
     QString Country;
     bool IsMain;
