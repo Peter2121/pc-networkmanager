@@ -526,7 +526,7 @@ void wificonfigwidgetbase::slotMoveDown()
                 break;
             }
         }
-        if( (itomove > 0) && (itomove < WPANetworksDialog.count()-1))
+        if( (itomove >= 0) && (itomove < WPANetworksDialog.count()-1))
         {
             if(WPANetworksDialog[itomove+1].GetPriority()==WPANetworksDialog[itomove].GetPriority())
                 WPANetworksDialog[itomove].DecreasePriority();
@@ -544,23 +544,28 @@ void wificonfigwidgetbase::slotEditProfile()
 {
     bool foundSSID=false;
     int curItem=0;
+    int itoedit = -1;
+    std::unique_ptr<WifiEdit> wifi_edit_dialog = nullptr;
 
     // Check if we have a selection to work with
     if ( listWifi->currentRow() != -1 )
     {
-      // Locate the SSID we want to remove
-      QString editSSID = listWifi->item(listWifi->currentRow())->text();
-      for ( int i = 0; i < 145; i++)
-      {
-          if ( SSIDList[i] == editSSID )
-          {
-            // We found the ssid we need to edit
-            foundSSID=true;
-            curItem=i;
-            break;
-          }
-      }
+        QString edit_ssid = listWifi->item(listWifi->currentRow())->text().split('[')[0].trimmed();
+        for (int i=0; i<WPANetworksDialog.count(); i++)
+        {
+            if ( WPANetworksDialog[i].GetSsid() == edit_ssid )
+            {
+                itoedit = i;
+                break;
+            }
+        }
+        if( (itoedit >= 0) && (itoedit < WPANetworksDialog.count()-1))
+        {
+            wifi_edit_dialog = std::make_unique<WifiEdit>(&WPANetworksDialog[itoedit]);
+            wifi_edit_dialog->exec();
+        }
 
+/*
       // Lets go ahead and open the edit dialog on this SSID
       if (foundSSID)
       {
@@ -595,7 +600,7 @@ void wificonfigwidgetbase::slotEditProfile()
 
           wifiselect.exec();
       }
-
+*/
 
     }
 }
@@ -1065,10 +1070,10 @@ int wificonfigwidgetbase::getWpaNetworks(QVector<WpaSuppNetwork>& networks)
     {
         int id = net.value(QString::fromStdString("NETWORK ID").toLower()).toString().toInt();
         QString ssid = net.value(QString::fromStdString(JSON_PARAM_SSID).toLower()).toString();
+        QString bssid = net.value(QString::fromStdString(JSON_PARAM_BSSID).toLower()).toString();
         QString flags = net.value(QString::fromStdString(JSON_PARAM_FLAGS).toLower()).toString();
         bool enabled = !flags.contains(QString::fromStdString("DISABLED"));
         bool current = flags.contains(QString::fromStdString("CURRENT"));
-        //QString qstr_priority = net.value(QString::fromStdString("PRIORITY").toLower()).toString();
         int priority = net.value(QString::fromStdString("PRIORITY").toLower()).toString().toInt();
         bool protectedd = false;
         QString key_mgmt = net.value(QString::fromStdString("key_mgmt").toLower()).toString();
@@ -1079,7 +1084,7 @@ int wificonfigwidgetbase::getWpaNetworks(QVector<WpaSuppNetwork>& networks)
             protectedd = true;
         else
             protectedd = false;
-        WpaSuppNetwork addnet = WpaSuppNetwork(id, ssid, priority, enabled, current, protectedd);
+        WpaSuppNetwork addnet = WpaSuppNetwork(id, ssid, bssid, priority, enabled, current, protectedd);
         networks.push_back(addnet);
     }
     std::sort(networks.begin(), networks.end());

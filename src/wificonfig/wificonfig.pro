@@ -11,14 +11,17 @@ LIBS	+= -L/usr/local/lib -ltrueos-utils -ltrueos-ui
 LIBS    += /usr/local/lib/libsockpp.a
 
 HEADERS	+= dialogwpaenterprise.h dialogwpapersonal.h wepconfig.h wificonfigwidgetbase.h wifiscanssid.h wifiselectiondialog.h \
+    wifiedit.h \
     wpasuppnetwork.h
 
 SOURCES	+= dialogwpaenterprise.cpp dialogwpapersonal.cpp main.cpp wepconfig.cpp wificonfigwidgetbase.cpp wifiscanssid.cpp wifiselectiondialog.cpp \
+    wifiedit.cpp \
     wpasuppnetwork.cpp
 include("../NMDaemonClient/NMDaemonClient.pri")
 include("../Utils/Utils.pri")
 
-FORMS += dialogwpaenterprise.ui dialogwpapersonal.ui wepconfig.ui wificonfigwidgetbase.ui wifiscanssid.ui wifiselectiondialog.ui
+FORMS += dialogwpaenterprise.ui dialogwpapersonal.ui wepconfig.ui wificonfigwidgetbase.ui wifiscanssid.ui wifiselectiondialog.ui \
+    wifiedit.ui
 
 RESOURCES += wificonfig.qrc
 

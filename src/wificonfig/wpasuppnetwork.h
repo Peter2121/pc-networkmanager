@@ -7,12 +7,14 @@ class WpaSuppNetwork
 {
 public:
     WpaSuppNetwork();
-    WpaSuppNetwork(int, QString, int, bool, bool, bool);
+    WpaSuppNetwork(int, QString, QString, int, bool, bool, bool);
     void Enable();
     void Disable();
 
     const QString &GetSsid() const;
+    const QString &GetBssid() const;
     void SetSsid(const QString &newSsid);
+    void SetBssid(const QString &newBssid);
     int GetPriority() const;
     void SetPriority(int newPriority);
     void IncreasePriority();
@@ -27,6 +29,7 @@ public:
 protected:
     int Id;
     QString Ssid;
+    QString Bssid;
     int Priority;
     bool Enabled;
     bool Current;

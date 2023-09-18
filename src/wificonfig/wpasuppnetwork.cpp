@@ -1,11 +1,11 @@
 #include "wpasuppnetwork.h"
 
-WpaSuppNetwork::WpaSuppNetwork() : WpaSuppNetwork(0, "", 0, false, false, false)
+WpaSuppNetwork::WpaSuppNetwork() : WpaSuppNetwork(0, "", "", 0, false, false, false)
 {
 }
 
-WpaSuppNetwork::WpaSuppNetwork(int id, QString ssid, int priority, bool enabled, bool current, bool protectedd) :
-    Id(id), Ssid(ssid), Priority(priority), Enabled(enabled), Current(current), Protected(protectedd)
+WpaSuppNetwork::WpaSuppNetwork(int id, QString ssid, QString bssid, int priority, bool enabled, bool current, bool protectedd) :
+    Id(id), Ssid(ssid), Bssid(bssid), Priority(priority), Enabled(enabled), Current(current), Protected(protectedd)
 {
 }
 
@@ -34,9 +34,19 @@ const QString &WpaSuppNetwork::GetSsid() const
     return Ssid;
 }
 
+const QString &WpaSuppNetwork::GetBssid() const
+{
+    return Bssid;
+}
+
 void WpaSuppNetwork::SetSsid(const QString &ssid)
 {
     Ssid = ssid;
+}
+
+void WpaSuppNetwork::SetBssid(const QString &bssid)
+{
+    Bssid = bssid;
 }
 
 int WpaSuppNetwork::GetPriority() const

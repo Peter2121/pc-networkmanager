@@ -16,6 +16,7 @@
 #include "../NMDaemonClient/nmdaemoncheckstatus.h"
 #include "../NMDaemonClient/nmdaemonspy.h"
 #include "wpasuppnetwork.h"
+#include "wifiedit.h"
 
 
 // Setup our encryption type defines
