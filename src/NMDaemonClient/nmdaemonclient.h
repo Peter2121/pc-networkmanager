@@ -50,6 +50,8 @@ protected:
     static inline const std::string CMD_SET_IPV4_DHCP_ENABLE = "{ \"SCOPE\" : \"INTERFACE\", \"CMD\" : \"IP4_DHCP_ENABLE\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\" } }";
     static inline const std::string CMD_SET_IPV4_DHCP_DISABLE = "{ \"SCOPE\" : \"INTERFACE\", \"CMD\" : \"IP4_DHCP_DISABLE\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\" } }";
     static inline const std::string CMD_WPA_SET_NETWORK_PRI = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_SETPARAM\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\", \"NETID\" : %d, \"PARAM_NAME\" : \"priority\", \"PARAM_VALUE\" : \"%d\", \"PARAM_QUOTES\" : false } }";
+    static inline const std::string CMD_WPA_SET_NETWORK_SSID = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_SETPARAM\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\", \"NETID\" : %d, \"PARAM_NAME\" : \"ssid\", \"PARAM_VALUE\" : \"%s\", \"PARAM_QUOTES\" : true } }";
+    static inline const std::string CMD_WPA_SET_NETWORK_BSSID = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_SET_BSSID\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\", \"NETID\" : %d, \"BSSID\" : \"%s\" } }";
 
     //static inline const QString CMD_GET_WPA_IF_LIST = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_LIST_IF\" }";
     //static inline const QString CMD_GWPA_TSAV = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_SAVE\", \"DATA\" : { \"INTERFACE NAME\" : \"wlan0\" } }";
@@ -118,6 +120,8 @@ public:
     bool SetNetworkEnabled(QString, int, bool);
     bool SetNetworkPriority(QString, int, int);
     bool RemoveNetwork(QString, int);
+    bool SetNetworkSsid(QString, int, QString);
+    bool SetNetworkBssid(QString, int, QString);
 signals:
     void dataReady(QJsonObject);
     void connected();

@@ -53,6 +53,7 @@ public:
     void autoConnectSSID(QString ssid);
 
 public slots:
+    void slotProfileSaved();
 
 private slots:
     void slotClose();

@@ -43,6 +43,7 @@ void WifiEdit::SlotSave()
     {
         // TODO: set new PSK
     }
+    emit Saved();
 }
 
 void WifiEdit::SlotSaveAndClose()

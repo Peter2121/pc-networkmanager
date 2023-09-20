@@ -710,6 +710,39 @@ bool NMDaemonClient::SetNetworkPriority(QString ifname, int netid, int priority)
     return true;
 }
 
+bool NMDaemonClient::SetNetworkSsid(QString ifname, int netid, QString ssid)
+{
+    QString req_string = QString::asprintf(CMD_WPA_SET_NETWORK_SSID.c_str(), ifname.toStdString().c_str(), netid, ssid.toStdString().c_str());
+
+    QJsonObject req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
+    lastJsonReceived = QJsonObject();
+    checkDataResultSource = "SetNetworkSsid";
+    callbackFunctionSuccess = nullptr;
+    connect(this, &NMDaemonClient::dataReady, this, &NMDaemonClient::slotCheckDataResult);
+    if(!sendRequest(req_object))
+    {
+        return false;
+    }
+    return true;
+}
+
+bool NMDaemonClient::SetNetworkBssid(QString ifname, int netid, QString bssid)
+{
+    QString req_string = QString::asprintf(CMD_WPA_SET_NETWORK_BSSID.c_str(), ifname.toStdString().c_str(), netid, bssid.toStdString().c_str());
+/* NOT IMPLEMENTED YET
+    QJsonObject req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
+    lastJsonReceived = QJsonObject();
+    checkDataResultSource = "SetNetworkBssid";
+    callbackFunctionSuccess = nullptr;
+    connect(this, &NMDaemonClient::dataReady, this, &NMDaemonClient::slotCheckDataResult);
+    if(!sendRequest(req_object))
+    {
+        return false;
+    }
+*/
+    return true;
+}
+
 bool NMDaemonClient::RemoveNetwork(QString ifname, int netid)
 {
     QString req_string = QString::asprintf(CMD_WPA_REMOVE_NETWORK.c_str(), ifname.toStdString().c_str(), netid);

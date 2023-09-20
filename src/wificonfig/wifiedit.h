@@ -28,6 +28,9 @@ private slots:
     void SlotSaveAndClose();
     void SlotSave();
     void SlotResetKey();
+
+signals:
+    void Saved();
 };
 
 #endif // WIFIEDIT_H

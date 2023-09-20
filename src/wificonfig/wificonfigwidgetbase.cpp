@@ -58,6 +58,11 @@ void wificonfigwidgetbase::autoConnectSSID(QString ssid){
   emit connectSSID(ssid);
 }
 
+void wificonfigwidgetbase::slotProfileSaved()
+{
+    pushApply->setEnabled(true);
+}
+
 void wificonfigwidgetbase::slotApply()
 {
     QString tmp;
@@ -82,21 +87,41 @@ void wificonfigwidgetbase::slotApply()
     if ( usingLagg )
       NetworkInterface::enableLagg(DeviceName);
 */
+    // Apply priority, SSID, BSSID and enable/disable
     int imax = WPANetworksSystem.length();
     foreach (auto net, WPANetworksDialog) {
         for(int i=0; i<imax; i++)
         {
             if(WPANetworksSystem[i].GetId() == net.GetId())
             {
-                if(WPANetworksSystem[i].GetSsid() != net.GetSsid())
-                    // Normally impossible!!
-                    continue;
                 if( (WPANetworksSystem[i].GetPriority() != net.GetPriority()) ||
-                     (WPANetworksSystem[i].IsEnabled() != net.IsEnabled()) )
+                     (WPANetworksSystem[i].IsEnabled() != net.IsEnabled()) ||
+                     (WPANetworksSystem[i].GetSsid() != net.GetSsid()) ||
+                     (WPANetworksSystem[i].GetBssid() != net.GetBssid()) )
                 {
+                    if(WPANetworksSystem[i].GetSsid() != net.GetSsid())
+                    {
+                        auto list_item = listWifi->item(listWifi->currentRow());
+                        QString new_text = net.GetSsid();
+                        QString new_tip = "SSID: " + net.GetSsid() + "\nPriority: " + QString::number(net.GetPriority());
+                        if(!net.IsEnabled())
+                        {
+                            new_text += " [disabled]";
+                            new_tip += "\n[disabled]";
+                        }
+                        if(net.IsCurrent())
+                        {
+                            new_text += " [current]";
+                            new_tip += "\n[current]";
+                        }
+                        list_item->setText(new_text);
+                        list_item->setToolTip(new_tip);
+                    }
                     WPANetworksSystem[i].SetPriority(net.GetPriority());
+                    WPANetworksSystem[i].SetSsid(net.GetSsid());
+                    WPANetworksSystem[i].SetBssid(net.GetBssid());
                     net.IsEnabled() ? WPANetworksSystem[i].Enable() : WPANetworksSystem[i].Disable();
-                    IndexToModify.push_back(i);
+                    IndexToModify.push_back(i);                    
                 }
             }
         }
@@ -105,9 +130,12 @@ void wificonfigwidgetbase::slotApply()
         int netid = WPANetworksSystem[i].GetId();
         nmd_status -> SetNetworkEnabled(DeviceName, netid, WPANetworksSystem[i].IsEnabled());
         nmd_status -> SetNetworkPriority(DeviceName, netid, WPANetworksSystem[i].GetPriority());
+        nmd_status -> SetNetworkSsid(DeviceName, netid, WPANetworksSystem[i].GetSsid());
+        nmd_status -> SetNetworkBssid(DeviceName, netid, WPANetworksSystem[i].GetBssid());
         nmd_status -> saveConfig(DeviceName);
     }
 
+    // Apply remove
     imax = WPANetworksDialog.length();
     foreach (auto net, WPANetworksSystem) {
         bool found = false;
@@ -562,6 +590,7 @@ void wificonfigwidgetbase::slotEditProfile()
         if( (itoedit >= 0) && (itoedit < WPANetworksDialog.count()-1))
         {
             wifi_edit_dialog = std::make_unique<WifiEdit>(&WPANetworksDialog[itoedit]);
+            connect( wifi_edit_dialog.get(), SIGNAL( Saved() ), this, SLOT( slotProfileSaved() ) );
             wifi_edit_dialog->exec();
         }
 
