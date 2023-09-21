@@ -91,6 +91,7 @@ void wificonfigwidgetbase::slotApply()
 */
     // Apply priority, SSID, BSSID and enable/disable
     int imax = WPANetworksSystem.length();
+    bool refresh_list = false;
     foreach (auto net, WPANetworksDialog) {
         for(int i=0; i<imax; i++)
         {
@@ -101,7 +102,8 @@ void wificonfigwidgetbase::slotApply()
                      (WPANetworksSystem[i].GetSsid() != net.GetSsid()) ||
                      (WPANetworksSystem[i].GetBssid() != net.GetBssid()) )
                 {
-                    if(WPANetworksSystem[i].GetSsid() != net.GetSsid())
+                    if( (WPANetworksSystem[i].GetSsid() != net.GetSsid()) &&
+                        (WPANetworksSystem[i].GetPriority() == net.GetPriority()) )
                     {
                         auto list_item = listWifi->item(listWifi->currentRow());
                         QString new_text = net.GetSsid();
@@ -119,6 +121,8 @@ void wificonfigwidgetbase::slotApply()
                         list_item->setText(new_text);
                         list_item->setToolTip(new_tip);
                     }
+                    if(WPANetworksSystem[i].GetPriority() != net.GetPriority())
+                        refresh_list = true;
                     WPANetworksSystem[i].SetPriority(net.GetPriority());
                     WPANetworksSystem[i].SetSsid(net.GetSsid());
                     WPANetworksSystem[i].SetBssid(net.GetBssid());
@@ -161,156 +165,13 @@ void wificonfigwidgetbase::slotApply()
 
     buttonCancel->setEnabled(true);
     pushApply->setEnabled(false);
-}
-
-/*
-void wificonfigwidgetbase::updateWPASupp()
-{
-    bool listEmpty = false;
-    QString tmp;
-
-    QFile fileout( "/etc/wpa_supplicant.conf" );
-    if ( fileout.open( QIODevice::WriteOnly ) ) {
-       QTextStream streamout( &fileout );
-
-
-       // Loop through all the devices we have now
-       for(int curItem=0; curItem < 145; curItem++)
-       {
-         if ( SSIDList[curItem].isEmpty() ){
-	   if(curItem==0){ listEmpty=true; }
-	   break;
-	 }
-
-         // Fix to prevent kernel panic on net restart
-	 if ( curItem == 0 )
-           streamout << "ctrl_interface=/var/run/wpa_supplicant\n\n";
-
-	 if ( WPAONLY ) {
-           streamout << "ap_scan=0\n";
-           streamout << "fast_reauth=0\n";
-           streamout << "network={\n ssid=\"" + SSIDList[curItem] + "\"\n";
-         } else {
-           if ( BSSID[curItem] )
-             streamout << "network={\n bssid=" + SSIDList[curItem] + "\n";
-           else
-             streamout << "network={\n ssid=\"" + SSIDList[curItem] + "\"\n";
-	 }
-
-         streamout << " priority=" << 145 - curItem << "\n";
-
-	 if ( ! WPAONLY )
-           streamout << " scan_ssid=1\n";
-
-         if ( SSIDEncType[curItem] == NO_ENCRYPTION )
-         {
-            streamout << " key_mgmt=NONE\n";
-         } else if (SSIDEncType[curItem] == WEP_ENCRYPTION ) {
-           // Ensure we don't end up with invalid key index
-	   if ( WEPIndex[curItem] !=0 && WEPIndex[curItem] !=1 && WEPIndex[curItem] !=2 && WEPIndex[curItem] !=3 )
-	      WEPIndex[curItem] = 0;
-
-           streamout << " key_mgmt=NONE\n";
-           streamout << " wep_tx_keyidx=" + tmp.setNum(WEPIndex[curItem]) + "\n";
-           // Check if we are using a plaintext WEP or not
-           if ( WEPHex[curItem] )
-             streamout << " wep_key" + tmp.setNum(WEPIndex[curItem]) + "=" + WEPKey[curItem] + "\n";
-           else
-             streamout << " wep_key" + tmp.setNum(WEPIndex[curItem]) + "=\"" + WEPKey[curItem] + "\"\n";
-
-         } else if (SSIDEncType[curItem] == WPA_ENCRYPTION ) {
-
-            streamout << " psk=\"" + WPAPersonalKey[curItem] + "\"\n";
-
-         } else if (SSIDEncType[curItem] == WPAE_ENCRYPTION ) {
-	    QString keyType;
-	    if ( WPAEKeyMgmt[curItem] == KEYWPAEAP )
-	       keyType="WPA-EAP";
-	    if ( WPAEKeyMgmt[curItem] == KEY8021X )
-	       keyType="IEEE8021X";
-
-            if ( WPAEType[curItem] == 1) {
-              streamout << " proto=RSN\n key_mgmt=" << keyType << "\n eap=TLS\n";
-	      streamout << " identity=\"" + WPAEIdent[curItem] + "\"\n";
-	      if ( ! WPAECACert[curItem].isEmpty() )
-	        streamout << " ca_cert=\"" + WPAECACert[curItem] + "\"\n";
-	      if ( ! WPAEClientCert[curItem].isEmpty() )
-	        streamout << " client_cert=\"" + WPAEClientCert[curItem] + "\"\n";
-	      streamout << " private_key=\"" + WPAEPrivKeyFile[curItem] + "\"\n";
-	      streamout << " private_key_password=\"" + WPAEPassword[curItem] + "\"\n";
-
-	    } else if (WPAEType[curItem] == 2) {
-              streamout << " proto=RSN\n key_mgmt=" << keyType << "\n eap=TTLS\n";
-	      streamout << " identity=\"" + WPAEIdent[curItem] + "\"\n";
-	      if ( ! WPAEAnonIdent[curItem].isEmpty() )
-  	          streamout << " anonymous_identity=\"" + WPAEAnonIdent[curItem] + "\"\n";
-	      streamout << " password=\"" + WPAEPassword[curItem] + "\"\n";
-	      if ( ! WPAECACert[curItem].isEmpty() )
-	        streamout << " ca_cert=\"" + WPAECACert[curItem] + "\"\n";
-          switch(WPAEPhase2[curItem]) {
-            case 1:
-              streamout << " phase2=\"auth=MSCHAPV2\"\n";
-              break;
-            case 2:
-              streamout << " phase2=\"auth=GTC\"\n";
-              break;
-            case 3:
-              streamout << " phase2=\"auth=OTP\"\n";
-              break;
-            case 4:
-              streamout << " phase2=\"auth=PAP\"\n";
-              break;
-            case 5:
-              streamout << " phase2=\"auth=CHAP\"\n";
-              break;
-            case 6:
-              streamout << " phase2=\"auth=MSCHAP\"\n";
-              break;
-            default: // comboPhase2 Itemindex 0
-              streamout << " phase2=\"auth=MD5\"\n";
-          }
-
-	    } else if (WPAEType[curItem] == 3) {
-              streamout << " proto=RSN\n key_mgmt=" << keyType << "\n eap=PEAP\n";
-	      streamout << " identity=\"" + WPAEIdent[curItem] + "\"\n";
-	      if ( ! WPAEAnonIdent[curItem].isEmpty() )
-  	          streamout << " anonymous_identity=\"" + WPAEAnonIdent[curItem] + "\"\n";
-	      streamout << " password=\"" + WPAEPassword[curItem] + "\"\n";
-	      if ( ! WPAECACert[curItem].isEmpty() )
-	        streamout << " ca_cert=\"" + WPAECACert[curItem] + "\"\n";
-	      streamout << " phase1=\"peaplabel=0\"\n";
-          switch(WPAEPhase2[curItem]) {
-            case 0:
-              streamout << " phase2=\"auth=MD5\"\n";
-              break;
-            case 2:
-              streamout << " phase2=\"auth=GTC\"\n";
-              break;
-            case 3:
-              streamout << " phase2=\"auth=OTP\"\n";
-              break;
-            default: // comboPhase2 Itemindex 1
-              streamout << " phase2=\"auth=MSCHAPV2\"\n";
-          }
-
-            }
-         }
-
-         streamout << "}\n\n";
-       } // End of for loop
-
-       fileout.close();
+    if(refresh_list)
+    {
+        std::sort(WPANetworksDialog.begin(), WPANetworksDialog.end());
+        std::reverse(WPANetworksDialog.begin(), WPANetworksDialog.end());
+        refreshNetworksList();
     }
-
-    // If no networks, clear out WPA supplicant.conf and reset rc.conf
-    if ( listEmpty  && ! WPAONLY ){
-       fileout.remove();
-       trueos::Utils::setConfFileValue( "/etc/rc.conf", "ifconfig_lagg0", "", -1);
-       trueos::Utils::setConfFileValue( "/etc/rc.conf", "ifconfig_" + DeviceName, "ifconfig_" + DeviceName + "=\"DHCP\"");
-    }
-
 }
-*/
 
 void wificonfigwidgetbase::setIsMain(bool is_main)
 {
@@ -418,54 +279,6 @@ void wificonfigwidgetbase::slotRescan()
         listNewWifi->addItem(new QListWidgetItem(QIcon(FileLoad), ssid + " (signal: " + QString(std::to_string(net.Power).c_str()) + "%)") );
         foundItem = 1;
     }
-/*
-    //display the info for each wifi access point
-    for(int i=1; i<ifconfout.size(); i++){    //Skip the header line by starting at 1
-      ifline = NetworkInterface::parseWifiScanLine(ifconfout[i],true); //get a single line
-      //save the info for this wifi
-      //qDebug() << "ifconfig run";
-      ssid = ifline[0];
-      strength = ifline[4];
-      //determine the icon based on if there is security encryption
-      security = ifline[6]; //NetworkInterface::getWifiSecurity(ssid,DeviceName);
-      if(security.contains("None")){
-	FileLoad = ":object-unlocked.png";
-      }else{
-	FileLoad = ":object-locked.png";
-      }
-      //qDebug() << "ssid check";
-      //Make sure we do not display blank ssid entry points
-      if( !ssid.isEmpty() ){
-
-      // qDebug()<<"Checking for duplicate SSID's";
-      bool duplicateSSID = false;
-      int dupRow;
-      for ( int z = 0 ; z < listNewWifi->count() ; z++){
-        //qDebug() << listNewWifi->item(z)->text() << ssid;
-	if ( listNewWifi->item(z)->text().contains(ssid+" (") ){
-          dupRow = z;
-          duplicateSSID = true;
-          break;
-	}
-      }
-      if( !duplicateSSID ){
-        //Add the wifi access point to the list
-        listNewWifi->addItem(new QListWidgetItem(QIcon(FileLoad), ssid + " (signal: " +strength + ")") );
-        foundItem = 1; //set the flag for wifi signals found
-      }else{
-        //Check if the new signal strength is greater, replace if it is
-        QString oldStrength = listNewWifi->item(dupRow)->text();
-        oldStrength = oldStrength.section("(signal:",1,1).section("%)",0,0).simplified();
-        if( strength.section("%",0,0).toInt() > oldStrength.toInt() ){
-          //New signal strength is greater - replace the string
-          qDebug() << "Changing signal strength for "+ssid+" to reflect a stronger signal found";
-          //qDebug() << strength << oldStrength;
-          listNewWifi->item(dupRow)->setText( ssid+" (signal: "+strength+")" );
-	}
-      }
-      } //End of check for empty SSID entry points
-    }
-*/
 
     if ( foundItem == 1 ){
       listNewWifi->setCurrentRow(-1);
@@ -478,6 +291,7 @@ void wificonfigwidgetbase::slotRescan()
 void wificonfigwidgetbase::refreshNetworksList()
 {
     listWifi->clear();
+    listWifi->update();
     foreach (const auto &net, WPANetworksDialog)
     {
         QString ssid = net.GetSsid();
@@ -507,6 +321,7 @@ void wificonfigwidgetbase::refreshNetworksList()
             listWifi->addItem(item_net_line);
         }
     }
+    listWifi->update();
     listWifi->setMouseTracking(true);
 }
 
