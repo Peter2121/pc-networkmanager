@@ -728,8 +728,9 @@ bool NMDaemonClient::SetNetworkSsid(QString ifname, int netid, QString ssid)
 
 bool NMDaemonClient::SetNetworkBssid(QString ifname, int netid, QString bssid)
 {
+    if(bssid=="any")
+        bssid="00:00:00:00:00:00";
     QString req_string = QString::asprintf(CMD_WPA_SET_NETWORK_BSSID.c_str(), ifname.toStdString().c_str(), netid, bssid.toStdString().c_str());
-/* NOT IMPLEMENTED YET
     QJsonObject req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
     lastJsonReceived = QJsonObject();
     checkDataResultSource = "SetNetworkBssid";
@@ -739,7 +740,6 @@ bool NMDaemonClient::SetNetworkBssid(QString ifname, int netid, QString bssid)
     {
         return false;
     }
-*/
     return true;
 }
 

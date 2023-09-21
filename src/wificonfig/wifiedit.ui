@@ -16,40 +16,14 @@
   <widget class="QPushButton" name="pushOk">
    <property name="geometry">
     <rect>
-     <x>20</x>
-     <y>270</y>
-     <width>89</width>
+     <x>50</x>
+     <y>271</y>
+     <width>80</width>
      <height>30</height>
     </rect>
    </property>
    <property name="text">
     <string>OK</string>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="pushApply">
-   <property name="geometry">
-    <rect>
-     <x>130</x>
-     <y>270</y>
-     <width>89</width>
-     <height>30</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Apply</string>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="pushClose">
-   <property name="geometry">
-    <rect>
-     <x>240</x>
-     <y>270</y>
-     <width>89</width>
-     <height>30</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Close</string>
    </property>
   </widget>
   <widget class="QWidget" name="layoutWidget">
@@ -219,6 +193,19 @@
      </widget>
     </item>
    </layout>
+  </widget>
+  <widget class="QPushButton" name="pushClose">
+   <property name="geometry">
+    <rect>
+     <x>220</x>
+     <y>271</y>
+     <width>80</width>
+     <height>30</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Cancel</string>
+   </property>
   </widget>
  </widget>
  <resources/>

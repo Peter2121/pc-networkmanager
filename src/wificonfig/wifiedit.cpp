@@ -11,7 +11,7 @@ WifiEdit::WifiEdit(WpaSuppNetwork *net, QWidget *parent) : QDialog(parent), NewK
         pushResetKey->setEnabled(false);
     ParentNet = net;
     modified = false;
-    connect( pushApply, SIGNAL( clicked() ), this, SLOT( SlotSave() ) );
+    //connect( pushApply, SIGNAL( clicked() ), this, SLOT( SlotSave() ) );
     connect( pushOk, SIGNAL( clicked() ), this, SLOT( SlotSaveAndClose() ) );
     connect( pushClose, SIGNAL( clicked() ), this, SLOT( SlotClose() ) );
     connect( pushResetKey, SIGNAL( clicked() ), this, SLOT( SlotResetKey() ) );

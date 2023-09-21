@@ -570,8 +570,8 @@ void wificonfigwidgetbase::slotMoveDown()
 
 void wificonfigwidgetbase::slotEditProfile()
 {
-    bool foundSSID=false;
-    int curItem=0;
+    //bool foundSSID=false;
+    //int curItem=0;
     int itoedit = -1;
     std::unique_ptr<WifiEdit> wifi_edit_dialog = nullptr;
 
@@ -591,6 +591,7 @@ void wificonfigwidgetbase::slotEditProfile()
         {
             wifi_edit_dialog = std::make_unique<WifiEdit>(&WPANetworksDialog[itoedit]);
             connect( wifi_edit_dialog.get(), SIGNAL( Saved() ), this, SLOT( slotProfileSaved() ) );
+            wifi_edit_dialog->setModal(true);
             wifi_edit_dialog->exec();
         }
 
