@@ -546,6 +546,7 @@ void  NetworkTray::openConfigDlg() {
         EthConfig = new ethernetconfig();
         EthConfig->setDevice(IfName);
         EthConfig->setWindowTitle(IfName + " " + "configuration");
+        EthConfig->setIsMain(false);
         EthConfig->programInit();
         EthConfig->show();
 }
@@ -556,6 +557,7 @@ void  NetworkTray::openWlanConfigDlg() {
         WlanConfig = new wificonfigwidgetbase(nmdStatus);
         WlanConfig->setDevice(IfName);
         WlanConfig->setWindowTitle("WLAN " + IfName + " " + "configuration");
+        WlanConfig->setIsMain(false);
 //        WlanConfig->programInit();
         WlanConfig->show();
 }

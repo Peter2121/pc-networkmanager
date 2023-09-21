@@ -31,6 +31,7 @@ wificonfigwidgetbase::wificonfigwidgetbase() : QWidget()
     WPAONLY=false;
     nmd_status = new NMDaemonCheckStatus();
     OwnNmdStatus = true;
+    IsMain = false;
 }
 
 wificonfigwidgetbase::wificonfigwidgetbase(NMDaemonCheckStatus* nmd) : QWidget()
@@ -39,6 +40,7 @@ wificonfigwidgetbase::wificonfigwidgetbase(NMDaemonCheckStatus* nmd) : QWidget()
     WPAONLY=false;
     nmd_status = nmd;
     OwnNmdStatus = false;
+    IsMain = false;
 }
 
 void wificonfigwidgetbase::slotClose()
