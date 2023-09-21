@@ -10,14 +10,14 @@ CONFIG += c++17
 LIBS	+= -L/usr/local/lib -ltrueos-utils -ltrueos-ui
 LIBS    += /usr/local/lib/libsockpp.a
 
-HEADERS	+= NetworkTray.h netKey.h
+HEADERS	+= NetworkTray.h ../wificonfig/netKey.h
 HEADERS	+= ../ethernetconfig/ethernetconfig.h ../ethernetconfig/ethernetconfigdata.h ../ethernetconfig/ipv4addrinput.h
 HEADERS	+= ../wificonfig/dialogwpaenterprise.h ../wificonfig/dialogwpapersonal.h ../wificonfig/wepconfig.h
 HEADERS	+= ../wificonfig/wificonfigwidgetbase.h ../wificonfig/wifiscanssid.h ../wificonfig/wifiselectiondialog.h
 HEADERS	+= ../wificonfig/wpasuppnetwork.h ../wificonfig/wifiedit.h
 
 
-SOURCES	+= main.cpp NetworkTray.cpp netKey.cpp
+SOURCES	+= main.cpp NetworkTray.cpp ../wificonfig/netKey.cpp
 SOURCES	+= ../ethernetconfig/ethernetconfig.cpp ../ethernetconfig/ethernetconfigdata.cpp ../ethernetconfig/ipv4addrinput.cpp
 SOURCES	+= ../wificonfig/dialogwpaenterprise.cpp ../wificonfig/dialogwpapersonal.cpp ../wificonfig/wepconfig.cpp
 SOURCES	+= ../wificonfig/wificonfigwidgetbase.cpp ../wificonfig/wifiscanssid.cpp ../wificonfig/wifiselectiondialog.cpp
@@ -28,7 +28,7 @@ include("../backend/backend.pri")
 include("../NMDaemonClient/NMDaemonClient.pri")
 include("../Utils/Utils.pri")
 
-FORMS	+= netKey.ui
+FORMS	+= ../wificonfig/netKey.ui
 FORMS	+= ../ethernetconfig/ethernetconfig.ui ../ethernetconfig/ipv4addrinput.ui
 FORMS   += ../wificonfig/dialogwpaenterprise.ui ../wificonfig/dialogwpapersonal.ui ../wificonfig/wepconfig.ui
 FORMS   += ../wificonfig/wificonfigwidgetbase.ui ../wificonfig/wifiscanssid.ui ../wificonfig/wifiselectiondialog.ui

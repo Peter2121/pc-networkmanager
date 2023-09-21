@@ -4,6 +4,7 @@
 #include <QDialog>
 #include "ui_wifiedit.h"
 #include "wpasuppnetwork.h"
+#include "netKey.h"
 
 namespace Ui {
 class WifiEdit;
@@ -28,6 +29,7 @@ private slots:
     void SlotSaveAndClose();
     void SlotSave();
     void SlotResetKey();
+    void SlotKeySaved(QString, QString, bool);
 
 signals:
     void Saved();

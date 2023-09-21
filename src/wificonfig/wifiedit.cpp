@@ -41,7 +41,8 @@ void WifiEdit::SlotSave()
         ParentNet->SetPriority(new_priority);
     if(!NewKey.isEmpty())
     {
-        // TODO: set new PSK
+        // TODO: Not implemented in WpaSuppNetwork
+        // ParentNet->SetPsk(NewKey);
     }
     emit Saved();
 }
@@ -54,10 +55,20 @@ void WifiEdit::SlotSaveAndClose()
 
 void WifiEdit::SlotResetKey()
 {
-    // TODO: ask for new PSK
+    auto netkey_dialog = std::make_unique<netKey>();
+    connect( netkey_dialog.get(), SIGNAL( saved(QString, QString, bool) ), this, SLOT( SlotKeySaved() ) );
+    netkey_dialog->setSSID(editSSID->text());
+    netkey_dialog->showKeyType(true);
+    netkey_dialog->setModal(true);
+    netkey_dialog->exec();
 }
 
 bool WifiEdit::IsModified()
 {
     return modified;
+}
+
+void WifiEdit::SlotKeySaved(QString key, QString, bool)
+{
+    NewKey = key;
 }
