@@ -15,6 +15,8 @@ public:
     const QString &GetBssid() const;
     void SetSsid(const QString &newSsid);
     void SetBssid(const QString &newBssid);
+    const QString GetKey() const;
+    void SetKey(QString);
     int GetPriority() const;
     void SetPriority(int newPriority);
     void IncreasePriority();
@@ -26,6 +28,7 @@ public:
     bool IsProtected() const;
     int GetId() const;
 
+
 protected:
     int Id;
     QString Ssid;
@@ -34,6 +37,7 @@ protected:
     bool Enabled;
     bool Current;
     bool Protected;
+    QString Key;
 };
 
 bool operator == (const WpaSuppNetwork&, const WpaSuppNetwork&);

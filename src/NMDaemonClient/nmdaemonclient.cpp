@@ -351,16 +351,13 @@ QVector<QJsonObject> NMDaemonClient::getWpaNetworkList(QString ifname)
     return ret_nets;
 }
 
-bool NMDaemonClient::updatePsk(QString ifname, QString ssid, QString psk, bool hexkey)
+bool NMDaemonClient::UpdatePsk(QString ifname, int net_id, QString psk, bool hexkey)
 {
     if(hexkey)
     {
         qDebug() << "Hex keys are not (yet) supported";
         return false;
     }
-    int net_id = getWpaNetworkId(ifname, ssid);
-    if(net_id<0)
-        return false;
 
     QJsonValue json_value;
     QString req_string = QString::asprintf(CMD_WPA_UPDATE_PSK.c_str(), ifname.toStdString().c_str(), net_id, psk.toStdString().c_str());
@@ -374,6 +371,17 @@ bool NMDaemonClient::updatePsk(QString ifname, QString ssid, QString psk, bool h
         return false;
     }
     return true;
+}
+
+bool NMDaemonClient::UpdatePsk(QString ifname, QString ssid, QString psk, bool hexkey)
+{
+    int net_id = getWpaNetworkId(ifname, ssid);
+    if(net_id<0)
+    {
+        qDebug() << "Cannot get network ID for ssid: " << ssid;
+        return false;
+    }
+    return UpdatePsk(ifname, net_id, psk, hexkey);
 }
 
 bool NMDaemonClient::addNetwork(QString ifname, QString ssid, QString psk, bool hexkey)

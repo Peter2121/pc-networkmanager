@@ -96,7 +96,8 @@ public:
     bool sendRequest(QJsonObject);
     QString getLastError();
     bool connectWifiNetwork(QString, QString);
-    bool updatePsk(QString, QString, QString, bool);
+    bool UpdatePsk(QString, QString, QString, bool);
+    bool UpdatePsk(QString, int, QString, bool);
     bool addNetwork(QString, QString, QString, bool);
     //bool addOpenNetwork(QString, QString);
     bool saveConfig(QString);

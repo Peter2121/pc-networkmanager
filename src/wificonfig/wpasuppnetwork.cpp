@@ -5,7 +5,7 @@ WpaSuppNetwork::WpaSuppNetwork() : WpaSuppNetwork(0, "", "", 0, false, false, fa
 }
 
 WpaSuppNetwork::WpaSuppNetwork(int id, QString ssid, QString bssid, int priority, bool enabled, bool current, bool protectedd) :
-    Id(id), Ssid(ssid), Bssid(bssid), Priority(priority), Enabled(enabled), Current(current), Protected(protectedd)
+    Id(id), Ssid(ssid), Bssid(bssid), Priority(priority), Enabled(enabled), Current(current), Protected(protectedd), Key("")
 {
 }
 
@@ -87,6 +87,16 @@ bool WpaSuppNetwork::IsProtected() const
 int WpaSuppNetwork::GetId() const
 {
     return Id;
+}
+
+const QString WpaSuppNetwork::GetKey() const
+{
+    return Key;
+}
+
+void WpaSuppNetwork::SetKey(QString new_key)
+{
+    Key = new_key;
 }
 
 bool operator == (const WpaSuppNetwork& net1, const WpaSuppNetwork& net2)

@@ -344,7 +344,7 @@ void NetworkTray::slotWifiConnectSuccess(QString ssid)
 void NetworkTray::slotUpdatePskAndConnect(QString key, QString ssid, bool hexkey)
 {
     nmdStatus->stopMonitoring();
-    if(nmdStatus->updatePsk(IfName, ssid, key, hexkey))
+    if(nmdStatus->UpdatePsk(IfName, ssid, key, hexkey))
     {
         connectWifiNetwork(ssid);
     }
