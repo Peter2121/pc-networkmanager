@@ -312,7 +312,7 @@ void wificonfigwidgetbase::refreshNetworksList()
         QString ssid = net.GetSsid();
         QString net_line = ssid;
         QString net_tip = "SSID: " + ssid + "\nPriority: " + QString::number(net.GetPriority());
-        QListWidgetItem* item_net_line = nullptr;
+        QListWidgetItemNet* item_net_line = nullptr;
         if(!net.IsEnabled())
         {
             net_line += " [disabled]";
@@ -325,13 +325,15 @@ void wificonfigwidgetbase::refreshNetworksList()
         }
         if(net.IsProtected())
         {
-            item_net_line = new QListWidgetItem(QIcon(":object-locked.png"), net_line);
+            item_net_line = new QListWidgetItemNet(QIcon(":object-locked.png"), net_line);
+            item_net_line ->SetNetId(net.GetId());
             item_net_line->setToolTip(net_tip);
             listWifi->addItem(item_net_line);
         }
         else
         {
-            item_net_line = new QListWidgetItem(QIcon(":object-unlocked.png"), net_line);
+            item_net_line = new QListWidgetItemNet(QIcon(":object-unlocked.png"), net_line);
+            item_net_line ->SetNetId(net.GetId());
             item_net_line->setToolTip(net_tip);
             listWifi->addItem(item_net_line);
         }
@@ -348,6 +350,7 @@ void wificonfigwidgetbase::slotMoveUp()
 
     if ( listWifi->currentRow() != -1 )
     {
+        /*
         QString move_ssid = listWifi->item(listWifi->currentRow())->text().split('[')[0].trimmed();
         for (int i=0; i<WPANetworksDialog.count(); i++)
         {
@@ -357,7 +360,17 @@ void wificonfigwidgetbase::slotMoveUp()
                 break;
             }
         }
-        if(itomove > 0)
+        */
+        int idnet = ((QListWidgetItemNet*)(listWifi->item(listWifi->currentRow())))->GetNetId();
+        for (int i=0; i<WPANetworksDialog.count(); i++)
+        {
+            if ( WPANetworksDialog[i].GetId() == idnet )
+            {
+                itomove = i;
+                break;
+            }
+        }
+        if(itomove >= 1 && (itomove < WPANetworksDialog.count()))
         {
             if(WPANetworksDialog[itomove-1].GetPriority()==WPANetworksDialog[itomove].GetPriority())
                 WPANetworksDialog[itomove].IncreasePriority();
@@ -377,10 +390,21 @@ void wificonfigwidgetbase::slotMoveDown()
 
     if ( listWifi->currentRow() != -1 )
     {
+        /*
         QString move_ssid = listWifi->item(listWifi->currentRow())->text().split('[')[0].trimmed();
         for (int i=0; i<WPANetworksDialog.count(); i++)
         {
             if ( WPANetworksDialog[i].GetSsid() == move_ssid )
+            {
+                itomove = i;
+                break;
+            }
+        }
+        */
+        int idnet = ((QListWidgetItemNet*)(listWifi->item(listWifi->currentRow())))->GetNetId();
+        for (int i=0; i<WPANetworksDialog.count(); i++)
+        {
+            if ( WPANetworksDialog[i].GetId() == idnet )
             {
                 itomove = i;
                 break;
@@ -410,6 +434,7 @@ void wificonfigwidgetbase::slotEditProfile()
     // Check if we have a selection to work with
     if ( listWifi->currentRow() != -1 )
     {
+        /*
         QString edit_ssid = listWifi->item(listWifi->currentRow())->text().split('[')[0].trimmed();
         for (int i=0; i<WPANetworksDialog.count(); i++)
         {
@@ -419,7 +444,17 @@ void wificonfigwidgetbase::slotEditProfile()
                 break;
             }
         }
-        if( (itoedit >= 0) && (itoedit < WPANetworksDialog.count()-1))
+        */
+        int idnet = ((QListWidgetItemNet*)(listWifi->item(listWifi->currentRow())))->GetNetId();
+        for (int i=0; i<WPANetworksDialog.count(); i++)
+        {
+            if ( WPANetworksDialog[i].GetId() == idnet )
+            {
+                itoedit = i;
+                break;
+            }
+        }
+        if( (itoedit >= 0) && (itoedit < WPANetworksDialog.count()))
         {
             wifi_edit_dialog = std::make_unique<WifiEdit>(&WPANetworksDialog[itoedit]);
             connect( wifi_edit_dialog.get(), SIGNAL( Saved() ), this, SLOT( slotProfileSaved() ) );
