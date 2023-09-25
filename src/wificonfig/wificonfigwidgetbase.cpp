@@ -95,7 +95,6 @@ void wificonfigwidgetbase::slotApply()
     int imaxsys = WPANetworksSystem.length();
     int imaxdial = WPANetworksDialog.length();
     bool refresh_list = false;
-//    foreach (auto net, WPANetworksDialog) {
     for(int idial=0; idial<imaxdial; idial++)
     {
         for(int isys=0; isys<imaxsys; isys++)
@@ -205,7 +204,7 @@ void wificonfigwidgetbase::setDevice( QString Device )
   connect( pushAddWifi, SIGNAL( clicked() ), this, SLOT( slotAddNewProfile() ) );
   connect( pushEditWifi, SIGNAL( clicked() ), this, SLOT( slotEditProfile() ) );
   connect( pushRemoveWifi, SIGNAL( clicked() ), this, SLOT( slotRemoveProfile() ) );
-  connect( pushRescan, SIGNAL( clicked() ), this, SLOT( slotRescan() ) );
+  connect( pushRescan, SIGNAL( clicked() ), this, SLOT( slotStartRescan() ) );
   connect( pushAddHidden, SIGNAL( clicked() ), this, SLOT( slotAddHiddenProfile() ) );
   connect( groupCountryCode, SIGNAL( clicked() ), this, SLOT( slotCheckGlobalText() ) );
   connect( listWifi, SIGNAL(itemDoubleClicked(QListWidgetItem*)), this, SLOT(slotItemDoubleClicked(QListWidgetItem*)));
@@ -269,6 +268,12 @@ void wificonfigwidgetbase::loadCountryCodes()
   connect( comboCountryCode, SIGNAL( currentIndexChanged(int) ), this, SLOT( slotCheckGlobalText() ) );
 }
 
+void wificonfigwidgetbase::slotStartRescan()
+{
+    connect(nmd_status, SIGNAL(wifiNetStatusUpdated()), this, SLOT(slotRescan()));
+    nmd_status->updateStatus();
+}
+
 void wificonfigwidgetbase::slotRescan()
 {
     QString strength, ssid, security, FileLoad;
@@ -279,9 +284,6 @@ void wificonfigwidgetbase::slotRescan()
     listNewWifi->clear();
     pushAddWifi->setEnabled(false);
     QVector<WifiNetworkDetails> wifi_networks = nmd_status->getLastNetsWifiDetails(DeviceName);
-
-    // Start the scan and get the output
-    //ifconfout = trueos::Utils::runShellCommand("ifconfig -v " + DeviceName + " up list scan");
 
     foreach(const auto &net, wifi_networks)
     {

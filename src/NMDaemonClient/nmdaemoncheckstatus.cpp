@@ -103,11 +103,16 @@ void NMDaemonCheckStatus::updateStatus()
     bool netstatusupdated = false;
     bool ifstatusupdated = false;
     bool jailstatusupdated = false;
+    bool need_to_restart_timer = false;
     // Get list of all netwok interfaces
     ifstatusupdated = updateStatusInterfaces();
     jailstatusupdated = updateStatusJails();
     // TODO: move the code into updateStatusWifi();
-    timerMonitoring->stop();
+    if(timerMonitoring->isActive())
+    {
+        timerMonitoring->stop();
+        need_to_restart_timer = true;
+    }
     if(!doConnect())
         return;
     // Get list of wireless interfaces available for wpa_supplicant
@@ -191,7 +196,8 @@ label_exit:
         emit wifiNetStatusUpdated();
     if(iflistupdated)
         emit wifiIfListUpdated();
-    timerMonitoring->start();
+    if(need_to_restart_timer)
+        timerMonitoring->start();
 }
 
 QPair<QString,int> NMDaemonCheckStatus::getLastIfWifiNetwork(QString ifname) const

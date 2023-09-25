@@ -82,6 +82,7 @@ private slots:
     void slotWEPSave(QString newkey, int newIndex, bool hexkey );
     void slotWPAPSave(QString newkey);
     void slotItemDoubleClicked(QListWidgetItem*);
+    void slotStartRescan();
 
 private:
     QString getLineFromCommandOutput( QString command );

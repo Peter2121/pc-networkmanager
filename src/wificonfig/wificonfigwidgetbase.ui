@@ -305,6 +305,9 @@
         <layout class="QVBoxLayout" name="verticalLayout_4">
          <item>
           <widget class="QCheckBox" name="checkMAC">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
            <property name="text">
             <string>Use hardware defau&amp;lt MAC address</string>
            </property>
@@ -342,6 +345,9 @@
        </item>
        <item>
         <widget class="QGroupBox" name="groupCountryCode">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
          <property name="title">
           <string>Set Country Code</string>
          </property>
