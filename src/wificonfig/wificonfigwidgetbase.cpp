@@ -456,25 +456,12 @@ void wificonfigwidgetbase::EditProfile(int itoedit)
 
 void wificonfigwidgetbase::slotEditProfile()
 {
-    //bool foundSSID=false;
-    //int curItem=0;
     int itoedit = -1;
     std::unique_ptr<WifiEdit> wifi_edit_dialog = nullptr;
 
     // Check if we have a selection to work with
     if ( listWifi->currentRow() != -1 )
     {
-        /*
-        QString edit_ssid = listWifi->item(listWifi->currentRow())->text().split('[')[0].trimmed();
-        for (int i=0; i<WPANetworksDialog.count(); i++)
-        {
-            if ( WPANetworksDialog[i].GetSsid() == edit_ssid )
-            {
-                itoedit = i;
-                break;
-            }
-        }
-        */
         int idnet = ((QListWidgetItemNet*)(listWifi->item(listWifi->currentRow())))->GetNetId();
         for (int i=0; i<WPANetworksDialog.count(); i++)
         {
@@ -550,18 +537,19 @@ void wificonfigwidgetbase::slotAddHiddenProfile(){
 void wificonfigwidgetbase::slotAddNewProfile()
 {
    //Get the selected SSID
-   if( (listNewWifi->currentRow())!=-1 ){
-    QString line = listNewWifi->item(listNewWifi->currentRow())->text();
-    QString ssidc = line.section(" (",0,0,QString::SectionSkipEmpty);
-    slotAddNewProfileSSID(ssidc);
-   }else{
-     QMessageBox::warning(this,"No Wifi Point Selected","Please select a wireless network to add");
+   if( (listNewWifi->currentRow())!=-1 )
+   {
+        QString line = listNewWifi->item(listNewWifi->currentRow())->text();
+        QString ssidc = line.section(" (",0,0,QString::SectionSkipEmpty);
+        slotAddNewProfileSSID(ssidc);
+   }
+   else
+   {
+        QMessageBox::warning(this,"No Wifi Point Selected","Please select a wireless network to add");
    }
 }
 
 void wificonfigwidgetbase::slotAddNewProfileSSID(QString ssidc){
-  /*  ssidc - SSID of the network to add
-  */
 
     //Get the Security Type
     QString sec = NetworkInterface::getWifiSecurity(ssidc,DeviceName);
