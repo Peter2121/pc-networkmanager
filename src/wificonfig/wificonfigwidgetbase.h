@@ -81,6 +81,7 @@ private slots:
     void slotRescan();
     void slotWEPSave(QString newkey, int newIndex, bool hexkey );
     void slotWPAPSave(QString newkey);
+    void slotItemDoubleClicked(QListWidgetItem*);
 
 private:
     QString getLineFromCommandOutput( QString command );
@@ -110,6 +111,7 @@ private:
     QVector<WpaSuppNetwork> WPANetworksSystem;
     QVector<WpaSuppNetwork> WPANetworksDialog;
     void refreshNetworksList();
+    void EditProfile(int);
 
     QProcess *netifProc;
 

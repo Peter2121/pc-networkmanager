@@ -208,6 +208,7 @@ void wificonfigwidgetbase::setDevice( QString Device )
   connect( pushRescan, SIGNAL( clicked() ), this, SLOT( slotRescan() ) );
   connect( pushAddHidden, SIGNAL( clicked() ), this, SLOT( slotAddHiddenProfile() ) );
   connect( groupCountryCode, SIGNAL( clicked() ), this, SLOT( slotCheckGlobalText() ) );
+  connect( listWifi, SIGNAL(itemDoubleClicked(QListWidgetItem*)), this, SLOT(slotItemDoubleClicked(QListWidgetItem*)));
 
   // Save the device name for later
   DeviceName = Device;
@@ -424,6 +425,33 @@ void wificonfigwidgetbase::slotMoveDown()
     }
 }
 
+void wificonfigwidgetbase::slotItemDoubleClicked(QListWidgetItem* item)
+{
+    int itoedit = -1;
+    int idnet = ((QListWidgetItemNet*)(item))->GetNetId();
+    for (int i=0; i<WPANetworksDialog.count(); i++)
+    {
+        if ( WPANetworksDialog[i].GetId() == idnet )
+        {
+            itoedit = i;
+            break;
+        }
+    }
+    EditProfile(itoedit);
+}
+
+void wificonfigwidgetbase::EditProfile(int itoedit)
+{
+    std::unique_ptr<WifiEdit> wifi_edit_dialog = nullptr;
+    if( (itoedit >= 0) && (itoedit < WPANetworksDialog.count()))
+    {
+        wifi_edit_dialog = std::make_unique<WifiEdit>(&WPANetworksDialog[itoedit]);
+        connect( wifi_edit_dialog.get(), SIGNAL( Saved() ), this, SLOT( slotProfileSaved() ) );
+        wifi_edit_dialog->setModal(true);
+        wifi_edit_dialog->exec();
+    }
+}
+
 void wificonfigwidgetbase::slotEditProfile()
 {
     //bool foundSSID=false;
@@ -454,13 +482,7 @@ void wificonfigwidgetbase::slotEditProfile()
                 break;
             }
         }
-        if( (itoedit >= 0) && (itoedit < WPANetworksDialog.count()))
-        {
-            wifi_edit_dialog = std::make_unique<WifiEdit>(&WPANetworksDialog[itoedit]);
-            connect( wifi_edit_dialog.get(), SIGNAL( Saved() ), this, SLOT( slotProfileSaved() ) );
-            wifi_edit_dialog->setModal(true);
-            wifi_edit_dialog->exec();
-        }
+        EditProfile(itoedit);
 
 /*
       // Lets go ahead and open the edit dialog on this SSID
