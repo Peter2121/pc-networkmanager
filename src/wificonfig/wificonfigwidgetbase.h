@@ -78,7 +78,7 @@ private slots:
     void slotRefreshSSIDList();
     void slotMoveUp();
     void slotMoveDown();
-    void slotRescan();
+    void slotFinishRescan();
     void slotWEPSave(QString newkey, int newIndex, bool hexkey );
     void slotWPAPSave(QString newkey);
     void slotItemDoubleClicked(QListWidgetItem*);

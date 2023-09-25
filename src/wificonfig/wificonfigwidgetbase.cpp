@@ -224,7 +224,7 @@ void wificonfigwidgetbase::setDevice( QString Device )
   //usingLagg = settings.value("/pc-netmanager/useLagg", false).toBool();
 
   //Load the available wifi access points
-  slotRescan();
+  slotFinishRescan();
 
 }
 
@@ -274,7 +274,7 @@ void wificonfigwidgetbase::slotStartRescan()
     nmd_status->updateStatus();
 }
 
-void wificonfigwidgetbase::slotRescan()
+void wificonfigwidgetbase::slotFinishRescan()
 {
     QString strength, ssid, security, FileLoad;
     QStringList ifconfout, ifline;
