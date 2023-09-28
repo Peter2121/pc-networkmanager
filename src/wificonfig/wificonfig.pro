@@ -11,10 +11,12 @@ LIBS	+= -L/usr/local/lib -ltrueos-utils -ltrueos-ui
 LIBS    += /usr/local/lib/libsockpp.a
 
 HEADERS	+= dialogwpaenterprise.h dialogwpapersonal.h wepconfig.h wificonfigwidgetbase.h wifiscanssid.h wifiselectiondialog.h \
-    qlistwidgetitemnet.h wifiedit.h wpasuppnetwork.h netKey.h
+    qlistwidgetitemnet.h wifiedit.h wpasuppnetwork.h netKey.h \
+    qlistwidgetitemsec.h
 
 SOURCES	+= dialogwpaenterprise.cpp dialogwpapersonal.cpp main.cpp wepconfig.cpp wificonfigwidgetbase.cpp wifiscanssid.cpp wifiselectiondialog.cpp \
-    qlistwidgetitemnet.cpp wifiedit.cpp wpasuppnetwork.cpp netKey.cpp
+    qlistwidgetitemnet.cpp wifiedit.cpp wpasuppnetwork.cpp netKey.cpp \
+    qlistwidgetitemsec.cpp
 
 include("../NMDaemonClient/NMDaemonClient.pri")
 include("../Utils/Utils.pri")

@@ -91,10 +91,26 @@ void wificonfigwidgetbase::slotApply()
     if ( usingLagg )
       NetworkInterface::enableLagg(DeviceName);
 */
-    // Apply priority, SSID, BSSID and enable/disable
     int imaxsys = WPANetworksSystem.length();
     int imaxdial = WPANetworksDialog.length();
     bool refresh_list = false;
+    for(int idial=0; idial<imaxdial; idial++)
+    {
+        bool found = false;
+        for(int isys=0; isys<imaxsys; isys++)
+        {
+            if(WPANetworksSystem[isys].GetSsid() == WPANetworksDialog[idial].GetSsid())
+            {
+                found = true;
+                break;
+            }
+        }
+        if(!found)  // New network
+        {
+
+        }
+    }
+    // Apply priority, SSID, BSSID and enable/disable
     for(int idial=0; idial<imaxdial; idial++)
     {
         for(int isys=0; isys<imaxsys; isys++)
@@ -157,7 +173,7 @@ void wificonfigwidgetbase::slotApply()
     }
 
     // Apply remove
-    foreach (auto net, WPANetworksSystem) {
+    foreach (const auto &net, WPANetworksSystem) {
         bool found = false;
         for(int i=0; i<imaxdial; i++)
         {
@@ -279,6 +295,7 @@ void wificonfigwidgetbase::slotFinishRescan()
     QString strength, ssid, security, FileLoad;
     QStringList ifconfout, ifline;
     int foundItem = 0;
+    QListWidgetItemSec *net_line = nullptr;
 
     // Clear the list box and disable the add button
     listNewWifi->clear();
@@ -289,12 +306,19 @@ void wificonfigwidgetbase::slotFinishRescan()
     {
         ssid = net.SSID;
 //        strength = net.Power;
-//      TODO: manage WIFI_SECURITY_ERROR case (don't load any icon)
         if(net.Security == NMDaemonClient::WIFI_SECURITY_OPEN)
             FileLoad = ":object-unlocked.png";
-        else
+        else if( (net.Security == NMDaemonClient::WIFI_SECURITY_WEP) ||
+                 (net.Security == NMDaemonClient::WIFI_SECURITY_WPA_PSK) ||
+                 (net.Security == NMDaemonClient::WIFI_SECURITY_WPA2_PSK) )
             FileLoad = ":object-locked.png";
-        listNewWifi->addItem(new QListWidgetItem(QIcon(FileLoad), ssid + " (signal: " + QString(std::to_string(net.Power).c_str()) + "%)") );
+        if(FileLoad.isEmpty())
+            net_line = new QListWidgetItemSec(ssid + " (signal: " + QString(std::to_string(net.Power).c_str()) + "%)");
+        else
+            net_line = new QListWidgetItemSec(QIcon(FileLoad), ssid + " (signal: " + QString(std::to_string(net.Power).c_str()) + "%)");
+        net_line->SetSecurity(net.Security);
+//        listNewWifi->addItem(new QListWidgetItem(QIcon(FileLoad), ssid + " (signal: " + QString(std::to_string(net.Power).c_str()) + "%)") );
+        listNewWifi->addItem(net_line);
         foundItem = 1;
     }
 
@@ -529,9 +553,9 @@ void wificonfigwidgetbase::slotAddHiddenProfile(){
   bool ok;
   QString ssidc = QInputDialog::getText(this,tr("Network Name"),tr("Please enter the name of the network you wish to add"), QLineEdit::Normal,"",&ok);
   //check if a name was given
-  if( ok && !ssidc.isEmpty()){
-    slotAddNewProfileSSID(ssidc.simplified());
-  }
+  //if( ok && !ssidc.isEmpty()){
+  //  slotAddNewProfileSSID(ssidc.simplified());
+  //}
 }
 
 void wificonfigwidgetbase::slotAddNewProfile()
@@ -539,18 +563,57 @@ void wificonfigwidgetbase::slotAddNewProfile()
    //Get the selected SSID
    if( (listNewWifi->currentRow())!=-1 )
    {
-        QString line = listNewWifi->item(listNewWifi->currentRow())->text();
+        QListWidgetItemSec *net = ((QListWidgetItemSec*)(listNewWifi->item(listNewWifi->currentRow())));
+        QString line = net->text();
         QString ssidc = line.section(" (",0,0,QString::SectionSkipEmpty);
-        slotAddNewProfileSSID(ssidc);
+        QString security = net->GetSecurity();
+        foreach (const auto &net, WPANetworksDialog)
+        {
+            if(net.GetSsid()==ssidc)
+            {
+                QMessageBox::warning(this, "Network exists", "This network exists already in the configuration");
+                return;
+            }
+        }
+        if( (security==NMDaemonClient::WIFI_SECURITY_OPEN) ||
+            (security==NMDaemonClient::WIFI_SECURITY_ERROR) )
+        {
+            WpaSuppNetwork *newnet = new WpaSuppNetwork(0, ssidc, "any", 0, true, false, false);
+            WPANetworksDialog.push_back(*newnet);
+            refreshNetworksList();
+            pushApply->setEnabled(true);
+        }
+        else if( (security==NMDaemonClient::WIFI_SECURITY_WEP) ||
+                 (security==NMDaemonClient::WIFI_SECURITY_WPA_PSK) ||
+                 (security==NMDaemonClient::WIFI_SECURITY_WPA2_PSK) )
+        {
+            netKey *dialogNetKey = new netKey();
+            dialogNetKey->setSSID(ssidc);
+            dialogNetKey->showKeyType(true);
+            connect( dialogNetKey, SIGNAL( saved(QString,QString,bool) ), this, SLOT( slotAddNewProfileSSID(QString,QString,bool) ) );
+            dialogNetKey->exec();
+        }
    }
    else
    {
-        QMessageBox::warning(this,"No Wifi Point Selected","Please select a wireless network to add");
+        QMessageBox::warning(this, "No Network Selected", "Please select a wireless network to add");
    }
 }
 
-void wificonfigwidgetbase::slotAddNewProfileSSID(QString ssidc){
+void wificonfigwidgetbase::slotAddNewProfileSSID(QString key, QString ssidc, bool use_hex)
+{
+   if(use_hex)
+   {
+        QMessageBox::warning(this, "Not Supported", "Hex keys are not (yet) supported");
+        return;
+   }
+   WpaSuppNetwork *newnet = new WpaSuppNetwork(0, ssidc, "any", 0, true, false, true);
+   newnet->SetKey(key);
+   WPANetworksDialog.push_back(*newnet);
+   refreshNetworksList();
+   pushApply->setEnabled(true);
 
+/*
     //Get the Security Type
     QString sec = NetworkInterface::getWifiSecurity(ssidc,DeviceName);
 
@@ -559,21 +622,22 @@ void wificonfigwidgetbase::slotAddNewProfileSSID(QString ssidc){
 
     //Open the proper security dialog and link it to the save slots
     if(sec.contains("None")){
-      slotAddNewProfileOpen(ssidc,false); //call the function to save the variables (no security settings)
+      slotAddNewProfileOpen(ssidc,false);
     }else if(sec.contains("WEP")){
      wepConfig dialogWEP;
      connect( &dialogWEP, SIGNAL( saved(QString, int, bool) ), this, SLOT( slotWEPSave(QString, int, bool) ) );
      dialogWEP.exec();
-    }else if(sec.contains("WPA")){ //both WPA and WPA2 encryption
+    }else if(sec.contains("WPA")){
      dialogWPAPersonal dialogWPA;
      connect( &dialogWPA, SIGNAL( saved(QString) ), this, SLOT( slotWPAPSave(QString) ) );
      dialogWPA.exec();
     }else{
       //Put error handling here
-      slotAddNewProfileOpen(ssidc,false); //call the function to save the variables (no security settings)
+      slotAddNewProfileOpen(ssidc,false);
       if ( ! WPAONLY )
         QMessageBox::warning(this,"Unknown Wifi Security","The security for this wifi access point could not be automatically determined.\n Please edit the profile to manually set the proper security encryption.");
     }
+*/
 }
 
 void wificonfigwidgetbase::slotWEPSave(QString newkey, int newindex, bool hexkey)

@@ -14,14 +14,15 @@ HEADERS	+= NetworkTray.h ../wificonfig/netKey.h
 HEADERS	+= ../ethernetconfig/ethernetconfig.h ../ethernetconfig/ethernetconfigdata.h ../ethernetconfig/ipv4addrinput.h
 HEADERS	+= ../wificonfig/dialogwpaenterprise.h ../wificonfig/dialogwpapersonal.h ../wificonfig/wepconfig.h
 HEADERS	+= ../wificonfig/wificonfigwidgetbase.h ../wificonfig/wifiscanssid.h ../wificonfig/wifiselectiondialog.h
-HEADERS	+= ../wificonfig/wpasuppnetwork.h ../wificonfig/wifiedit.h ../wificonfig/qlistwidgetitemnet.h
-
+HEADERS	+= ../wificonfig/wpasuppnetwork.h ../wificonfig/wifiedit.h
+HEADERS	+= ../wificonfig/qlistwidgetitemnet.h ../wificonfig/qlistwidgetitemsec.h
 
 SOURCES	+= main.cpp NetworkTray.cpp ../wificonfig/netKey.cpp
 SOURCES	+= ../ethernetconfig/ethernetconfig.cpp ../ethernetconfig/ethernetconfigdata.cpp ../ethernetconfig/ipv4addrinput.cpp
 SOURCES	+= ../wificonfig/dialogwpaenterprise.cpp ../wificonfig/dialogwpapersonal.cpp ../wificonfig/wepconfig.cpp
 SOURCES	+= ../wificonfig/wificonfigwidgetbase.cpp ../wificonfig/wifiscanssid.cpp ../wificonfig/wifiselectiondialog.cpp
-SOURCES	+= ../wificonfig/wpasuppnetwork.cpp ../wificonfig/wifiedit.cpp ../wificonfig/qlistwidgetitemnet.cpp
+SOURCES	+= ../wificonfig/wpasuppnetwork.cpp ../wificonfig/wifiedit.cpp
+SOURCES	+= ../wificonfig/qlistwidgetitemnet.cpp ../wificonfig/qlistwidgetitemsec.cpp
 
 #Include the backend classes for probing network info
 include("../backend/backend.pri")

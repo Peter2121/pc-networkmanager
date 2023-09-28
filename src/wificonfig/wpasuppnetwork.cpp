@@ -94,7 +94,7 @@ const QString WpaSuppNetwork::GetKey() const
     return Key;
 }
 
-void WpaSuppNetwork::SetKey(QString new_key)
+void WpaSuppNetwork::SetKey(const QString& new_key)
 {
     Key = new_key;
 }

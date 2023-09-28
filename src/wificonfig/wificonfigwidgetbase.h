@@ -18,6 +18,7 @@
 #include "wpasuppnetwork.h"
 #include "wifiedit.h"
 #include "qlistwidgetitemnet.h"
+#include "qlistwidgetitemsec.h"
 
 
 // Setup our encryption type defines
@@ -66,7 +67,7 @@ private slots:
     void slotEnableProfile();
     void slotDisableProfile();
     void slotRemoveProfileSSID(QString RemoveSSID);
-    void slotAddNewProfileSSID(QString ssidc);
+    void slotAddNewProfileSSID(QString,QString,bool);
     void slotAddNewProfileOpen( QString SSID, bool isBSSID );
     void slotAddNewProfileWEP( QString SSID, bool isBSSID, QString newKey, int newIndex, bool hexkey );
     void slotAddNewProfileWPA( QString SSID, bool isBSSID, QString newKey );

@@ -16,7 +16,7 @@ public:
     void SetSsid(const QString &newSsid);
     void SetBssid(const QString &newBssid);
     const QString GetKey() const;
-    void SetKey(QString);
+    void SetKey(const QString &key);
     int GetPriority() const;
     void SetPriority(int newPriority);
     void IncreasePriority();
