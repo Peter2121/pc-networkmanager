@@ -96,10 +96,11 @@ void wificonfigwidgetbase::slotApply()
     bool refresh_list = false;
     for(int idial=0; idial<imaxdial; idial++)
     {
-        bool found = false;
+        int found = false;
+        QString ssid = WPANetworksDialog[idial].GetSsid();
         for(int isys=0; isys<imaxsys; isys++)
         {
-            if(WPANetworksSystem[isys].GetSsid() == WPANetworksDialog[idial].GetSsid())
+            if(WPANetworksSystem[isys].GetSsid() == ssid)
             {
                 found = true;
                 break;
@@ -107,7 +108,11 @@ void wificonfigwidgetbase::slotApply()
         }
         if(!found)  // New network
         {
-
+            //std::unique_ptr<NMDaemonSpy> readspy = std::make_unique<NMDaemonSpy>(this, &NMDaemonClient::successWifiNetAdd);
+            if(nmd_status->addNetwork(DeviceName, ssid, WPANetworksDialog[idial].GetKey(), WPANetworksDialog[idial].GetSecurity(), false))
+            {
+                //readspy->wait(NMDaemonClient::DEFAULT_READ_WAIT_TIME_MSEC);
+            }
         }
     }
     // Apply priority, SSID, BSSID and enable/disable
@@ -590,7 +595,8 @@ void wificonfigwidgetbase::slotAddNewProfile()
             netKey *dialogNetKey = new netKey();
             dialogNetKey->setSSID(ssidc);
             dialogNetKey->showKeyType(true);
-            connect( dialogNetKey, SIGNAL( saved(QString,QString,bool) ), this, SLOT( slotAddNewProfileSSID(QString,QString,bool) ) );
+            dialogNetKey->SetSecurity(security);
+            connect( dialogNetKey, SIGNAL( saved(QString,QString,bool,QString) ), this, SLOT( slotAddNewProfileSSID(QString,QString,bool,QString) ) );
             dialogNetKey->exec();
         }
    }
@@ -600,7 +606,7 @@ void wificonfigwidgetbase::slotAddNewProfile()
    }
 }
 
-void wificonfigwidgetbase::slotAddNewProfileSSID(QString key, QString ssidc, bool use_hex)
+void wificonfigwidgetbase::slotAddNewProfileSSID(QString key, QString ssidc, bool use_hex, QString security)
 {
    if(use_hex)
    {
@@ -609,6 +615,7 @@ void wificonfigwidgetbase::slotAddNewProfileSSID(QString key, QString ssidc, boo
    }
    WpaSuppNetwork *newnet = new WpaSuppNetwork(0, ssidc, "any", 0, true, false, true);
    newnet->SetKey(key);
+   newnet->SetSecurity(security);
    WPANetworksDialog.push_back(*newnet);
    refreshNetworksList();
    pushApply->setEnabled(true);

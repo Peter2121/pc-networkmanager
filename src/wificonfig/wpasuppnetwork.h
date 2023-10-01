@@ -8,6 +8,7 @@ class WpaSuppNetwork
 public:
     WpaSuppNetwork();
     WpaSuppNetwork(int, QString, QString, int, bool, bool, bool);
+    WpaSuppNetwork(int, QString, QString, int, bool, bool, bool, QString, QString);
     void Enable();
     void Disable();
 
@@ -27,6 +28,8 @@ public:
     bool IsCurrent() const;
     bool IsProtected() const;
     int GetId() const;
+    QString GetSecurity() const;
+    void SetSecurity(const QString &newSecurity);
 
 
 protected:
@@ -38,6 +41,7 @@ protected:
     bool Current;
     bool Protected;
     QString Key;
+    QString Security;
 };
 
 bool operator == (const WpaSuppNetwork&, const WpaSuppNetwork&);

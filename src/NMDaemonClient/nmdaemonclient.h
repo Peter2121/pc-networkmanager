@@ -25,9 +25,6 @@ class NMDAEMONCLIENT_EXPORT NMDaemonClient : public QObject
 Q_OBJECT
 
 protected:
-    static int constexpr DEFAULT_READ_WAIT_TIME_MSEC = 5000;
-    static int constexpr SCAN_READ_WAIT_TIME_MSEC = 15000;
-    static int constexpr CONNECT_READ_WAIT_TIME_MSEC = 20000;
     static inline const std::string CMD_CONNECT_WIFI_NETWORK = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_CONNECT\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\", \"SSID\" : \"%s\" } }";
     static inline const std::string CMD_WPA_LIST_NETWORKS = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_LIST\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\" } }";
     static inline const std::string CMD_WPA_SCAN_NETWORKS = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_SCAN\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\" } }";
@@ -81,8 +78,11 @@ protected:
     void cbWifiNetEnable(QString, QString);
     void cbWifiNetAdd(QString, QString);
     void cbSendSuccessWifiNetEnable(QString ssid) { emit successWifiNetEnable(ssid); }
-    void cbSendSuccessWifiNetAdd(QString ssid) { emit successWifiNetAdd(ssid); }
+    void cbSendSuccessWifiNetAdd(QString ssid, int id) { emit successWifiNetAdd(ssid,id); }
 public:
+    static int constexpr DEFAULT_READ_WAIT_TIME_MSEC = 5000;
+    static int constexpr SCAN_READ_WAIT_TIME_MSEC = 15000;
+    static int constexpr CONNECT_READ_WAIT_TIME_MSEC = 20000;
     static inline const QString WIFI_SECURITY_ERROR = "ERROR";
     static inline const QString WIFI_SECURITY_OPEN = "OPEN";
     static inline const QString WIFI_SECURITY_WEP = "WEP";
@@ -99,6 +99,7 @@ public:
     bool UpdatePsk(QString, QString, QString, bool);
     bool UpdatePsk(QString, int, QString, bool);
     bool addNetwork(QString, QString, QString, bool);
+    bool addNetwork(QString, QString, QString, QString, bool);
     //bool addOpenNetwork(QString, QString);
     bool saveConfig(QString);
     //bool tsavConfigg(QString);
@@ -134,7 +135,7 @@ signals:
     void errorWifiConnect(QString, QString);
     void successWifiNetEnable(QString);
     void errorWifiNetEnable(QString, QString);
-    void successWifiNetAdd(QString);
+    void successWifiNetAdd(QString,int);
     void errorWifiNetAdd(QString, QString);
 private slots:
     void slotDataReceived();

@@ -72,7 +72,7 @@ private slots:
    void slotWifiConnectSuccess(QString);
    void slotWifiEnableError(QString, QString);
    void slotWifiAddError(QString, QString);
-   void slotWifiConnectNetwork(QString ssid);
+   void slotWifiConnectNetwork(QString, int);
 
 protected:
    static constexpr short NUM_SEPARATORS = 3;

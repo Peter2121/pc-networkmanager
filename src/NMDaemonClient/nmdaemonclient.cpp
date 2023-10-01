@@ -417,41 +417,77 @@ bool NMDaemonClient::addNetwork(QString ifname, QString ssid, QString psk, bool 
             {
                 security = getWifiNetworkSecurity(caps, ies);
             }
-            if(security != WIFI_SECURITY_ERROR)
-            {
-                if(security == WIFI_SECURITY_OPEN)
-                {
-                    req_string = QString::asprintf(CMD_WPA_ADD_OPEN_NETWORK.c_str(), ifname.toStdString().c_str(), ssid.toStdString().c_str());
-                }
-                else
-                {
-                    req_string = QString::asprintf(CMD_WPA_ADD_SECURE_NETWORK.c_str(), ifname.toStdString().c_str(), ssid.toStdString().c_str(), psk.toStdString().c_str(), security.toStdString().c_str());
-                }
-                req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
-                checkDataResultSource = "addNetwork";
-                callbackFunctionSuccess = std::bind(&NMDaemonClient::cbWifiNetAdd, this, ifname, ssid);
-                connect(this, &NMDaemonClient::dataReady, this, &NMDaemonClient::slotCheckDataResult);
-                if(!sendRequest(req_object))
-                {
-                    return false;
-                }
-            }
+            return addNetwork(ifname, ssid, psk, security, hexkey);
+        }
+        else
+        {
+            qDebug() << "Cannot get last scan results for SSID " << ssid;
+            return false;
         }
     }
+    else
+    {
+        qDebug() << "Cannot get last scan results";
+        return false;
+    }
     return true;
+}
+
+bool NMDaemonClient::addNetwork(QString ifname, QString ssid, QString psk, QString security, bool hexkey)
+{
+    QString req_string;
+    QJsonObject req_object;
+
+    if(hexkey)
+    {
+        qDebug() << "Hex keys are not (yet) supported";
+        return false;
+    }
+
+    if(security != WIFI_SECURITY_ERROR)
+    {
+        if(security == WIFI_SECURITY_OPEN)
+        {
+            req_string = QString::asprintf(CMD_WPA_ADD_OPEN_NETWORK.c_str(), ifname.toStdString().c_str(), ssid.toStdString().c_str());
+        }
+        else
+        {
+            req_string = QString::asprintf(CMD_WPA_ADD_SECURE_NETWORK.c_str(), ifname.toStdString().c_str(), ssid.toStdString().c_str(), psk.toStdString().c_str(), security.toStdString().c_str());
+        }
+        req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
+        checkDataResultSource = "addNetwork";
+        callbackFunctionSuccess = std::bind(&NMDaemonClient::cbWifiNetAdd, this, ifname, ssid);
+        connect(this, &NMDaemonClient::dataReady, this, &NMDaemonClient::slotCheckDataResult);
+        if(!sendRequest(req_object))
+        {
+            return false;
+        }
+        else
+        {
+            return true;
+        }
+    }
+    else
+    {
+        qDebug() << "Unknown WiFi security";
+        return false;
+    }
 }
 
 void NMDaemonClient::cbWifiNetAdd(QString ifname, QString ssid)
 {
     QJsonValue json_value;
+    int netid = -1;
     if(!lastJsonReceived.empty())
     {
         json_value = lastJsonReceived.value(QString::fromStdString(JSON_PARAM_RESULT));
         if(json_value.toString().toStdString() == JSON_PARAM_SUCC)
         {
+            json_value = lastJsonReceived.value(QString::fromStdString(JSON_PARAM_DATA));
+            netid = json_value.toObject().value("network id").toString().toInt();
             lastJsonReceived = QJsonObject();
             checkDataResultSource = "cbWifiNetAdd";
-            callbackFunctionSuccess = std::bind(&NMDaemonClient::cbSendSuccessWifiNetAdd, this, ssid);
+            callbackFunctionSuccess = std::bind(&NMDaemonClient::cbSendSuccessWifiNetAdd, this, ssid, netid);
             saveConfig(ifname);
         }
         else

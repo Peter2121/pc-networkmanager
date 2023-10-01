@@ -18,7 +18,9 @@ public:
 
    void setSSID( QString SSID );
    void showKeyType(bool show);
-	
+   QString GetSecurity() const;
+   void SetSecurity(const QString &newSecurity);
+
 public slots:
 
 private slots:
@@ -27,9 +29,10 @@ private slots:
    void slotShowKey();
 
 private:
-    QString ssid;
+    QString Ssid;
+    QString Security;
 signals:
-    void saved(QString, QString, bool);
+    void saved(QString, QString, bool, QString);
     void cancel();
 
 } ;

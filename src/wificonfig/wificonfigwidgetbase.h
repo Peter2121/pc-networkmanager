@@ -67,7 +67,7 @@ private slots:
     void slotEnableProfile();
     void slotDisableProfile();
     void slotRemoveProfileSSID(QString RemoveSSID);
-    void slotAddNewProfileSSID(QString,QString,bool);
+    void slotAddNewProfileSSID(QString,QString,bool,QString);
     void slotAddNewProfileOpen( QString SSID, bool isBSSID );
     void slotAddNewProfileWEP( QString SSID, bool isBSSID, QString newKey, int newIndex, bool hexkey );
     void slotAddNewProfileWPA( QString SSID, bool isBSSID, QString newKey );

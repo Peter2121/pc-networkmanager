@@ -373,7 +373,7 @@ void NetworkTray::slotAddNetworkAndConnect(QString key, QString ssid, bool hexke
     }
 }
 
-void NetworkTray::slotWifiConnectNetwork(QString ssid)
+void NetworkTray::slotWifiConnectNetwork(QString ssid, int netid)
 {
     connectWifiNetwork(ssid);
 }

@@ -14,8 +14,8 @@
 
 
 void netKey::setSSID(QString SSID){
- //Set the label to show the SSID 
-  ssid = SSID;
+ //Set the label to show the SSID
+  Ssid = SSID;
  labelssid->setText(SSID);
  //Also set the slot/signal connections here (for now)
  connect( pushApply,SIGNAL( clicked() ),this,SLOT( slotApply() ) );
@@ -51,7 +51,7 @@ void netKey::slotApply()
 	bool useHex = true;
 	if( group_keytype->isVisible() && radio_text->isChecked() ){ useHex = false; }
     close();
-    emit saved(lineKey2->text(), ssid, useHex);
+    emit saved(lineKey2->text(), Ssid, useHex, Security);
     }
 }
 
@@ -60,4 +60,13 @@ void netKey::slotCancel(){
   emit cancel();
 }
 
+QString netKey::GetSecurity() const
+{
+  return Security;
+}
+
+void netKey::SetSecurity(const QString &security)
+{
+  Security = security;
+}
 
