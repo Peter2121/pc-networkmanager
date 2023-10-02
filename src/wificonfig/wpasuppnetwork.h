@@ -28,6 +28,7 @@ public:
     bool IsCurrent() const;
     bool IsProtected() const;
     int GetId() const;
+    void SetId(int id);
     QString GetSecurity() const;
     void SetSecurity(const QString &newSecurity);
 

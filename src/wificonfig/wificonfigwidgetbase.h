@@ -46,6 +46,7 @@ class wificonfigwidgetbase : public QWidget, private Ui::wificonfigwidgetbase
 public:
         wificonfigwidgetbase();
         wificonfigwidgetbase(NMDaemonCheckStatus*);
+        ~wificonfigwidgetbase();
 
     void setDevice( QString Device );
     void showInfo();
@@ -84,6 +85,7 @@ private slots:
     void slotWPAPSave(QString newkey);
     void slotItemDoubleClicked(QListWidgetItem*);
     void slotStartRescan();
+    void SlotContinueApply(QString,int);
 
 private:
     QString getLineFromCommandOutput( QString command );
@@ -100,7 +102,7 @@ private:
     QString getGatewayForIdent( QString ident );
     QString getMediaForIdent( QString ident );
     QString getWifiParent( QString dev );
-    int getWpaNetworks(QVector<WpaSuppNetwork>& nets);
+    int getWpaNetworks(QVector<std::shared_ptr<WpaSuppNetwork>>& nets);
     void loadCountryCodes();
     void runCommand( QString Command );
     //void updateWPASupp();
@@ -110,8 +112,8 @@ private:
     bool OwnNmdStatus;
     NMDaemonCheckStatus* nmd_status;
     QVector<QJsonObject> WPAConfiguredNetworks;
-    QVector<WpaSuppNetwork> WPANetworksSystem;
-    QVector<WpaSuppNetwork> WPANetworksDialog;
+    QVector<std::shared_ptr<WpaSuppNetwork>> WPANetworksSystem;
+    QVector<std::shared_ptr<WpaSuppNetwork>> WPANetworksDialog;
     void refreshNetworksList();
     void EditProfile(int);
 
