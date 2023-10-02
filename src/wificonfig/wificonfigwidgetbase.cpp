@@ -159,21 +159,24 @@ void wificonfigwidgetbase::slotApply()
                     if( (WPANetworksSystem[isys]->GetSsid() != WPANetworksDialog[idial]->GetSsid()) &&
                         (WPANetworksSystem[isys]->GetPriority() == WPANetworksDialog[idial]->GetPriority()) )
                     {
-                        auto list_item = listWifi->item(listWifi->currentRow());
-                        QString new_text = WPANetworksDialog[idial]->GetSsid();
-                        QString new_tip = "ID: "+ QString::number(WPANetworksDialog[idial]->GetId()) + "\nSSID: " + WPANetworksDialog[idial]->GetSsid() + "\nPriority: " + QString::number(WPANetworksDialog[idial]->GetPriority());
-                        if(!WPANetworksDialog[idial]->IsEnabled())
+                        auto list_item = listWifi->item(listWifi->currentRow());    // TODO: What if the selected item is not the one modified??
+                        if(list_item!=nullptr)
                         {
-                            new_text += " [disabled]";
-                            new_tip += "\n[disabled]";
+                            QString new_text = WPANetworksDialog[idial]->GetSsid();
+                            QString new_tip = "ID: "+ QString::number(WPANetworksDialog[idial]->GetId()) + "\nSSID: " + WPANetworksDialog[idial]->GetSsid() + "\nPriority: " + QString::number(WPANetworksDialog[idial]->GetPriority());
+                            if(!WPANetworksDialog[idial]->IsEnabled())
+                            {
+                                new_text += " [disabled]";
+                                new_tip += "\n[disabled]";
+                            }
+                            if(WPANetworksDialog[idial]->IsCurrent())
+                            {
+                                new_text += " [current]";
+                                new_tip += "\n[current]";
+                            }
+                            list_item->setText(new_text);
+                            list_item->setToolTip(new_tip);
                         }
-                        if(WPANetworksDialog[idial]->IsCurrent())
-                        {
-                            new_text += " [current]";
-                            new_tip += "\n[current]";
-                        }
-                        list_item->setText(new_text);
-                        list_item->setToolTip(new_tip);
                     }
                     if(WPANetworksSystem[isys]->GetPriority() != WPANetworksDialog[idial]->GetPriority())
                         refresh_list = true;
@@ -1095,6 +1098,7 @@ int wificonfigwidgetbase::getWpaNetworks(QVector<std::shared_ptr<WpaSuppNetwork>
         else
             protectedd = false;
         auto addnet = std::make_shared<WpaSuppNetwork>(id, ssid, bssid, priority, enabled, current, protectedd);
+        addnet->SetSecurity(key_mgmt);
         networks.push_back(addnet);
     }
     std::sort(networks.begin(), networks.end());

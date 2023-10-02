@@ -50,5 +50,9 @@ bool operator < (const WpaSuppNetwork&, const WpaSuppNetwork&);
 void operator ++ (WpaSuppNetwork&);
 void operator -- (WpaSuppNetwork&);
 
+bool operator == (const std::shared_ptr<WpaSuppNetwork>, const std::shared_ptr<WpaSuppNetwork>);
+bool operator < (const std::shared_ptr<WpaSuppNetwork>, const std::shared_ptr<WpaSuppNetwork>);
+void operator ++ (std::shared_ptr<WpaSuppNetwork>);
+void operator -- (std::shared_ptr<WpaSuppNetwork>);
 
 #endif // WPASUPPNETWORK_H

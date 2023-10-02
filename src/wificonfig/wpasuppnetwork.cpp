@@ -138,3 +138,23 @@ void operator -- (WpaSuppNetwork& net)
 {
     net.DecreasePriority();
 }
+
+bool operator == (const std::shared_ptr<WpaSuppNetwork> net1, const std::shared_ptr<WpaSuppNetwork> net2)
+{
+    return (net1->GetPriority() == net2->GetPriority());
+}
+
+bool operator < (const std::shared_ptr<WpaSuppNetwork> net1, const std::shared_ptr<WpaSuppNetwork> net2)
+{
+    return (net1->GetPriority() < net2->GetPriority());
+}
+
+void operator ++ (std::shared_ptr<WpaSuppNetwork> net)
+{
+    net->IncreasePriority();
+}
+
+void operator -- (std::shared_ptr<WpaSuppNetwork> net)
+{
+    net->DecreasePriority();
+}
