@@ -21,7 +21,23 @@ void netKey::setSSID(QString SSID){
  connect( pushApply,SIGNAL( clicked() ),this,SLOT( slotApply() ) );
  connect( pushCancel,SIGNAL( clicked() ),this,SLOT( slotCancel() ) );
  connect( checkShowKey, SIGNAL( clicked() ),this,SLOT( slotShowKey() ) );
+ comboNetSec->setEnabled(false);
  slotShowKey();
+}
+
+void netKey::EnableSecurityCombo()
+{
+ comboNetSec->addItem(NMDaemonClient::WIFI_SECURITY_WEP);
+ comboNetSec->addItem(NMDaemonClient::WIFI_SECURITY_WPA_PSK);
+ comboNetSec->addItem(NMDaemonClient::WIFI_SECURITY_WPA2_PSK);
+ comboNetSec->setCurrentIndex(2);
+ comboNetSec->setEnabled(true);
+}
+
+void netKey::SetSecurityCombo()
+{
+ comboNetSec->clear();
+ comboNetSec->addItem(Security);
 }
 
 void netKey::showKeyType(bool show){
@@ -44,12 +60,19 @@ void netKey::slotApply()
 {
     if ( (!checkShowKey->isChecked()) && ( lineKey->text() != lineKey2->text() ) )
     {
-	QMessageBox::warning( this, tr("Network Key Error"), tr("Error: The entered network keys do not match!\n") );
+        QMessageBox::warning( this, tr("Network Key Error"), tr("Error: The entered network keys do not match!\n") );
     }
     else
     {
 	bool useHex = true;
-	if( group_keytype->isVisible() && radio_text->isChecked() ){ useHex = false; }
+    if( group_keytype->isVisible() && radio_text->isChecked() )
+    {
+        useHex = false;
+    }
+    if(comboNetSec->isEnabled())
+    {
+        Security = comboNetSec->currentText();
+    }
     close();
     emit saved(lineKey2->text(), Ssid, useHex, Security);
     }

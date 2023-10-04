@@ -5,6 +5,7 @@
 #include <QMessageBox>
 #include <QDialog>
 #include "ui_netKey.h"
+#include "../NMDaemonClient/nmdaemonclient.h"
 
 class netKey : public QDialog, private Ui::netKey
 {
@@ -20,6 +21,8 @@ public:
    void showKeyType(bool show);
    QString GetSecurity() const;
    void SetSecurity(const QString &newSecurity);
+   void EnableSecurityCombo();
+   void SetSecurityCombo();
 
 public slots:
 

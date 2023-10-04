@@ -592,10 +592,15 @@ void wificonfigwidgetbase::slotAddHiddenProfile(){
   //Prompt for the desired SSID
   bool ok;
   QString ssidc = QInputDialog::getText(this,tr("Network Name"),tr("Please enter the name of the network you wish to add"), QLineEdit::Normal,"",&ok);
-  //check if a name was given
-  //if( ok && !ssidc.isEmpty()){
-  //  slotAddNewProfileSSID(ssidc.simplified());
-  //}
+  if( ok && !ssidc.isEmpty())
+  {
+    netKey *dialogNetKey = new netKey();
+    dialogNetKey->setSSID(ssidc);
+    dialogNetKey->showKeyType(true);
+    dialogNetKey->EnableSecurityCombo();
+    connect( dialogNetKey, SIGNAL( saved(QString,QString,bool,QString) ), this, SLOT( slotAddNewProfileSSID(QString,QString,bool,QString) ) );
+    dialogNetKey->exec();
+  }
 }
 
 void wificonfigwidgetbase::slotAddNewProfile()
@@ -631,6 +636,7 @@ void wificonfigwidgetbase::slotAddNewProfile()
             dialogNetKey->setSSID(ssidc);
             dialogNetKey->showKeyType(true);
             dialogNetKey->SetSecurity(security);
+            dialogNetKey->SetSecurityCombo();
             connect( dialogNetKey, SIGNAL( saved(QString,QString,bool,QString) ), this, SLOT( slotAddNewProfileSSID(QString,QString,bool,QString) ) );
             dialogNetKey->exec();
         }
@@ -648,7 +654,7 @@ void wificonfigwidgetbase::slotAddNewProfileSSID(QString key, QString ssidc, boo
         QMessageBox::warning(this, "Not Supported", "Hex keys are not (yet) supported");
         return;
    }
-   auto newnet = std::make_shared<WpaSuppNetwork>(0, ssidc, "any", 0, true, false, true);
+   auto newnet = std::make_shared<WpaSuppNetwork>(0, ssidc, "any", 0, false, false, true);
    newnet->SetKey(key);
    newnet->SetSecurity(security);
    WPANetworksDialog.push_back(newnet);

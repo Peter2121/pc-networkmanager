@@ -58,6 +58,8 @@ void WifiEdit::SlotResetKey()
     connect( netkey_dialog.get(), SIGNAL( saved(QString, QString, bool) ), this, SLOT( SlotKeySaved(QString, QString, bool) ) );
     netkey_dialog->setSSID(editSSID->text());
     netkey_dialog->showKeyType(true);
+    netkey_dialog->SetSecurity(ParentNet->GetSecurity());
+    netkey_dialog->SetSecurityCombo();
     netkey_dialog->setModal(true);
     netkey_dialog->exec();
 }
