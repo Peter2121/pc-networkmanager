@@ -484,6 +484,7 @@ void NMDaemonClient::cbWifiNetAdd(QString ifname, QString ssid)
         if(json_value.toString().toStdString() == JSON_PARAM_SUCC)
         {
             json_value = lastJsonReceived.value(QString::fromStdString(JSON_PARAM_DATA));
+            json_value = json_value.toObject().value("NETWORK");
             netid = json_value.toObject().value("network id").toString().toInt();
             lastJsonReceived = QJsonObject();
             checkDataResultSource = "cbWifiNetAdd";
