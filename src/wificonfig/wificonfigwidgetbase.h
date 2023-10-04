@@ -116,6 +116,7 @@ private:
     QVector<std::shared_ptr<WpaSuppNetwork>> WPANetworksDialog;
     void refreshNetworksList();
     void EditProfile(int);
+    QString GetNetSecurity(QString, QString);
 
     QProcess *netifProc;
 

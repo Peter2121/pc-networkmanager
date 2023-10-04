@@ -1099,20 +1099,36 @@ int wificonfigwidgetbase::getWpaNetworks(QVector<std::shared_ptr<WpaSuppNetwork>
         int priority = net.value(QString::fromStdString("PRIORITY").toLower()).toString().toInt();
         bool protectedd = false;
         QString key_mgmt = net.value(QString::fromStdString("key_mgmt").toLower()).toString();
+        QString key_mgmt_proto = net.value(QString::fromStdString("proto").toLower()).toString();
         if( key_mgmt.contains(NMDaemonClient::WIFI_SECURITY_WEP) ||
-            key_mgmt.contains(NMDaemonClient::WIFI_SECURITY_WPA_PSK) ||
-            key_mgmt.contains(NMDaemonClient::WIFI_SECURITY_WPA2_PSK)
+            key_mgmt.contains(NMDaemonClient::WIFI_SECURITY_WPA_PSK)
           )
             protectedd = true;
         else
             protectedd = false;
         auto addnet = std::make_shared<WpaSuppNetwork>(id, ssid, bssid, priority, enabled, current, protectedd);
-        addnet->SetSecurity(key_mgmt);
+        addnet->SetSecurity(GetNetSecurity(key_mgmt, key_mgmt_proto));
         networks.push_back(addnet);
     }
     std::sort(networks.begin(), networks.end());
     std::reverse(networks.begin(), networks.end());
     return networks.count();
+}
+
+QString wificonfigwidgetbase::GetNetSecurity(QString key_mgmt, QString key_mgmt_proto)
+{
+    if( key_mgmt.contains(NMDaemonClient::WIFI_SECURITY_WPA_PSK) )
+    {
+        if(key_mgmt_proto.contains("RSN"))
+            return NMDaemonClient::WIFI_SECURITY_WPA2_PSK;
+        else if(key_mgmt_proto.contains("WPA"))
+            return NMDaemonClient::WIFI_SECURITY_WPA_PSK;
+        else return NMDaemonClient::WIFI_SECURITY_ERROR;
+    }
+    else
+    {
+        return key_mgmt;
+    }
 }
 
 void wificonfigwidgetbase::slotEnableProfile()
