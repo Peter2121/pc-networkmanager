@@ -141,9 +141,34 @@ bool NMDaemonClient::sendRequest(QJsonObject json_command)
         //Received from socket:  {"RESULT":"SUCCESS"}
         //FATAL: Cannot acquire write lock on nmdaemon socket trying to write:  "{\"CMD\":\"IF_LIST\",\"SCOPE\":\"SYSTEM\"}"
         //******************************
-        readData();    // TODO: call it in a separate thread ??
+        //readData();    // TODO: call it in a separate thread ??
+
+        QThread* read_thread = new QThread;
+        auto read_sock = nmdUnixSocket->clone();
+        //auto moved_sock = std::move(read_sock);
+        NMDaemonWorker* worker = new NMDaemonWorker(std::move(read_sock), buf, NM_MAXBUF);
+        worker->moveToThread(read_thread);
+        connect(worker, SIGNAL(DataError(const QString&)), this, SLOT(SlotDataError(const QString&)));
+        connect(worker, SIGNAL(DataRead()), this, SLOT(SlotReadData()));
+        connect(read_thread, SIGNAL(started()), worker, SLOT(ReadData()));
+        connect(worker, SIGNAL(Finished()), read_thread, SLOT(quit()));
+        connect(worker, SIGNAL(Finished()), worker, SLOT(deleteLater()));
+        connect(read_thread, SIGNAL(finished()), read_thread, SLOT(deleteLater()));
+        read_thread->start();
         return true;
     }
+}
+
+void NMDaemonClient::SlotDataError(const QString& error)
+{
+    lastError = error;
+    qDebug() << "ERROR: Cannot read data from socket: " << error;
+}
+
+void NMDaemonClient::SlotReadData()
+{
+    emit dataReceived();
+    //slotDataReceived();
 }
 
 void NMDaemonClient::readData()
@@ -315,22 +340,13 @@ int NMDaemonClient::getWpaNetworkId(QString ifname, QString ssid)
     return net_id;
 }
 
-QVector<QJsonObject> NMDaemonClient::getWpaNetworkList(QString ifname)
+void NMDaemonClient::CBUpdateWpaNetworkList(QString)
 {
-    QVector<QJsonObject> ret_nets;
-    QString req_string = QString::asprintf(CMD_WPA_LIST_NETWORKS.c_str(), ifname.toStdString().c_str());
-    QJsonObject req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
-    lastJsonReceived = QJsonObject();
-    std::unique_ptr<NMDaemonSpy> readspy = std::make_unique<NMDaemonSpy>(this, &NMDaemonClient::dataReady);
+    std::shared_ptr<QVector<QJsonObject>> wpa_networks = std::make_shared<QVector<QJsonObject>>();
     QJsonObject json_object;
     QJsonValue json_value;
     QJsonArray json_array;
 
-    if(!sendRequest(req_object))
-    {
-        return ret_nets;
-    }
-    readspy->wait(DEFAULT_READ_WAIT_TIME_MSEC);
     if(!lastJsonReceived.empty())
     {
         json_value = lastJsonReceived.value(QString::fromStdString(JSON_PARAM_RESULT));
@@ -344,11 +360,28 @@ QVector<QJsonObject> NMDaemonClient::getWpaNetworkList(QString ifname)
             {
                 json_object = v.toObject();
                 if(!json_object.isEmpty())
-                    ret_nets.push_back(json_object);
+                    wpa_networks->push_back(json_object);
             }
         }
     }
-    return ret_nets;
+    emit UpdatedWpaNetworkList(wpa_networks);
+}
+
+bool NMDaemonClient::GetWpaNetworkList(QString ifname)
+{
+    QString req_string = QString::asprintf(CMD_WPA_LIST_NETWORKS.c_str(), ifname.toStdString().c_str());
+    QJsonObject req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
+    lastJsonReceived = QJsonObject();
+
+    checkDataResultSource = "GetWpaNetworkList";
+    callbackFunctionSuccess = std::bind(&NMDaemonClient::CBUpdateWpaNetworkList, this, ifname);
+    connect(this, &NMDaemonClient::dataReady, this, &NMDaemonClient::slotCheckDataResult);
+
+    if(!sendRequest(req_object))
+    {
+        return false;
+    }
+    return true;
 }
 
 bool NMDaemonClient::UpdatePsk(QString ifname, int net_id, QString psk, bool hexkey)
@@ -363,7 +396,7 @@ bool NMDaemonClient::UpdatePsk(QString ifname, int net_id, QString psk, bool hex
     QString req_string = QString::asprintf(CMD_WPA_UPDATE_PSK.c_str(), ifname.toStdString().c_str(), net_id, psk.toStdString().c_str());
     QJsonObject req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
     lastJsonReceived = QJsonObject();
-    checkDataResultSource = "updatePsk";
+    checkDataResultSource = "UpdatePsk";
     callbackFunctionSuccess = std::bind(&NMDaemonClient::saveConfig, this, ifname);
     connect(this, &NMDaemonClient::dataReady, this, &NMDaemonClient::slotCheckDataResult);
     if(!sendRequest(req_object))

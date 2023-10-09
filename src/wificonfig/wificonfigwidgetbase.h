@@ -77,7 +77,7 @@ private slots:
     void slotMACClicked();
     void slotFinishLoading();
     void slotCheckGlobalText();
-    void slotRefreshSSIDList();
+    void SlotStartRefreshSSIDList();
     void slotMoveUp();
     void slotMoveDown();
     void slotFinishRescan();
@@ -86,6 +86,7 @@ private slots:
     void slotItemDoubleClicked(QListWidgetItem*);
     void slotStartRescan();
     void SlotContinueApply(QString,int);
+    void SlotFinishRefreshSSIDList(std::shared_ptr<QVector<QJsonObject>>);
 
 private:
     QString getLineFromCommandOutput( QString command );

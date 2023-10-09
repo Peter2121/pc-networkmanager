@@ -13,11 +13,13 @@
 
 SOURCES += \
     $$PWD/nmdaemonspy.cpp \
+    $$PWD/nmdaemonworker.cpp \
     $${PWD}/nmdaemoncheckstatus.cpp \
     $${PWD}/nmdaemonclient.cpp
 
 HEADERS += \
     $$PWD/nmdaemonspy.h \
+    $$PWD/nmdaemonworker.h \
     $${PWD}/NMDaemonClient_global.h \
     $${PWD}/nmdaemoncheckstatus.h \
     $${PWD}/nmdaemonclient.h

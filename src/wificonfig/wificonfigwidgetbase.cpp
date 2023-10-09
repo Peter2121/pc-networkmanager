@@ -267,20 +267,29 @@ void wificonfigwidgetbase::setDevice( QString Device )
 
   // Save the device name for later
   DeviceName = Device;
+  pushApply->setEnabled(false);
+  slotStartRescan();
 
   // Center the dialog window
   //QDesktopWidget *d = QApplication::desktop();
   //move(d->width() / 3, d->height() / 4);
 
   // Connect the slot to refresh
-  QTimer::singleShot(100,  this,  SLOT(slotFinishLoading() ) );
+  //QTimer::singleShot(100,  this,  SLOT(slotFinishLoading() ) );
 
   // Check if we are using the lagg0 device
   //QSettings settings("PCBSD");
   //usingLagg = settings.value("/pc-netmanager/useLagg", false).toBool();
 
   //Load the available wifi access points
-  slotFinishRescan();
+  //slotFinishRescan();
+  loadCountryCodes();
+
+  listWifi->clear();
+  listWifi->addItem("Please, wait...");
+  listWifi->update();
+  SlotStartRefreshSSIDList();
+  // Load the list of country codes we can set
 
 }
 
@@ -326,7 +335,7 @@ void wificonfigwidgetbase::loadCountryCodes()
 
 void wificonfigwidgetbase::slotStartRescan()
 {
-    connect(nmd_status, SIGNAL(wifiNetStatusUpdated()), this, SLOT(slotRescan()));
+    connect(nmd_status, SIGNAL(wifiNetStatusUpdated()), this, SLOT(slotFinishRescan()));
     nmd_status->updateStatus();
 }
 
@@ -754,7 +763,7 @@ void wificonfigwidgetbase::slotAddNewProfileOpen(QString SSID, bool isBSSID)
     BSSID[curItem] = isBSSID;
 
     // Refresh the SSID listbox and enable the apply button
-    slotRefreshSSIDList();
+    SlotStartRefreshSSIDList();
     slotCheckGlobalText();
 }
 
@@ -787,7 +796,7 @@ void wificonfigwidgetbase::slotAddNewProfileWEP( QString SSID, bool isBSSID, QSt
     WEPHex[curItem] = hexkey;
 
     // Refresh the SSID listbox and enable the apply button
-    slotRefreshSSIDList();
+    SlotStartRefreshSSIDList();
     slotCheckGlobalText();
 
 }
@@ -817,7 +826,7 @@ void wificonfigwidgetbase::slotAddNewProfileWPA( QString SSID, bool isBSSID, QSt
    WPAPersonalKey[curItem] = newKey;
 
    // Refresh the SSID listbox and enable the apply button
-   slotRefreshSSIDList();
+   SlotStartRefreshSSIDList();
    slotCheckGlobalText();
 }
 
@@ -855,7 +864,7 @@ void wificonfigwidgetbase::slotAddNewProfileWPAE( QString SSID, bool isBSSID, in
    WPAEPhase2[curItem] = EAPPhase2;
 
    // Refresh the SSID listbox and enable the apply button
-   slotRefreshSSIDList();
+   SlotStartRefreshSSIDList();
    slotCheckGlobalText();
 
 }
@@ -1001,7 +1010,7 @@ void wificonfigwidgetbase::slotFinishLoading()
 */
 
    // Refresh the ssid profile list
-   slotRefreshSSIDList();
+   SlotStartRefreshSSIDList();
 
    // Load the list of country codes we can set
    loadCountryCodes();
@@ -1010,15 +1019,19 @@ void wificonfigwidgetbase::slotFinishLoading()
 }
 
 
-// Slot which reads the arrays and displays the list of WIFI profiles
-void wificonfigwidgetbase::slotRefreshSSIDList()
+void wificonfigwidgetbase::SlotStartRefreshSSIDList()
 {
-    WPAConfiguredNetworks = nmd_status->getWpaNetworkList(DeviceName);
-    getWpaNetworks(WPANetworksSystem);
-    getWpaNetworks(WPANetworksDialog);
-    refreshNetworksList();
+   connect( nmd_status, SIGNAL( UpdatedWpaNetworkList(std::shared_ptr<QVector<QJsonObject>>) ), this, SLOT( SlotFinishRefreshSSIDList(std::shared_ptr<QVector<QJsonObject>>) ) );
+   nmd_status->GetWpaNetworkList(DeviceName);
 }
 
+void wificonfigwidgetbase::SlotFinishRefreshSSIDList(std::shared_ptr<QVector<QJsonObject>> wpa_networks)
+{
+   WPAConfiguredNetworks = *(wpa_networks);
+   getWpaNetworks(WPANetworksSystem);
+   getWpaNetworks(WPANetworksDialog);
+   refreshNetworksList();
+}
 
 QString wificonfigwidgetbase::getIPv6ForIdent( QString ident )
 {

@@ -18,6 +18,7 @@
 #include <sockpp/version.h>
 #include "../nmdaemon/nmjsonconst.h"
 #include "nmdaemonspy.h"
+#include "nmdaemonworker.h"
 
 class NMDAEMONCLIENT_EXPORT NMDaemonClient : public QObject
 {
@@ -79,6 +80,7 @@ protected:
     void cbWifiNetAdd(QString, QString);
     void cbSendSuccessWifiNetEnable(QString ssid) { emit successWifiNetEnable(ssid); }
     void cbSendSuccessWifiNetAdd(QString ssid, int id) { emit successWifiNetAdd(ssid,id); }
+    void CBUpdateWpaNetworkList(QString);
 public:
     static int constexpr DEFAULT_READ_WAIT_TIME_MSEC = 5000;
     static int constexpr SCAN_READ_WAIT_TIME_MSEC = 15000;
@@ -118,7 +120,7 @@ public:
     bool sendCommand(QString, QString);
     bool enableDhcp4(QString);
     bool disableDhcp4(QString);
-    QVector<QJsonObject> getWpaNetworkList(QString);
+    bool GetWpaNetworkList(QString);
     bool SetNetworkEnabled(QString, int, bool);
     bool SetNetworkPriority(QString, int, int);
     bool RemoveNetwork(QString, int);
@@ -137,9 +139,12 @@ signals:
     void errorWifiNetEnable(QString, QString);
     void successWifiNetAdd(QString,int);
     void errorWifiNetAdd(QString, QString);
+    void UpdatedWpaNetworkList(std::shared_ptr<QVector<QJsonObject>>);
 private slots:
     void slotDataReceived();
     void slotCheckDataResult(QJsonObject);
+    void SlotDataError(const QString&);
+    void SlotReadData();
 };
 
 #endif // NMDAEMONCLIENT_H
