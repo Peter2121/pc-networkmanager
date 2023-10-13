@@ -2,6 +2,7 @@ TEMPLATE	= app
 LANGUAGE	= C++
 
 CONFIG	+= qt warn_on release
+CONFIG += ccache
 
 QT	+= core gui widgets network
 

@@ -97,7 +97,10 @@ bool NMDaemonClient::sendRequest(QJsonObject json_command)
     if(!doConnect())
         return false;
     if(writeSocket.available()>0)
+    {
+        qDebug() << "writeSocket.acquire() direct for " << QString::fromStdString(str_cmd);
         writeSocket.acquire();
+    }
     else
     {
         bool available = false;
@@ -111,7 +114,10 @@ bool NMDaemonClient::sendRequest(QJsonObject json_command)
             }
         }
         if(available)
+        {
+            qDebug() << "writeSocket.acquire() after waiting for " << QString::fromStdString(str_cmd);
             writeSocket.acquire();
+        }
         else
         {
             qDebug() << "FATAL: Cannot acquire write lock on nmdaemon socket trying to write: " << QString::fromStdString(str_cmd);
@@ -593,6 +599,13 @@ void NMDaemonClient::slotCheckDataResult(QJsonObject data)
     disconnect(this, &NMDaemonClient::dataReady, this, &NMDaemonClient::slotCheckDataResult);
     QString src = checkDataResultSource;
     checkDataResultSource = "";
+//  Dirty hack to avoid "Cannot acquire write lock"
+//  Normally the lock should be released already!!!
+    if(writeSocket.available() == 0)
+    {
+        qDebug() << "****** Unlocking writeSocket in slotCheckDataResult!!! ******";
+        writeSocket.release();
+    }
     if(checkSuccess(data))
     {
         qDebug() << "SUCCESS received from " << src;

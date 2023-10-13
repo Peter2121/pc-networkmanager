@@ -77,6 +77,8 @@ void wificonfigwidgetbase::slotProfileSaved()
 void wificonfigwidgetbase::SlotContinueApply(QString ssid, int netid)
 {
     int imaxdial = WPANetworksDialog.length();
+    connect(this, SIGNAL(ApplyConfig()), this, SLOT(slotApply()) );
+
     for(int idial=0; idial<imaxdial; idial++)
     {
       if(ssid==WPANetworksDialog[idial]->GetSsid())
@@ -85,12 +87,13 @@ void wificonfigwidgetbase::SlotContinueApply(QString ssid, int netid)
           WPANetworksDialog[idial]->SetKey("");
           auto newsysnet = std::make_shared<WpaSuppNetwork>(netid, ssid, "any", 0, "false", "false", WPANetworksDialog[idial]->IsProtected());
           WPANetworksSystem.push_back(newsysnet);
-          std::sort(WPANetworksDialog.begin(), WPANetworksDialog.end());
-          std::reverse(WPANetworksDialog.begin(), WPANetworksDialog.end());
-          refreshNetworksList();
-          slotApply();
+          break;
       }
     }
+    std::sort(WPANetworksDialog.begin(), WPANetworksDialog.end());
+    std::reverse(WPANetworksDialog.begin(), WPANetworksDialog.end());
+    refreshNetworksList();
+    emit ApplyConfig();
 }
 
 void wificonfigwidgetbase::slotApply()

@@ -143,5 +143,6 @@ private:
 
 signals:
   void connectSSID(QString); //internal signal for launching the connection dialog for an SSID
+  void ApplyConfig();
 } ;
 #endif // WIFICONFIGWIDGETBASE_H

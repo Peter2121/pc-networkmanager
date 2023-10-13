@@ -6,6 +6,7 @@ QT += testlib
 CONFIG	+= qt warn_on release
 CONFIG += qtc_runnable
 CONFIG += c++17
+CONFIG += ccache
 
 LIBS	+= -L/usr/local/lib -ltrueos-utils -ltrueos-ui
 LIBS    += /usr/local/lib/libsockpp.a
