@@ -24,7 +24,7 @@
 
 #include <iostream>
 #include <QCheckBox>
-#include <QDesktopWidget>
+//#include <QDesktopWidget>
 #include <QFile>
 #include <QGroupBox>
 #include <QLabel>

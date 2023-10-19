@@ -8,9 +8,9 @@
 #include <trueos-netif.h>
 #include <trueos-utils.h>
 #include <trueos-ui.h>
-#include "wifiselectiondialog.h"
-#include "wepconfig.h"
-#include "dialogwpapersonal.h"
+//#include "wifiselectiondialog.h"
+//#include "wepconfig.h"
+//#include "dialogwpapersonal.h"
 #include "ui_wificonfigwidgetbase.h"
 #include <QProcess>
 #include "../NMDaemonClient/nmdaemoncheckstatus.h"

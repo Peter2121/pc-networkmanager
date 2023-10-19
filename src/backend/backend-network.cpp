@@ -54,13 +54,13 @@ NetDevSettings Network::deviceRCSettings(QString dev){
   for(int i=0; i<info.length(); i++){
     QString var = info[i].section("=",0,0).simplified();
     QString val = info[i].section("=",1,100).simplified();
-      if(val.startsWith("\"")){ val = val.remove(1); }
+    if(val.startsWith("\"")){ val = val.remove(QChar(1)); }
       if(val.endsWith("\"")){ val.chop(1); }
       val.prepend(" "); val.append(" "); //just to make additional parsing easier later - each "variable" should have whitespace on both sides
     if( (var=="vlans_"+dev) || (var=="wlans_"+dev) ){
       set.asDevice = val;
     }else if(var==("ifconfig_"+dev)){
-      QStringList vals = val.split(" ",QString::SkipEmptyParts);
+      QStringList vals = val.split(" ",Qt::SkipEmptyParts);
       //This is the main settings line: lots of things to look for:
       if(!val.contains("DHCP")){
         //Look for the static networking values

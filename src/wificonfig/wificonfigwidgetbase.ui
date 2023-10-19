@@ -426,11 +426,7 @@
  <includes>
   <include location="local">qmessagebox.h</include>
   <include location="local">qfile.h</include>
-  <include location="local">wifiselectiondialog.h</include>
   <include location="local">qmessagebox.h</include>
-  <include location="local">wepconfig.h</include>
-  <include location="local">dialogwpapersonal.h</include>
-  <include location="local">qdesktopwidget.h</include>
   <include location="local">qapplication.h</include>
   <include location="global">trueos-netif.h</include>
   <include location="global">trueos-utils.h</include>
@@ -520,4 +516,11 @@
    </hints>
   </connection>
  </connections>
+ <slots>
+  <slot>slotClose()</slot>
+  <slot>slotApply()</slot>
+  <slot>slotOK()</slot>
+  <slot>slotMACClicked()</slot>
+  <slot>slotCheckGlobalText()</slot>
+ </slots>
 </ui>

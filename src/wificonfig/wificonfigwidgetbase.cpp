@@ -310,13 +310,13 @@ void wificonfigwidgetbase::loadCountryCodes()
   reader.readNext();
   while (!reader.atEnd()) {
       if (reader.isStartElement()) {
-          if (reader.name() == "country") {
+            if (reader.name() == QString("country")) {
 	     name="";
 	     code = reader.attributes().value("id").toString();
              while (!reader.atEnd()) {
-                 if (reader.isEndElement() && reader.name() == "country")
-		    break;
-                 if (reader.isStartElement() && reader.name() == "name") {
+                    if (reader.isEndElement() && reader.name() == QString("country"))
+            break;
+                    if (reader.isStartElement() && reader.name() == QString("name")) {
 	   	    name = reader.readElementText();
 	         }
                  reader.readNext();

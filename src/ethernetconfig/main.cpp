@@ -27,8 +27,8 @@
 #include <QDebug>
 #include <QFile>
 #include <qtranslator.h>
-#include <qdesktopwidget.h>
-#include <qtextcodec.h>
+//#include <qdesktopwidget.h>
+//#include <qtextcodec.h>
 #include <QApplication>
 //#define PREFIX QString("/usr/local")
 //#include "../NMDaemonClient/nmdaemoncheckstatus.h"
@@ -47,7 +47,7 @@ int main(int argc, char **argv)
     a.installTranslator( &translator );
     */
     qDebug() << "Locale:" << langCode;
-    QTextCodec::setCodecForLocale( QTextCodec::codecForName("UTF-8") ); //Force Utf-8 compliance
+    //QTextCodec::setCodecForLocale( QTextCodec::codecForName("UTF-8") ); //Force Utf-8 compliance
     
     ethernetconfig *mainWin = 0;
 

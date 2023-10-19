@@ -15,10 +15,11 @@ void NMDaemonWorker::ReadData()
     size_t bufsize = BufLen*sizeof(char);
     memset(Buf, 0, bufsize);
     n = NmdUnixSocket.read_n(Buf, bufsize);
-    qDebug() << "Received from socket: " << Buf;
+    qDebug() << "ReadData: Received from socket: " << Buf;
     if(n>0)
     {
         emit DataRead();
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
         emit Finished();
     }
     else
@@ -26,6 +27,7 @@ void NMDaemonWorker::ReadData()
         QString last_error = QString::fromStdString(NmdUnixSocket.last_error_str());
         qDebug() << "ERROR: Cannot read data from socket: " << last_error;
         emit DataError(last_error);
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
         emit Finished();
     }
 }

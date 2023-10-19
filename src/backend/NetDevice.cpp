@@ -9,6 +9,7 @@
 //===========================================
 #include "backend-network.h"
 #include "backend-general.h"
+#include <QRegExp>
 
 //#include "sysadm-global.h"
 
@@ -38,7 +39,7 @@ QStringList NetDevice::listNetDevices(){
 //=====================
 //Get the name of the device (taking off any numbers)
 QString NetDevice::devName(){
-   uint pos = name.indexOf(QRegExp("[0-9]+$"));
+   uint pos = name.indexOf(QRegularExpression("[0-9]+$"));
    QString result = name;
    result.truncate(pos);
    return result;
@@ -46,7 +47,7 @@ QString NetDevice::devName(){
 
 //Return just the number of the device (removing the name)
 uint NetDevice::devNum(){
-   uint pos = name.indexOf(QRegExp("[0-9]+$"));
+   uint pos = name.indexOf(QRegularExpression("[0-9]+$"));
    return name.mid(pos).toInt();
 }
 
@@ -116,7 +117,7 @@ QString NetDevice::desc(){
 
   if(!parent.isEmpty()){
     name = num = parent;
-      uint pos = name.indexOf(QRegExp("[0-9]+$"));
+      uint pos = name.indexOf(QRegularExpression("[0-9]+$"));
       name.truncate(pos);
       num.remove(0,pos);
   }else{

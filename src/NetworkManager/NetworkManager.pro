@@ -4,7 +4,8 @@ LANGUAGE	= C++
 CONFIG	+= qt warn_on release
 CONFIG += ccache
 
-QT	+= core gui widgets network
+QT += core gui widgets network
+#QT += core5compat
 
 QMAKE_LIBDIR = /usr/local/lib/qt5 $$PWD/../../../trueos-libqt5/src-qt5/libtrueos/
 LIBS	+= -L/usr/local/lib -ltrueos-utils -ltrueos-ui

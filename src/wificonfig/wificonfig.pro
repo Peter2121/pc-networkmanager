@@ -2,6 +2,7 @@ TEMPLATE	= app
 LANGUAGE	= C++
 QT += core gui widgets network concurrent
 QT += testlib
+#QT += core5compat
 
 CONFIG	+= qt warn_on release
 CONFIG += qtc_runnable
@@ -11,18 +12,21 @@ CONFIG += ccache
 LIBS	+= -L/usr/local/lib -ltrueos-utils -ltrueos-ui
 LIBS    += /usr/local/lib/libsockpp.a
 
-HEADERS	+= dialogwpaenterprise.h dialogwpapersonal.h wepconfig.h wificonfigwidgetbase.h wifiscanssid.h wifiselectiondialog.h \
+#HEADERS	+= dialogwpaenterprise.h dialogwpapersonal.h wepconfig.h wificonfigwidgetbase.h wifiscanssid.h wifiselectiondialog.h \
+HEADERS	+= wificonfigwidgetbase.h \
     qlistwidgetitemnet.h wifiedit.h wpasuppnetwork.h netKey.h \
     qlistwidgetitemsec.h
 
-SOURCES	+= dialogwpaenterprise.cpp dialogwpapersonal.cpp main.cpp wepconfig.cpp wificonfigwidgetbase.cpp wifiscanssid.cpp wifiselectiondialog.cpp \
+#SOURCES	+= dialogwpaenterprise.cpp dialogwpapersonal.cpp main.cpp wepconfig.cpp wificonfigwidgetbase.cpp wifiscanssid.cpp wifiselectiondialog.cpp \
+SOURCES	+= main.cpp wificonfigwidgetbase.cpp \
     qlistwidgetitemnet.cpp wifiedit.cpp wpasuppnetwork.cpp netKey.cpp \
     qlistwidgetitemsec.cpp
 
 include("../NMDaemonClient/NMDaemonClient.pri")
 include("../Utils/Utils.pri")
 
-FORMS += dialogwpaenterprise.ui dialogwpapersonal.ui wepconfig.ui wificonfigwidgetbase.ui wifiscanssid.ui wifiselectiondialog.ui \
+#FORMS += dialogwpaenterprise.ui dialogwpapersonal.ui wepconfig.ui wificonfigwidgetbase.ui wifiscanssid.ui wifiselectiondialog.ui \
+FORMS += wificonfigwidgetbase.ui \
     wifiedit.ui netKey.ui
 
 RESOURCES += wificonfig.qrc

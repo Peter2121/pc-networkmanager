@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QDebug>
+#include <thread>
 #include <sockpp/unix_connector.h>
 #include <sockpp/version.h>
 

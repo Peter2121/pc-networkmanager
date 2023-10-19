@@ -161,7 +161,7 @@ void NMDaemonCheckStatus::updateStatus()
             {
                 json_value = lastJsonReceived.value("DATA");
                 json_object = json_value.toObject();
-                lastWifiNetStatus.push_back(QPair(s,json_object));
+                lastWifiNetStatus.push_back(QPair<QString,QJsonObject>(s,json_object));
             }
         }
     }
@@ -185,7 +185,7 @@ void NMDaemonCheckStatus::updateStatus()
             {
                 json_value = lastJsonReceived.value("DATA");
                 json_object = json_value.toObject();
-                lastWifiIfStatus.push_back(QPair(s,json_object));
+                lastWifiIfStatus.push_back(QPair<QString,QJsonObject>(s,json_object));
             }
         }
     }

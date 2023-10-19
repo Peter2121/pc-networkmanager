@@ -69,7 +69,7 @@ void NMDaemonClient::slotDataReceived()
 {
     QJsonObject json_received;
     QString qstr_received = QString(buf);
-    //qDebug() << "Received from socket: " << qstr_received;
+    qDebug() << "slotDataReceived: Received from socket: " << qstr_received;
     QJsonDocument qjdoc_received = QJsonDocument::fromJson(qstr_received.toUtf8());
     if(!qjdoc_received.isNull())
     {
@@ -104,9 +104,10 @@ bool NMDaemonClient::sendRequest(QJsonObject json_command)
     else
     {
         bool available = false;
-        for(int i=0; i<10; i++)
+        for(int i=0; i<100; i++)
         {
-            sleep(1);
+            QCoreApplication::processEvents();
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
             if(writeSocket.available()>0)
             {
                 available=true;
@@ -121,7 +122,8 @@ bool NMDaemonClient::sendRequest(QJsonObject json_command)
         else
         {
             qDebug() << "FATAL: Cannot acquire write lock on nmdaemon socket trying to write: " << QString::fromStdString(str_cmd);
-            exit(1);
+            return false;
+            //exit(1);
         }
     }
     lastJsonReceived = QJsonObject();
@@ -154,12 +156,13 @@ bool NMDaemonClient::sendRequest(QJsonObject json_command)
         //auto moved_sock = std::move(read_sock);
         NMDaemonWorker* worker = new NMDaemonWorker(std::move(read_sock), buf, NM_MAXBUF);
         worker->moveToThread(read_thread);
-        connect(worker, SIGNAL(DataError(const QString&)), this, SLOT(SlotDataError(const QString&)));
-        connect(worker, SIGNAL(DataRead()), this, SLOT(SlotReadData()));
-        connect(read_thread, SIGNAL(started()), worker, SLOT(ReadData()));
-        connect(worker, SIGNAL(Finished()), read_thread, SLOT(quit()));
-        connect(worker, SIGNAL(Finished()), worker, SLOT(deleteLater()));
-        connect(read_thread, SIGNAL(finished()), read_thread, SLOT(deleteLater()));
+        connect(worker, SIGNAL(DataError(const QString&)), this, SLOT(SlotDataError(const QString&)), Qt::QueuedConnection);
+        connect(worker, SIGNAL(DataRead()), this, SLOT(SlotReadData()), Qt::QueuedConnection);
+        //connect(worker, SIGNAL(DataRead()), this, SLOT(slotDataReceived()), Qt::QueuedConnection);
+        connect(read_thread, SIGNAL(started()), worker, SLOT(ReadData()), Qt::QueuedConnection);
+        connect(worker, SIGNAL(Finished()), read_thread, SLOT(quit()), Qt::QueuedConnection);
+        connect(worker, SIGNAL(Finished()), worker, SLOT(deleteLater()), Qt::QueuedConnection);
+        connect(read_thread, SIGNAL(finished()), read_thread, SLOT(deleteLater()), Qt::QueuedConnection);
         read_thread->start();
         return true;
     }
@@ -173,8 +176,8 @@ void NMDaemonClient::SlotDataError(const QString& error)
 
 void NMDaemonClient::SlotReadData()
 {
+    //qDebug() << "SlotReadData";
     emit dataReceived();
-    //slotDataReceived();
 }
 
 void NMDaemonClient::readData()
@@ -599,13 +602,6 @@ void NMDaemonClient::slotCheckDataResult(QJsonObject data)
     disconnect(this, &NMDaemonClient::dataReady, this, &NMDaemonClient::slotCheckDataResult);
     QString src = checkDataResultSource;
     checkDataResultSource = "";
-//  Dirty hack to avoid "Cannot acquire write lock"
-//  Normally the lock should be released already!!!
-    if(writeSocket.available() == 0)
-    {
-        qDebug() << "****** Unlocking writeSocket in slotCheckDataResult!!! ******";
-        writeSocket.release();
-    }
     if(checkSuccess(data))
     {
         qDebug() << "SUCCESS received from " << src;
@@ -837,7 +833,8 @@ bool NMDaemonClient::SetNetworkBssid(QString ifname, int netid, QString bssid)
 bool NMDaemonClient::RemoveNetwork(QString ifname, int netid)
 {
     QString req_string = QString::asprintf(CMD_WPA_REMOVE_NETWORK.c_str(), ifname.toStdString().c_str(), netid);
-
+    return sendCommand(req_string, "RemoveNetwork");
+/*
     QJsonObject req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
     lastJsonReceived = QJsonObject();
     checkDataResultSource = "RemoveNetwork";
@@ -848,4 +845,5 @@ bool NMDaemonClient::RemoveNetwork(QString ifname, int netid)
         return false;
     }
     return true;
+*/
 }

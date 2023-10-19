@@ -2,6 +2,7 @@ TEMPLATE	= app
 LANGUAGE	= C++
 QT += core gui widgets network concurrent
 QT += testlib
+#QT += core5compat
 
 CONFIG	+= qt warn_on release
 CONFIG += qtc_runnable
@@ -13,15 +14,17 @@ LIBS    += /usr/local/lib/libsockpp.a
 
 HEADERS	+= NetworkTray.h ../wificonfig/netKey.h
 HEADERS	+= ../ethernetconfig/ethernetconfig.h ../ethernetconfig/ethernetconfigdata.h ../ethernetconfig/ipv4addrinput.h
-HEADERS	+= ../wificonfig/dialogwpaenterprise.h ../wificonfig/dialogwpapersonal.h ../wificonfig/wepconfig.h
-HEADERS	+= ../wificonfig/wificonfigwidgetbase.h ../wificonfig/wifiscanssid.h ../wificonfig/wifiselectiondialog.h
+#HEADERS	+= ../wificonfig/dialogwpaenterprise.h ../wificonfig/dialogwpapersonal.h ../wificonfig/wepconfig.h
+HEADERS	+= ../wificonfig/wificonfigwidgetbase.h
+#HEADERS	+= ../wificonfig/wifiscanssid.h ../wificonfig/wifiselectiondialog.h
 HEADERS	+= ../wificonfig/wpasuppnetwork.h ../wificonfig/wifiedit.h
 HEADERS	+= ../wificonfig/qlistwidgetitemnet.h ../wificonfig/qlistwidgetitemsec.h
 
 SOURCES	+= main.cpp NetworkTray.cpp ../wificonfig/netKey.cpp
 SOURCES	+= ../ethernetconfig/ethernetconfig.cpp ../ethernetconfig/ethernetconfigdata.cpp ../ethernetconfig/ipv4addrinput.cpp
-SOURCES	+= ../wificonfig/dialogwpaenterprise.cpp ../wificonfig/dialogwpapersonal.cpp ../wificonfig/wepconfig.cpp
-SOURCES	+= ../wificonfig/wificonfigwidgetbase.cpp ../wificonfig/wifiscanssid.cpp ../wificonfig/wifiselectiondialog.cpp
+#SOURCES	+= ../wificonfig/dialogwpaenterprise.cpp ../wificonfig/dialogwpapersonal.cpp ../wificonfig/wepconfig.cpp
+SOURCES	+= ../wificonfig/wificonfigwidgetbase.cpp
+#SOURCES	+= ../wificonfig/wifiscanssid.cpp ../wificonfig/wifiselectiondialog.cpp
 SOURCES	+= ../wificonfig/wpasuppnetwork.cpp ../wificonfig/wifiedit.cpp
 SOURCES	+= ../wificonfig/qlistwidgetitemnet.cpp ../wificonfig/qlistwidgetitemsec.cpp
 
@@ -32,8 +35,9 @@ include("../Utils/Utils.pri")
 
 FORMS	+= ../wificonfig/netKey.ui
 FORMS	+= ../ethernetconfig/ethernetconfig.ui ../ethernetconfig/ipv4addrinput.ui
-FORMS   += ../wificonfig/dialogwpaenterprise.ui ../wificonfig/dialogwpapersonal.ui ../wificonfig/wepconfig.ui
-FORMS   += ../wificonfig/wificonfigwidgetbase.ui ../wificonfig/wifiscanssid.ui ../wificonfig/wifiselectiondialog.ui
+#FORMS   += ../wificonfig/dialogwpaenterprise.ui ../wificonfig/dialogwpapersonal.ui ../wificonfig/wepconfig.ui
+FORMS   += ../wificonfig/wificonfigwidgetbase.ui
+#FORMS   += ../wificonfig/wifiscanssid.ui ../wificonfig/wifiselectiondialog.ui
 FORMS   += ../wificonfig/wifiedit.ui
 
 
