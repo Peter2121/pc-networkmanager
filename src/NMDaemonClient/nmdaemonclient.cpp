@@ -17,10 +17,6 @@ NMDaemonClient::NMDaemonClient(QString socket_path, bool is_persistent) : socket
     memset(buf, 0, sizeof(buf));
     callbackFunctionSuccess = nullptr;
     callbackFunctionError = nullptr;
-//    connect(nmdSocket, QOverload<QLocalSocket::LocalSocketError>::of(&QLocalSocket::errorOccurred),
-//            this, &NMDaemonClient::slotError);
-//    connect(nmdSocket, &QLocalSocket::connected, this, &NMDaemonClient::slotConnected);
-//    connect(nmdSocket, &QLocalSocket::disconnected, this, &NMDaemonClient::slotDisconnected);
     connect(this, &NMDaemonClient::dataReceived, this, &NMDaemonClient::slotDataReceived);
 }
 
@@ -768,7 +764,8 @@ bool NMDaemonClient::SetNetworkEnabled(QString ifname, int netid, bool is_enable
         req_string = QString::asprintf(CMD_WPA_ENABLE_NETWORK.c_str(), ifname.toStdString().c_str(), netid);
     else
         req_string = QString::asprintf(CMD_WPA_DISABLE_NETWORK.c_str(), ifname.toStdString().c_str(), netid);
-
+    return sendCommand(req_string, "SetNetworkEnabled");
+/*
     QJsonObject req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
     lastJsonReceived = QJsonObject();
     checkDataResultSource = "SetNetworkEnabled";
@@ -779,6 +776,7 @@ bool NMDaemonClient::SetNetworkEnabled(QString ifname, int netid, bool is_enable
         return false;
     }
     return true;
+*/
 }
 
 bool NMDaemonClient::SetNetworkPriority(QString ifname, int netid, int priority)
@@ -786,6 +784,8 @@ bool NMDaemonClient::SetNetworkPriority(QString ifname, int netid, int priority)
     QString req_string = QString::asprintf(CMD_WPA_SET_NETWORK_PRI.c_str(), ifname.toStdString().c_str(), netid, priority);
 
     QJsonObject req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
+    return sendCommand(req_string, "SetNetworkPriority");
+    /*
     lastJsonReceived = QJsonObject();
     checkDataResultSource = "SetNetworkPriority";
     callbackFunctionSuccess = nullptr;
@@ -795,6 +795,7 @@ bool NMDaemonClient::SetNetworkPriority(QString ifname, int netid, int priority)
         return false;
     }
     return true;
+    */
 }
 
 bool NMDaemonClient::SetNetworkSsid(QString ifname, int netid, QString ssid)
@@ -802,6 +803,8 @@ bool NMDaemonClient::SetNetworkSsid(QString ifname, int netid, QString ssid)
     QString req_string = QString::asprintf(CMD_WPA_SET_NETWORK_SSID.c_str(), ifname.toStdString().c_str(), netid, ssid.toStdString().c_str());
 
     QJsonObject req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
+    return sendCommand(req_string, "SetNetworkSsid");
+    /*
     lastJsonReceived = QJsonObject();
     checkDataResultSource = "SetNetworkSsid";
     callbackFunctionSuccess = nullptr;
@@ -811,6 +814,7 @@ bool NMDaemonClient::SetNetworkSsid(QString ifname, int netid, QString ssid)
         return false;
     }
     return true;
+    */
 }
 
 bool NMDaemonClient::SetNetworkBssid(QString ifname, int netid, QString bssid)
@@ -818,6 +822,8 @@ bool NMDaemonClient::SetNetworkBssid(QString ifname, int netid, QString bssid)
     if(bssid=="any")
         bssid="00:00:00:00:00:00";
     QString req_string = QString::asprintf(CMD_WPA_SET_NETWORK_BSSID.c_str(), ifname.toStdString().c_str(), netid, bssid.toStdString().c_str());
+    return sendCommand(req_string, "SetNetworkBssid");
+    /*
     QJsonObject req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
     lastJsonReceived = QJsonObject();
     checkDataResultSource = "SetNetworkBssid";
@@ -828,22 +834,11 @@ bool NMDaemonClient::SetNetworkBssid(QString ifname, int netid, QString bssid)
         return false;
     }
     return true;
+    */
 }
 
 bool NMDaemonClient::RemoveNetwork(QString ifname, int netid)
 {
     QString req_string = QString::asprintf(CMD_WPA_REMOVE_NETWORK.c_str(), ifname.toStdString().c_str(), netid);
     return sendCommand(req_string, "RemoveNetwork");
-/*
-    QJsonObject req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
-    lastJsonReceived = QJsonObject();
-    checkDataResultSource = "RemoveNetwork";
-    callbackFunctionSuccess = nullptr;
-    connect(this, &NMDaemonClient::dataReady, this, &NMDaemonClient::slotCheckDataResult);
-    if(!sendRequest(req_object))
-    {
-        return false;
-    }
-    return true;
-*/
 }
