@@ -372,9 +372,14 @@ void NMDaemonClient::CBUpdateWpaNetworkList(QString)
     emit UpdatedWpaNetworkList(wpa_networks);
 }
 
-bool NMDaemonClient::GetWpaNetworkList(QString ifname)
+bool NMDaemonClient::GetWpaNetworkList(QString ifname, bool detailed)
 {
-    QString req_string = QString::asprintf(CMD_WPA_LIST_NETWORKS.c_str(), ifname.toStdString().c_str());
+    QString req_string;
+    if(detailed)
+        req_string = QString::asprintf(CMD_WPA_LIST_NETWORKS_DETAILED.c_str(), ifname.toStdString().c_str());
+    else
+        req_string = QString::asprintf(CMD_WPA_LIST_NETWORKS.c_str(), ifname.toStdString().c_str());
+
     QJsonObject req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
     lastJsonReceived = QJsonObject();
 

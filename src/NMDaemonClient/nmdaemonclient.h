@@ -28,6 +28,7 @@ Q_OBJECT
 protected:
     static inline const std::string CMD_CONNECT_WIFI_NETWORK = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_CONNECT\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\", \"SSID\" : \"%s\" } }";
     static inline const std::string CMD_WPA_LIST_NETWORKS = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_LIST\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\" } }";
+    static inline const std::string CMD_WPA_LIST_NETWORKS_DETAILED = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_LIST\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\", \"DETAILS\": true } }";
     static inline const std::string CMD_WPA_SCAN_NETWORKS = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_SCAN\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\" } }";
     static inline const std::string CMD_WPA_UPDATE_PSK = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_SETPSK\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\", \"NETID\" : %d, \"PSK\" : \"%s\" } }";
     static inline const std::string CMD_WPA_ADD_SECURE_NETWORK = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_ADD\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\", \"SSID\" : \"%s\", \"PSK\" : \"%s\", \"PROFILE\": \"%s\" } }";
@@ -120,7 +121,7 @@ public:
     bool sendCommand(QString, QString);
     bool enableDhcp4(QString);
     bool disableDhcp4(QString);
-    bool GetWpaNetworkList(QString);
+    bool GetWpaNetworkList(QString, bool=false);
     bool SetNetworkEnabled(QString, int, bool);
     bool SetNetworkPriority(QString, int, int);
     bool RemoveNetwork(QString, int);

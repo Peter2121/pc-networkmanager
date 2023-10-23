@@ -60,7 +60,7 @@ private slots:
    void slotSave();
    void slotGetNetKey(QAction* act);
    void slotConnect();
-   void slotUpdatePskAndConnect(QString key, QString SSID, bool hexkey);
+   void slotUpdatePskAndConnect(QString key, QString SSID, bool hexkey, QString security);
    void slotAddNetworkAndConnect(QString key, QString ssid, bool hexkey);
 //   void slotQuickConnect(QString key, QString SSID, bool hexkey);
 //   void slotCheckWifiAvailability();

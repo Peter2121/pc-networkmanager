@@ -1025,7 +1025,7 @@ void wificonfigwidgetbase::slotFinishLoading()
 void wificonfigwidgetbase::SlotStartRefreshSSIDList()
 {
    connect( nmd_status, SIGNAL( UpdatedWpaNetworkList(std::shared_ptr<QVector<QJsonObject>>) ), this, SLOT( SlotFinishRefreshSSIDList(std::shared_ptr<QVector<QJsonObject>>) ) );
-   nmd_status->GetWpaNetworkList(DeviceName);
+   nmd_status->GetWpaNetworkList(DeviceName, true);
 }
 
 void wificonfigwidgetbase::SlotFinishRefreshSSIDList(std::shared_ptr<QVector<QJsonObject>> wpa_networks)

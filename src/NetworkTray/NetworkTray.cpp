@@ -311,7 +311,7 @@ void NetworkTray::slotWifiConnectError(QString ssid, QString result)
         //Insert the SSID into the dialog
         dialogNetKey->setSSID(ssid);
         dialogNetKey->showKeyType(true);
-        connect(dialogNetKey, SIGNAL( saved(QString,QString,bool) ), this, SLOT( slotUpdatePskAndConnect(QString,QString,bool) ) );
+        connect(dialogNetKey, SIGNAL( saved(QString,QString,bool,QString) ), this, SLOT( slotUpdatePskAndConnect(QString,QString,bool,QString) ) );
         connect(dialogNetKey, SIGNAL( cancel() ), nmdStatus, SLOT( slotStartMonitoring() ) );
         //Activate the dialog
         dialogNetKey->exec();
@@ -322,7 +322,7 @@ void NetworkTray::slotWifiConnectError(QString ssid, QString result)
         //Insert the SSID into the dialog
         dialogNetKey->setSSID(ssid);
         dialogNetKey->showKeyType(true);
-        connect(dialogNetKey, SIGNAL( saved(QString,QString,bool) ), this, SLOT( slotAddNetworkAndConnect(QString,QString,bool) ) );
+        connect(dialogNetKey, SIGNAL( saved(QString,QString,bool,QString) ), this, SLOT( slotAddNetworkAndConnect(QString,QString,bool,QString) ) );
         connect(dialogNetKey, SIGNAL( cancel() ), nmdStatus, SLOT( slotStartMonitoring() ) );
         //Activate the dialog
         dialogNetKey->exec();
@@ -337,11 +337,13 @@ void NetworkTray::slotWifiConnectError(QString ssid, QString result)
 void NetworkTray::slotWifiConnectSuccess(QString ssid)
 {
     disconnect(nmdStatus, &NMDaemonClient::successWifiConnect, this, &NetworkTray::slotWifiConnectSuccess);
-    nmdStatus->enableNetwork(IfName, ssid);
+    //nmdStatus->enableNetwork(IfName, ssid);
+    //connect(nmdStatus, SIGNAL(wifiNetStatusUpdated()), this, SLOT(slotFinishRescan()));
+    nmdStatus->updateStatus();
     nmdStatus->startMonitoring();
 }
 
-void NetworkTray::slotUpdatePskAndConnect(QString key, QString ssid, bool hexkey)
+void NetworkTray::slotUpdatePskAndConnect(QString key, QString ssid, bool hexkey, QString security)
 {
     nmdStatus->stopMonitoring();
     if(nmdStatus->UpdatePsk(IfName, ssid, key, hexkey))
