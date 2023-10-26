@@ -26,7 +26,8 @@ class NMDAEMONCLIENT_EXPORT NMDaemonClient : public QObject
 Q_OBJECT
 
 protected:
-    static inline const std::string CMD_CONNECT_WIFI_NETWORK = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_CONNECT\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\", \"SSID\" : \"%s\" } }";
+    static inline const std::string CMD_CONNECT_WIFI_NET_SSID = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_CONNECT\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\", \"SSID\" : \"%s\" } }";
+    static inline const std::string CMD_CONNECT_WIFI_NET_ID = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_CONNECT\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\", \"NETID\" : %d } }";
     static inline const std::string CMD_WPA_LIST_NETWORKS = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_LIST\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\" } }";
     static inline const std::string CMD_WPA_LIST_NETWORKS_DETAILED = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_LIST\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\", \"DETAILS\": true } }";
     static inline const std::string CMD_WPA_SCAN_NETWORKS = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_SCAN\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\" } }";
@@ -76,7 +77,8 @@ protected:
     QString checkDataResultSource;
     std::function<void()> callbackFunctionSuccess;
     std::function<void()> callbackFunctionError;
-    void cbWifiConnect(QString, QString);
+    void CbWifiConnectSsid(QString, QString);
+    void CbWifiConnectNetid(QString, int);
     void cbWifiNetEnable(QString, QString);
     void cbWifiNetAdd(QString, QString);
     void cbSendSuccessWifiNetEnable(QString ssid) { emit successWifiNetEnable(ssid); }
@@ -98,7 +100,8 @@ public:
     ~NMDaemonClient();
     bool sendRequest(QJsonObject);
     QString getLastError();
-    bool connectWifiNetwork(QString, QString);
+    bool ConnectWifiNetwork(QString, QString);
+    bool ConnectWifiNetwork(QString, int);
     bool UpdatePsk(QString, QString, QString, bool);
     bool UpdatePsk(QString, int, QString, bool);
     bool addNetwork(QString, QString, QString, bool);
@@ -136,6 +139,8 @@ signals:
     void dataSuccess(QString, QString);
     void successWifiConnect(QString);
     void errorWifiConnect(QString, QString);
+    void successWifiConnect(int);
+    void errorWifiConnect(int, QString);
     void successWifiNetEnable(QString);
     void errorWifiNetEnable(QString, QString);
     void successWifiNetAdd(QString,int);

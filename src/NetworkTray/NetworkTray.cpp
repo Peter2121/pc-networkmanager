@@ -279,9 +279,9 @@ void NetworkTray::connectWifiNetwork(QString ssid)
     if(numWifiConnectRetries>0)
         qDebug() << "Retrying connect to ssid " << ssid << " for the " << numWifiConnectRetries << "nd time";
     nmdStatus->stopMonitoring();
-    connect(nmdStatus, &NMDaemonClient::successWifiConnect, this, &NetworkTray::slotWifiConnectSuccess);
-    connect(nmdStatus, &NMDaemonClient::errorWifiConnect, this, &NetworkTray::slotWifiConnectError);
-    nmdStatus->connectWifiNetwork(IfName, ssid);
+    connect(nmdStatus, SIGNAL(successWifiConnect(QString)), this, SLOT(slotWifiConnectSuccess(QString)));
+    connect(nmdStatus, SIGNAL(errorWifiConnect(QString, QString)), this, SLOT(slotWifiConnectError(QString, QString)));
+    nmdStatus->ConnectWifiNetwork(IfName, ssid);
     //qDebug() << "connectWifiNetwork to ssid " << ssid << " result: " << result;
     /*
 //<3>Associated with 04:d1:3a:f4:53:68
@@ -334,9 +334,9 @@ void NetworkTray::slotWifiConnectError(QString ssid, QString result)
     }
 }
 
-void NetworkTray::slotWifiConnectSuccess(QString ssid)
+void NetworkTray::slotWifiConnectSuccess(QString)
 {
-    disconnect(nmdStatus, &NMDaemonClient::successWifiConnect, this, &NetworkTray::slotWifiConnectSuccess);
+    disconnect(nmdStatus, SIGNAL(successWifiConnect(QString)), this, SLOT(slotWifiConnectSuccess(QString)));
     //nmdStatus->enableNetwork(IfName, ssid);
     //connect(nmdStatus, SIGNAL(wifiNetStatusUpdated()), this, SLOT(slotFinishRescan()));
     nmdStatus->updateStatus();

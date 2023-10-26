@@ -87,6 +87,9 @@ private slots:
     void slotStartRescan();
     void SlotContinueApply(QString,int);
     void SlotFinishRefreshSSIDList(std::shared_ptr<QVector<QJsonObject>>);
+    void SlotConnect();
+    void SlotConnectSuccess(int);
+    void SlotConnectError(int, QString);
 
 private:
     QString getLineFromCommandOutput( QString command );
@@ -105,7 +108,7 @@ private:
     QString getWifiParent( QString dev );
     int getWpaNetworks(QVector<std::shared_ptr<WpaSuppNetwork>>& nets);
     void loadCountryCodes();
-    void runCommand( QString Command );
+    //void runCommand( QString Command );
     //void updateWPASupp();
     QString DeviceName;
     QString Country;

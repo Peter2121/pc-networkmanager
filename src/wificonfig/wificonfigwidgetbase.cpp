@@ -265,6 +265,7 @@ void wificonfigwidgetbase::setDevice( QString Device )
   connect( pushRemoveWifi, SIGNAL( clicked() ), this, SLOT( slotRemoveProfile() ) );
   connect( pushRescan, SIGNAL( clicked() ), this, SLOT( slotStartRescan() ) );
   connect( pushAddHidden, SIGNAL( clicked() ), this, SLOT( slotAddHiddenProfile() ) );
+  connect( pushConnect, SIGNAL( clicked() ), this, SLOT( SlotConnect() ) );
   connect( groupCountryCode, SIGNAL( clicked() ), this, SLOT( slotCheckGlobalText() ) );
   connect( listWifi, SIGNAL(itemDoubleClicked(QListWidgetItem*)), this, SLOT(slotItemDoubleClicked(QListWidgetItem*)));
 
@@ -722,13 +723,13 @@ void wificonfigwidgetbase::slotWPAPSave(QString newkey)
   slotAddNewProfileWPA(ssidc,false,newkey);
 }
 
-
+/*
 void wificonfigwidgetbase::runCommand( QString Command )
 {
     FILE *file = popen(Command.toLatin1(),"r");
 	pclose(file);
 }
-
+*/
 // TODO: correctly remove profile when the same ssid is present X times (use netid)
 void wificonfigwidgetbase::slotRemoveProfileSSID(QString remove_ssid)
 {
@@ -1181,4 +1182,29 @@ void wificonfigwidgetbase::slotDisableProfile()
         refreshNetworksList();
         pushApply->setEnabled(true);
     }
+}
+
+void wificonfigwidgetbase::SlotConnect()
+{
+    int netid = -1;
+    if ( listWifi->currentRow() != -1 )
+    {
+        netid = ((QListWidgetItemNet*)(listWifi->item(listWifi->currentRow())))->GetNetId();
+    }
+    if(netid>=0)
+    {
+    connect(nmd_status, SIGNAL(successWifiConnect(int)), this, SLOT(SlotConnectSuccess(int)));
+    connect(nmd_status, SIGNAL(errorWifiConnect(int, QString)), this, SLOT(SlotConnectError(int, QString)));
+    nmd_status->ConnectWifiNetwork(DeviceName, netid);
+    }
+}
+
+void wificonfigwidgetbase::SlotConnectSuccess(int)
+{
+    SlotStartRefreshSSIDList();
+}
+
+void wificonfigwidgetbase::SlotConnectError(int netid, QString)
+{
+    QMessageBox::information(this, QString("ERROR"), QString("Cannot connect to network ") + QString(netid));
 }

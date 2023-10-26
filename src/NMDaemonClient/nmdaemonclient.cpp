@@ -196,7 +196,7 @@ void NMDaemonClient::readData()
     }
 }
 
-bool NMDaemonClient::connectWifiNetwork(QString ifname, QString ssid)
+bool NMDaemonClient::ConnectWifiNetwork(QString ifname, QString ssid)
 {
     QJsonObject json_object;
     QJsonValue json_value;
@@ -205,11 +205,11 @@ bool NMDaemonClient::connectWifiNetwork(QString ifname, QString ssid)
     QString req_string;
     QJsonObject req_object;
     QString flags;
-    req_string = QString::asprintf(CMD_CONNECT_WIFI_NETWORK.c_str(), ifname.toStdString().c_str(), ssid.toStdString().c_str());
+    req_string = QString::asprintf(CMD_CONNECT_WIFI_NET_SSID.c_str(), ifname.toStdString().c_str(), ssid.toStdString().c_str());
     req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
     lastJsonReceived = QJsonObject();
     checkDataResultSource = "connectWifiNetwork";
-    callbackFunctionSuccess = std::bind(&NMDaemonClient::cbWifiConnect, this, ifname, ssid);
+    callbackFunctionSuccess = std::bind(&NMDaemonClient::CbWifiConnectSsid, this, ifname, ssid);
     callbackFunctionError = callbackFunctionSuccess;
     connect(this, &NMDaemonClient::dataReady, this, &NMDaemonClient::slotCheckDataResult);
     if(!sendRequest(req_object))
@@ -219,7 +219,30 @@ bool NMDaemonClient::connectWifiNetwork(QString ifname, QString ssid)
     return true;
 }
 
-void NMDaemonClient::cbWifiConnect(QString, QString ssid)
+bool NMDaemonClient::ConnectWifiNetwork(QString ifname, int netid)
+{
+    QJsonObject json_object;
+    QJsonValue json_value;
+    QJsonArray json_array;
+    QString conf_ssid;
+    QString req_string;
+    QJsonObject req_object;
+    QString flags;
+    req_string = QString::asprintf(CMD_CONNECT_WIFI_NET_ID.c_str(), ifname.toStdString().c_str(), netid);
+    req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
+    lastJsonReceived = QJsonObject();
+    checkDataResultSource = "connectWifiNetwork";
+    callbackFunctionSuccess = std::bind(&NMDaemonClient::CbWifiConnectNetid, this, ifname, netid);
+    callbackFunctionError = callbackFunctionSuccess;
+    connect(this, &NMDaemonClient::dataReady, this, &NMDaemonClient::slotCheckDataResult);
+    if(!sendRequest(req_object))
+    {
+        return false;
+    }
+    return true;
+}
+
+void NMDaemonClient::CbWifiConnectSsid(QString, QString ssid)
 {
     QJsonValue json_value;
     if(!lastJsonReceived.empty())
@@ -237,6 +260,27 @@ void NMDaemonClient::cbWifiConnect(QString, QString ssid)
     else
     {
         emit errorWifiConnect(ssid, QString::fromStdString(JSON_PARAM_ERR));
+    }
+}
+
+void NMDaemonClient::CbWifiConnectNetid(QString, int netid)
+{
+    QJsonValue json_value;
+    if(!lastJsonReceived.empty())
+    //{ { JSON_PARAM_RESULT, JSON_DATA_ERR_AUTH_FAILED } }
+    //{ { JSON_PARAM_RESULT, JSON_DATA_ERR_NOT_AVAILABLE } }
+    //...
+    {
+        json_value = lastJsonReceived.value(QString::fromStdString(JSON_PARAM_RESULT));
+        if(json_value.toString().toStdString() == JSON_PARAM_SUCC)
+            emit successWifiConnect(netid);
+        else
+            // TODO: Check currently connected network to see if the connect request was finally succeeded
+            emit errorWifiConnect(netid, json_value.toString());
+    }
+    else
+    {
+        emit errorWifiConnect(netid, QString::fromStdString(JSON_PARAM_ERR));
     }
 }
 
