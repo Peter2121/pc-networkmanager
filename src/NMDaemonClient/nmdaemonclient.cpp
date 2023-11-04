@@ -26,7 +26,7 @@ NMDaemonClient::~NMDaemonClient()
     delete nmdUnixSocket;
 }
 
-bool NMDaemonClient::doConnect()
+bool NMDaemonClient::DoConnect()
 {
     if(isConnected)
         return true;
@@ -84,13 +84,92 @@ void NMDaemonClient::slotDataReceived()
         emit dataReady(json_received);
     }
 }
+QJsonObject NMDaemonClient::AsyncSendRequest(QJsonObject json_command)
+{
+    std::string str_cmd = QJsonDocument(json_command).toJson(QJsonDocument::Compact).toStdString();
+    auto json_received = QJsonObject();
+
+    if(!DoConnect())
+    {
+        throw AsynStepException("AsyncSendRequest: DoConnect failed");
+    }
+    if(writeSocket.available()>0)
+    {
+        qDebug() << "AsyncSendRequest: writeSocket.acquire() direct for request " << QString::fromStdString(str_cmd);
+        writeSocket.acquire();
+    }
+    else
+    {
+        bool available = false;
+        int i=0,imax=200;
+        long wt=50;
+        for(i=0; i<imax; i++)
+        {
+            QCoreApplication::processEvents();
+            std::this_thread::sleep_for(std::chrono::milliseconds(wt));
+            if(writeSocket.available()>0)
+            {
+                available=true;
+                break;
+            }
+        }
+        if(available)
+        {
+            qDebug() << "AsyncSendRequest: writeSocket.acquire() after waiting during " << (i-1)*wt << "msec for request " << QString::fromStdString(str_cmd);
+            writeSocket.acquire();
+        }
+        else
+        {
+            qDebug() << "AsyncSendRequest: Cannot acquire write lock on nmdaemon socket for request " << QString::fromStdString(str_cmd);
+            throw AsynStepException("AsyncSendRequest: Cannot acquire write lock on nmdaemon socket");
+        }
+    }
+
+    lastJsonReceived = QJsonObject();
+    memset(buf, 0, sizeof(buf));
+    strlcpy(buf, str_cmd.c_str(), NM_MAXBUF);
+    int len = (str_cmd.length()<NM_MAXBUF) ? str_cmd.length() : NM_MAXBUF-1;
+    buf[len] = 0;
+    qDebug() << "AsyncSendRequest: Writing to socket: " << buf;
+    int len_sent = nmdUnixSocket->write(buf, sizeof(buf));
+    if(len_sent<len+1)
+    {
+        lastError = QString::fromStdString(nmdUnixSocket->last_error_str());
+        qDebug() << "Error writing to socket: " << lastError;
+        writeSocket.release();
+        throw AsynStepException("AsyncSendRequest: Error writing to socket " + nmdUnixSocket->last_error_str());
+    }
+
+    memset(buf, 0, sizeof(buf));
+    int n = nmdUnixSocket->read_n(buf, sizeof(buf));
+    qDebug() << "AsyncSendRequest: Received from socket:\n" << buf;
+    if(n<=0)
+    {
+        lastError = QString::fromStdString(nmdUnixSocket->last_error_str());
+        qDebug() << "AsyncSendRequest: Error reading from socket: " << lastError;
+        throw AsynStepException("AsyncSendRequest: Error reading from socket " + nmdUnixSocket->last_error_str());
+    }
+
+    QString qstr_received = QString(buf);
+    qDebug() << "AsyncSendRequest: Received from socket: " << qstr_received;
+    QJsonDocument qjdoc_received = QJsonDocument::fromJson(qstr_received.toUtf8());
+    if( !qjdoc_received.isNull() && qjdoc_received.isObject() )
+        json_received = qjdoc_received.object();
+    if(!isPersistentConn)
+        doDisconnect();
+    if(writeSocket.available() == 0)
+        writeSocket.release();
+    if(!json_received.empty() && (json_received != lastJsonReceived) )
+        lastJsonReceived = json_received;
+    return json_received;
+}
 
 bool NMDaemonClient::sendRequest(QJsonObject json_command)
 {
     QString qstr_received = "";
     const char *ptr = nullptr;
     std::string str_cmd = QJsonDocument(json_command).toJson(QJsonDocument::Compact).toStdString();
-    if(!doConnect())
+    if(!DoConnect())
         return false;
     if(writeSocket.available()>0)
     {
@@ -629,7 +708,7 @@ bool NMDaemonClient::saveConfig(QString ifname)
     return sendCommand(req_string, "saveConfig");
 }
 
-bool NMDaemonClient::checkSuccess(QJsonObject data)
+bool NMDaemonClient::CheckSuccess(QJsonObject data)
 {
     if(!data.empty())
     {
@@ -647,7 +726,7 @@ void NMDaemonClient::slotCheckDataResult(QJsonObject data)
     disconnect(this, &NMDaemonClient::dataReady, this, &NMDaemonClient::slotCheckDataResult);
     QString src = checkDataResultSource;
     checkDataResultSource = "";
-    if(checkSuccess(data))
+    if(CheckSuccess(data))
     {
         qDebug() << "SUCCESS received from " << src;
         if(callbackFunctionSuccess != nullptr)
@@ -694,7 +773,7 @@ QString NMDaemonClient::getIPv4Address(QString ifname)
     readspy->wait(DEFAULT_READ_WAIT_TIME_MSEC);
     if(!lastJsonReceived.empty())
     {
-        if(checkSuccess(lastJsonReceived))
+        if(CheckSuccess(lastJsonReceived))
         {
             json_value = lastJsonReceived.value(QString::fromStdString(JSON_PARAM_DATA));
             json_object = json_value.toObject();
@@ -726,7 +805,7 @@ bool NMDaemonClient::isDhcp4Enabled(QString ifname)
     readspy->wait(DEFAULT_READ_WAIT_TIME_MSEC);
     if(!lastJsonReceived.empty())
     {
-        if(checkSuccess(lastJsonReceived))
+        if(CheckSuccess(lastJsonReceived))
         {
             json_value = lastJsonReceived.value(QString::fromStdString(JSON_PARAM_DATA));
             json_object = json_value.toObject();
@@ -740,6 +819,32 @@ bool NMDaemonClient::isDhcp4Enabled(QString ifname)
         }
     }
     return status;
+}
+
+bool NMDaemonClient::AsyncSendCommand(QString command, QString source)
+{
+    QJsonObject req_object = QJsonDocument::fromJson(command.toUtf8()).object();
+    auto step1 = std::make_shared<AsynStep<QJsonObject>>
+    (
+        [&](){ return AsyncSendRequest(req_object); },
+        [this](QJsonObject jobj){ return CheckSuccess(jobj); },
+        source.toStdString(),
+        [](){ QCoreApplication::processEvents(); },
+        200
+    );
+    std::unique_ptr<AsynWf> wf1 = std::make_unique<AsynWf>();
+    wf1->AddStep(step1);
+    try
+    {
+        wf1->Run();
+        emit dataSuccess(QJsonDocument(req_object).toJson(QJsonDocument::Compact), source);
+        return true;
+    }
+    catch (AsynWfException we)
+    {
+        emit dataError(source, "Error sending request:\n" + QString(we.what()) + "\nRequest was:\n" + QJsonDocument(req_object).toJson(QJsonDocument::Compact));
+        return false;
+    }
 }
 
 bool NMDaemonClient::sendCommand(QString command, QString source)
@@ -889,5 +994,5 @@ bool NMDaemonClient::SetNetworkBssid(QString ifname, int netid, QString bssid)
 bool NMDaemonClient::RemoveNetwork(QString ifname, int netid)
 {
     QString req_string = QString::asprintf(CMD_WPA_REMOVE_NETWORK.c_str(), ifname.toStdString().c_str(), netid);
-    return sendCommand(req_string, "RemoveNetwork");
+    return AsyncSendCommand(req_string, "RemoveNetwork");
 }

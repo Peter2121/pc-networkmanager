@@ -11,6 +11,7 @@ CONFIG += ccache
 
 LIBS	+= -L/usr/local/lib -ltrueos-utils -ltrueos-ui
 LIBS    += /usr/local/lib/libsockpp.a
+LIBS    += /usr/local/lib/libasync++.a
 
 #HEADERS	+= dialogwpaenterprise.h dialogwpapersonal.h wepconfig.h wificonfigwidgetbase.h wifiscanssid.h wifiselectiondialog.h \
 HEADERS	+= wificonfigwidgetbase.h \

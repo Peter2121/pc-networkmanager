@@ -16,9 +16,24 @@
 #include <unistd.h>
 #include <sockpp/unix_connector.h>
 #include <sockpp/version.h>
+//#include <async++.h>
+#include "asynstep.hpp"
 #include "../nmdaemon/nmjsonconst.h"
 #include "nmdaemonspy.h"
 #include "nmdaemonworker.h"
+
+class NMDaemonClientException : public std::exception
+{
+protected:
+    std::string Info;
+
+public:
+    NMDaemonClientException(std::string info) : Info(info) {}
+    const char *what()
+    {
+        return Info.c_str();
+    }
+};
 
 class NMDAEMONCLIENT_EXPORT NMDaemonClient : public QObject
 {
@@ -67,7 +82,7 @@ protected:
     bool isConnected;
     char buf[NM_MAXBUF];
     //NMDaemonSpy* spy;
-    bool doConnect();
+    bool DoConnect();
     bool doDisconnect();
     void readData();
     QString lastError;
@@ -99,6 +114,7 @@ public:
     NMDaemonClient(QString, bool);
     ~NMDaemonClient();
     bool sendRequest(QJsonObject);
+    QJsonObject AsyncSendRequest(QJsonObject);
     QString getLastError();
     bool ConnectWifiNetwork(QString, QString);
     bool ConnectWifiNetwork(QString, int);
@@ -113,7 +129,7 @@ public:
     int getWpaNetworkId(QString, QString);
     QJsonObject getJsonForSsid(QString);
     QString getWifiNetworkSecurity(QString, QString) const;
-    bool checkSuccess(QJsonObject);
+    bool CheckSuccess(QJsonObject);
     QString getIPv4Address(QString);
     bool isDhcp4Enabled(QString);
     bool setIPv4Address(QString, QString, QString);
@@ -122,6 +138,7 @@ public:
     bool enableInterface(QString);
     bool disableInterface(QString);
     bool sendCommand(QString, QString);
+    bool AsyncSendCommand(QString, QString);
     bool enableDhcp4(QString);
     bool disableDhcp4(QString);
     bool GetWpaNetworkList(QString, bool=false);

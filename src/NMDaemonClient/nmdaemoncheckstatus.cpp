@@ -33,7 +33,7 @@ void NMDaemonCheckStatus::startMonitoring()
 {
     if(isMonitoring)
         return;
-    if(!doConnect())
+    if(!DoConnect())
         return;
     isMonitoring = true;
     updateStatus();
@@ -58,7 +58,7 @@ bool NMDaemonCheckStatus::updateStatusInterfaces()
     QJsonValue json_value;
     QJsonArray json_array;
     QJsonObject json_obj;
-    if(!doConnect())
+    if(!DoConnect())
         return false;
     timerMonitoring->stop();
     lastIfStatus = QJsonArray();
@@ -113,7 +113,7 @@ void NMDaemonCheckStatus::updateStatus()
         timerMonitoring->stop();
         need_to_restart_timer = true;
     }
-    if(!doConnect())
+    if(!DoConnect())
         return;
     // Get list of wireless interfaces available for wpa_supplicant
     req_object = QJsonDocument::fromJson(CMD_GET_WPA_IF_LIST.toUtf8()).object();
@@ -433,7 +433,7 @@ bool NMDaemonCheckStatus::updateStatusJails()
     std::unique_ptr<NMDaemonSpy> spy = nullptr;
     QJsonValue json_value;
     QJsonArray json_array;
-    if(!doConnect())
+    if(!DoConnect())
         return false;
     timerMonitoring->stop();
     QJsonObject req_object = QJsonDocument::fromJson(CMD_GET_SYS_JAIL_LIST.toUtf8()).object();

@@ -11,6 +11,7 @@ CONFIG += ccache
 
 LIBS	+= -L/usr/local/lib -ltrueos-utils -ltrueos-ui
 LIBS    += /usr/local/lib/libsockpp.a
+LIBS    += /usr/local/lib/libasync++.a
 
 HEADERS	+= NetworkTray.h ../wificonfig/netKey.h
 HEADERS	+= ../ethernetconfig/ethernetconfig.h ../ethernetconfig/ethernetconfigdata.h ../ethernetconfig/ipv4addrinput.h

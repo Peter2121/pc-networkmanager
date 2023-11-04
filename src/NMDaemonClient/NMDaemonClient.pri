@@ -18,6 +18,7 @@ SOURCES += \
     $${PWD}/nmdaemonclient.cpp
 
 HEADERS += \
+    $$PWD/asynstep.hpp \
     $$PWD/nmdaemonspy.h \
     $$PWD/nmdaemonworker.h \
     $${PWD}/NMDaemonClient_global.h \
