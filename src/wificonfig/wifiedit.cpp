@@ -55,7 +55,7 @@ void WifiEdit::SlotSaveAndClose()
 void WifiEdit::SlotResetKey()
 {
     auto netkey_dialog = std::make_unique<netKey>();
-    connect( netkey_dialog.get(), SIGNAL( saved(QString, QString, bool) ), this, SLOT( SlotKeySaved(QString, QString, bool) ) );
+    connect( netkey_dialog.get(), SIGNAL( saved(QString, QString, bool, QString) ), this, SLOT( SlotKeySaved(QString, QString, bool, QString) ) );
     netkey_dialog->setSSID(editSSID->text());
     netkey_dialog->showKeyType(true);
     netkey_dialog->SetSecurity(ParentNet->GetSecurity());
@@ -69,7 +69,7 @@ bool WifiEdit::IsModified()
     return modified;
 }
 
-void WifiEdit::SlotKeySaved(QString key, QString, bool)
+void WifiEdit::SlotKeySaved(QString key, QString, bool, QString)
 {
     NewKey = key;
 }

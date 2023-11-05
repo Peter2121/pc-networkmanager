@@ -81,7 +81,6 @@ void NetworkTray::onActivated(QSystemTrayIcon::ActivationReason reason)
 
 void NetworkTray::slotSave()
 {
-    //nmdStatus->enableNetwork(IfName, "ppp-rrr");
     nmdStatus->saveConfig(IfName);
 }
 
@@ -289,7 +288,7 @@ void NetworkTray::connectWifiNetwork(QString ssid)
 //nmworkerieee80211.cpp:438    ERR| Error in execCmdIfStatus: cannot get bssid for interface wlan0 -> NO WLAN INTERFACE!!!
 //nmworkerwpa.cpp:256    ERR| wpaCtrlCmd cannot connect to client socket /tmp/nmd_wpaw.xrEFI : Address already in use
 //nmworkerieee80211.cpp:82     ERR| Error in execCmdNetList: incorrect data received from lib80211
-    nmdStatus->enableNetwork(IfName, ssid);
+//    nmdStatus->EnableNetwork(IfName, ssid);
     //nmdStatus->saveConfig(IfName);
     //updateStatus();
     nmdStatus->startMonitoring();
@@ -337,8 +336,6 @@ void NetworkTray::slotWifiConnectError(QString ssid, QString result)
 void NetworkTray::slotWifiConnectSuccess(QString)
 {
     disconnect(nmdStatus, SIGNAL(successWifiConnect(QString)), this, SLOT(slotWifiConnectSuccess(QString)));
-    //nmdStatus->enableNetwork(IfName, ssid);
-    //connect(nmdStatus, SIGNAL(wifiNetStatusUpdated()), this, SLOT(slotFinishRescan()));
     nmdStatus->updateStatus();
     nmdStatus->startMonitoring();
 }
@@ -346,7 +343,8 @@ void NetworkTray::slotWifiConnectSuccess(QString)
 void NetworkTray::slotUpdatePskAndConnect(QString key, QString ssid, bool hexkey, QString security)
 {
     nmdStatus->stopMonitoring();
-    if(nmdStatus->UpdatePsk(IfName, ssid, key, hexkey))
+    //if(nmdStatus->UpdatePsk(IfName, ssid, key, hexkey))
+    if(nmdStatus->UpdatePskAndSave(IfName, ssid, key, hexkey))
     {
         connectWifiNetwork(ssid);
     }

@@ -211,8 +211,9 @@ void wificonfigwidgetbase::slotApply()
 
     // Update keys
     foreach (auto psk, psks) {
-        nmd_status -> UpdatePsk(DeviceName, std::get<0>(psk), std::get<1>(psk), false);
-        nmd_status -> saveConfig(DeviceName);
+        //nmd_status -> UpdatePsk(DeviceName, std::get<0>(psk), std::get<1>(psk), false);
+        //nmd_status -> saveConfig(DeviceName);
+        nmd_status -> UpdatePskAndSave(DeviceName, std::get<0>(psk), std::get<1>(psk), false);
     }
 
     // Apply remove
@@ -232,8 +233,9 @@ void wificonfigwidgetbase::slotApply()
         }
     }
     foreach (int id, IdToRemove) {
-        nmd_status -> RemoveNetwork(DeviceName, id);
-        nmd_status -> saveConfig(DeviceName);
+        //nmd_status -> RemoveNetwork(DeviceName, id);
+        //nmd_status -> saveConfig(DeviceName);
+        nmd_status -> RemoveNetworkAndSave(DeviceName, id);
     }
 
     buttonCancel->setEnabled(true);

@@ -130,7 +130,7 @@ QJsonObject NMDaemonClient::AsyncSendRequest(QJsonObject json_command)
     strlcpy(buf, str_cmd.c_str(), NM_MAXBUF);
     int len = (str_cmd.length()<NM_MAXBUF) ? str_cmd.length() : NM_MAXBUF-1;
     buf[len] = 0;
-    qDebug() << "AsyncSendRequest: Writing to socket: " << buf;
+    qDebug() << "AsyncSendRequest: Writing to socket:\n\t" << buf;
     int len_sent = nmdUnixSocket->write(buf, sizeof(buf));
     if(len_sent<len+1)
     {
@@ -142,7 +142,7 @@ QJsonObject NMDaemonClient::AsyncSendRequest(QJsonObject json_command)
 
     memset(buf, 0, sizeof(buf));
     int n = nmdUnixSocket->read_n(buf, sizeof(buf));
-    qDebug() << "AsyncSendRequest: Received from socket:\n" << buf;
+    qDebug() << "AsyncSendRequest: Received from socket:\n\t" << buf;
     if(n<=0)
     {
         lastError = QString::fromStdString(nmdUnixSocket->last_error_str());
@@ -151,7 +151,7 @@ QJsonObject NMDaemonClient::AsyncSendRequest(QJsonObject json_command)
     }
 
     QString qstr_received = QString(buf);
-    qDebug() << "AsyncSendRequest: Received from socket: " << qstr_received;
+    //qDebug() << "AsyncSendRequest: Received from socket: " << qstr_received;
     QJsonDocument qjdoc_received = QJsonDocument::fromJson(qstr_received.toUtf8());
     if( !qjdoc_received.isNull() && qjdoc_received.isObject() )
         json_received = qjdoc_received.object();
@@ -363,8 +363,12 @@ void NMDaemonClient::CbWifiConnectNetid(QString, int netid)
     }
 }
 
-QJsonObject NMDaemonClient::getJsonForSsid(QString ssid)
-// Get JSON object from lastJsonReceived for given SSID
+QJsonObject NMDaemonClient::GetJsonForSsid(QString ssid)
+{
+    return GetJsonForSsid(ssid, lastJsonReceived);
+}
+
+QJsonObject NMDaemonClient::GetJsonForSsid(QString ssid, QJsonObject list_networks)
 {
     QJsonArray json_array;
     QJsonValue json_value;
@@ -372,10 +376,10 @@ QJsonObject NMDaemonClient::getJsonForSsid(QString ssid)
     QJsonObject ret_object;
     QString conf_ssid;
 
-    json_value = lastJsonReceived.value(QString::fromStdString(JSON_PARAM_RESULT));
+    json_value = list_networks.value(QString::fromStdString(JSON_PARAM_RESULT));
     if(json_value.toString().toStdString() == JSON_PARAM_SUCC)
     {
-        json_value = lastJsonReceived.value(QString::fromStdString(JSON_PARAM_DATA));
+        json_value = list_networks.value(QString::fromStdString(JSON_PARAM_DATA));
         json_object = json_value.toObject();
         json_value = json_object.value(QString::fromStdString(JSON_PARAM_NETWORKS));
         json_array = json_value.toArray();
@@ -395,7 +399,8 @@ QJsonObject NMDaemonClient::getJsonForSsid(QString ssid)
     return ret_object;
 }
 
-bool NMDaemonClient::enableNetwork(QString ifname, QString ssid) // TODO: Rename to enableWifiNetwork
+/*
+bool NMDaemonClient::EnableNetwork(QString ifname, QString ssid) // TODO: Rename to enableWifiNetwork
 {
     int net_id = getWpaNetworkId(ifname, ssid);
     if(net_id<0)
@@ -404,7 +409,7 @@ bool NMDaemonClient::enableNetwork(QString ifname, QString ssid) // TODO: Rename
     QString req_string = QString::asprintf(CMD_WPA_ENABLE_NETWORK.c_str(), ifname.toStdString().c_str(), net_id);
     QJsonObject req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
     lastJsonReceived = QJsonObject();
-    checkDataResultSource = "enableNetwork";
+    checkDataResultSource = "EnableNetwork";
     callbackFunctionSuccess = std::bind(&NMDaemonClient::cbWifiNetEnable, this, ifname, ssid);
     connect(this, &NMDaemonClient::dataReady, this, &NMDaemonClient::slotCheckDataResult);
     if(!sendRequest(req_object))
@@ -438,6 +443,7 @@ void NMDaemonClient::cbWifiNetEnable(QString ifname, QString ssid)
         emit errorWifiNetEnable(ssid, QString::fromStdString(JSON_PARAM_ERR));
     }
 }
+*/
 
 int NMDaemonClient::getWpaNetworkId(QString ifname, QString ssid)
 // Get list of configured networks from WPA and search for the ssid in this list
@@ -459,7 +465,7 @@ int NMDaemonClient::getWpaNetworkId(QString ifname, QString ssid)
     readspy->wait(DEFAULT_READ_WAIT_TIME_MSEC);
     if(!lastJsonReceived.empty())
     {
-        json_object = getJsonForSsid(ssid);
+        json_object = GetJsonForSsid(ssid);
         if(!json_object.empty())
         {
             net_id = json_object.value("network id").toString().toInt();
@@ -517,6 +523,7 @@ bool NMDaemonClient::GetWpaNetworkList(QString ifname, bool detailed)
     return true;
 }
 
+/*
 bool NMDaemonClient::UpdatePsk(QString ifname, int net_id, QString psk, bool hexkey)
 {
     if(hexkey)
@@ -538,7 +545,98 @@ bool NMDaemonClient::UpdatePsk(QString ifname, int net_id, QString psk, bool hex
     }
     return true;
 }
+*/
 
+bool NMDaemonClient::UpdatePskAndSave(QString ifname, int net_id, QString psk, bool hexkey)
+{
+    if(hexkey)
+    {
+        qDebug() << "Hex keys are not (yet) supported";
+        return false;
+    }
+
+    QString req_string1 = QString::asprintf(CMD_WPA_UPDATE_PSK.c_str(), ifname.toStdString().c_str(), net_id, psk.toStdString().c_str());
+    QJsonObject req_object1 = QJsonDocument::fromJson(req_string1.toUtf8()).object();
+    QString source1 = "UpdatePsk";
+    QString req_string2 = QString::asprintf(CMD_WPA_SAVE.c_str(), ifname.toStdString().c_str());
+    QJsonObject req_object2 = QJsonDocument::fromJson(req_string2.toUtf8()).object();
+    QString source2 = "SaveConfig";
+
+    auto step1 = std::make_shared<AsynStep<QJsonObject>>
+        (
+            [&](){ return AsyncSendRequest(req_object1); },
+            [this](QJsonObject jobj){ return CheckSuccess(jobj); },
+            source1.toStdString(),
+            [](){ QCoreApplication::processEvents(); },
+            200
+        );
+    auto step2 = std::make_shared<AsynStep<QJsonObject>>
+        (
+            [&](){ return AsyncSendRequest(req_object2); },
+            [this](QJsonObject jobj){ return CheckSuccess(jobj); },
+            source2.toStdString(),
+            [](){ QCoreApplication::processEvents(); },
+            200
+        );
+    std::unique_ptr<AsynWf> wf1 = std::make_unique<AsynWf>();
+    wf1->AddStep(step1);
+    wf1->AddStep(step2);
+    try
+    {
+        wf1->Run();
+        return true;
+    }
+    catch (AsynWfException we)
+    {
+        emit dataError("UpdatePskAndSave", "Error sending request:\n" + QString(we.what()));
+        return false;
+    }
+}
+
+bool NMDaemonClient::UpdatePskAndSave(QString ifname, QString ssid, QString psk, bool hexkey)
+{
+    QString req_string1 = QString::asprintf(CMD_WPA_LIST_NETWORKS.c_str(), ifname.toStdString().c_str());
+    QJsonObject req_object1 = QJsonDocument::fromJson(req_string1.toUtf8()).object();
+    QString source1 = "WpaListNetworks";
+    int net_id = -1;
+    auto step1 = std::make_shared<AsynStep<QJsonObject>>
+        (
+            [&](){ return AsyncSendRequest(req_object1); },
+            [this](QJsonObject jobj){ return CheckSuccess(jobj); },
+            source1.toStdString(),
+            [](){ QCoreApplication::processEvents(); },
+            200
+        );
+    try
+    {
+        if(!step1->Run())
+        {
+            qDebug() << "UpdatePskAndSave: Cannot get list of WPA configured networks";
+            return false;
+        }
+    }
+    catch (AsynStepException se)
+    {
+        qDebug() << "UpdatePskAndSave: Cannot get list of WPA configured networks: " << QString(se.what());
+        return false;
+    }
+    auto list_networks = step1->GetData();
+    auto json_object = GetJsonForSsid(ssid, list_networks);
+    if(json_object.empty())
+    {
+        qDebug() << "UpdatePskAndSave: Cannot get net_id for ssid " << ssid << " from json received:\n\t" << QJsonDocument(req_object1).toJson(QJsonDocument::Compact);
+        return false;
+    }
+    net_id = json_object.value("network id").toString().toInt();
+    if(net_id<0)
+    {
+        qDebug() << "UpdatePskAndSave: Got invalid net_id " << net_id << " for ssid " << ssid << " from json received:\n\t" << QJsonDocument(req_object1).toJson(QJsonDocument::Compact);
+        return false;
+    }
+    return UpdatePskAndSave(ifname, net_id, psk, hexkey);
+}
+
+/*
 bool NMDaemonClient::UpdatePsk(QString ifname, QString ssid, QString psk, bool hexkey)
 {
     int net_id = getWpaNetworkId(ifname, ssid);
@@ -549,6 +647,7 @@ bool NMDaemonClient::UpdatePsk(QString ifname, QString ssid, QString psk, bool h
     }
     return UpdatePsk(ifname, net_id, psk, hexkey);
 }
+*/
 
 bool NMDaemonClient::addNetwork(QString ifname, QString ssid, QString psk, bool hexkey)
 {
@@ -574,7 +673,7 @@ bool NMDaemonClient::addNetwork(QString ifname, QString ssid, QString psk, bool 
     readspy->wait(DEFAULT_READ_WAIT_TIME_MSEC);
     if(!lastJsonReceived.empty())
     {
-        json_object = getJsonForSsid(ssid);
+        json_object = GetJsonForSsid(ssid);
         if(!json_object.empty())
         {
             caps = json_object.value("CAPS").toString();
@@ -705,7 +804,8 @@ QString NMDaemonClient::getWifiNetworkSecurity(QString caps, QString ies) const
 bool NMDaemonClient::saveConfig(QString ifname)
 {
     QString req_string = QString::asprintf(CMD_WPA_SAVE.c_str(), ifname.toStdString().c_str());
-    return sendCommand(req_string, "saveConfig");
+    return AsyncSendCommand(req_string, "saveConfig");
+    //return sendCommand(req_string, "saveConfig");
 }
 
 bool NMDaemonClient::CheckSuccess(QJsonObject data)
@@ -866,7 +966,8 @@ bool NMDaemonClient::setIPv4Address(QString ifname, QString address, QString mas
                                                 ifname.toStdString().c_str(),
                                                 address.toStdString().c_str(),
                                                 mask.toStdString().c_str() );
-    return sendCommand(req_string, "setIPv4Address");
+    return AsyncSendCommand(req_string, "setIPv4Address");
+    //return sendCommand(req_string, "setIPv4Address");
 }
 
 bool NMDaemonClient::addIPv4Address(QString ifname, QString address, QString mask)
@@ -875,7 +976,8 @@ bool NMDaemonClient::addIPv4Address(QString ifname, QString address, QString mas
                                                 ifname.toStdString().c_str(),
                                                 address.toStdString().c_str(),
                                                 mask.toStdString().c_str() );
-    return sendCommand(req_string, "addIPv4Address");
+    return AsyncSendCommand(req_string, "addIPv4Address");
+    //return sendCommand(req_string, "addIPv4Address");
 }
 
 bool NMDaemonClient::removeIPv4Address(QString ifname, QString address, QString mask)
@@ -884,31 +986,36 @@ bool NMDaemonClient::removeIPv4Address(QString ifname, QString address, QString 
                                                 ifname.toStdString().c_str(),
                                                 address.toStdString().c_str(),
                                                 mask.toStdString().c_str() );
-    return sendCommand(req_string, "removeIPv4Address");
+    return AsyncSendCommand(req_string, "removeIPv4Address");
+    //return sendCommand(req_string, "removeIPv4Address");
 }
 
 bool NMDaemonClient::enableInterface(QString ifname)
 {
     QString req_string = QString::asprintf(CMD_SET_IF_ENABLE.c_str(), ifname.toStdString().c_str());
-    return sendCommand(req_string, "enableInterface");
+    return AsyncSendCommand(req_string, "enableInterface");
+    //return sendCommand(req_string, "enableInterface");
 }
 
 bool NMDaemonClient::disableInterface(QString ifname)
 {
     QString req_string = QString::asprintf(CMD_SET_IF_DISABLE.c_str(), ifname.toStdString().c_str());
-    return sendCommand(req_string, "disableInterface");
+    return AsyncSendCommand(req_string, "disableInterface");
+    //return sendCommand(req_string, "disableInterface");
 }
 
 bool NMDaemonClient::enableDhcp4(QString ifname)
 {
     QString req_string = QString::asprintf(CMD_SET_IPV4_DHCP_ENABLE.c_str(), ifname.toStdString().c_str());
-    return sendCommand(req_string, "enableDhcp4");
+    return AsyncSendCommand(req_string, "enableDhcp4");
+    //return sendCommand(req_string, "enableDhcp4");
 }
 
 bool NMDaemonClient::disableDhcp4(QString ifname)
 {
     QString req_string = QString::asprintf(CMD_SET_IPV4_DHCP_DISABLE.c_str(), ifname.toStdString().c_str());
-    return sendCommand(req_string, "disableDhcp4");
+    return AsyncSendCommand(req_string, "disableDhcp4");
+    //return sendCommand(req_string, "disableDhcp4");
 }
 
 bool NMDaemonClient::SetNetworkEnabled(QString ifname, int netid, bool is_enabled)
@@ -918,7 +1025,8 @@ bool NMDaemonClient::SetNetworkEnabled(QString ifname, int netid, bool is_enable
         req_string = QString::asprintf(CMD_WPA_ENABLE_NETWORK.c_str(), ifname.toStdString().c_str(), netid);
     else
         req_string = QString::asprintf(CMD_WPA_DISABLE_NETWORK.c_str(), ifname.toStdString().c_str(), netid);
-    return sendCommand(req_string, "SetNetworkEnabled");
+    return AsyncSendCommand(req_string, "SetNetworkEnabled");
+    //return sendCommand(req_string, "SetNetworkEnabled");
 /*
     QJsonObject req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
     lastJsonReceived = QJsonObject();
@@ -936,9 +1044,9 @@ bool NMDaemonClient::SetNetworkEnabled(QString ifname, int netid, bool is_enable
 bool NMDaemonClient::SetNetworkPriority(QString ifname, int netid, int priority)
 {
     QString req_string = QString::asprintf(CMD_WPA_SET_NETWORK_PRI.c_str(), ifname.toStdString().c_str(), netid, priority);
-
-    QJsonObject req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
-    return sendCommand(req_string, "SetNetworkPriority");
+    //QJsonObject req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
+    return AsyncSendCommand(req_string, "SetNetworkPriority");
+    //return sendCommand(req_string, "SetNetworkPriority");
     /*
     lastJsonReceived = QJsonObject();
     checkDataResultSource = "SetNetworkPriority";
@@ -955,9 +1063,9 @@ bool NMDaemonClient::SetNetworkPriority(QString ifname, int netid, int priority)
 bool NMDaemonClient::SetNetworkSsid(QString ifname, int netid, QString ssid)
 {
     QString req_string = QString::asprintf(CMD_WPA_SET_NETWORK_SSID.c_str(), ifname.toStdString().c_str(), netid, ssid.toStdString().c_str());
-
-    QJsonObject req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
-    return sendCommand(req_string, "SetNetworkSsid");
+    //QJsonObject req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
+    return AsyncSendCommand(req_string, "SetNetworkSsid");
+    //return sendCommand(req_string, "SetNetworkSsid");
     /*
     lastJsonReceived = QJsonObject();
     checkDataResultSource = "SetNetworkSsid";
@@ -976,7 +1084,8 @@ bool NMDaemonClient::SetNetworkBssid(QString ifname, int netid, QString bssid)
     if(bssid=="any")
         bssid="00:00:00:00:00:00";
     QString req_string = QString::asprintf(CMD_WPA_SET_NETWORK_BSSID.c_str(), ifname.toStdString().c_str(), netid, bssid.toStdString().c_str());
-    return sendCommand(req_string, "SetNetworkBssid");
+    return AsyncSendCommand(req_string, "SetNetworkBssid");
+    //return sendCommand(req_string, "SetNetworkBssid");
     /*
     QJsonObject req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
     lastJsonReceived = QJsonObject();
@@ -995,4 +1104,44 @@ bool NMDaemonClient::RemoveNetwork(QString ifname, int netid)
 {
     QString req_string = QString::asprintf(CMD_WPA_REMOVE_NETWORK.c_str(), ifname.toStdString().c_str(), netid);
     return AsyncSendCommand(req_string, "RemoveNetwork");
+}
+
+bool NMDaemonClient::RemoveNetworkAndSave(QString ifname, int netid)
+{
+    QString req_string1 = QString::asprintf(CMD_WPA_REMOVE_NETWORK.c_str(), ifname.toStdString().c_str(), netid);
+    QJsonObject req_object1 = QJsonDocument::fromJson(req_string1.toUtf8()).object();
+    QString source1 = "RemoveNetwork";
+    QString req_string2 = QString::asprintf(CMD_WPA_SAVE.c_str(), ifname.toStdString().c_str());
+    QJsonObject req_object2 = QJsonDocument::fromJson(req_string2.toUtf8()).object();
+    QString source2 = "SaveConfig";
+
+    auto step1 = std::make_shared<AsynStep<QJsonObject>>
+        (
+            [&](){ return AsyncSendRequest(req_object1); },
+            [this](QJsonObject jobj){ return CheckSuccess(jobj); },
+            source1.toStdString(),
+            [](){ QCoreApplication::processEvents(); },
+            200
+        );
+    auto step2 = std::make_shared<AsynStep<QJsonObject>>
+        (
+            [&](){ return AsyncSendRequest(req_object2); },
+            [this](QJsonObject jobj){ return CheckSuccess(jobj); },
+            source2.toStdString(),
+            [](){ QCoreApplication::processEvents(); },
+            200
+        );
+    std::unique_ptr<AsynWf> wf1 = std::make_unique<AsynWf>();
+    wf1->AddStep(step1);
+    wf1->AddStep(step2);
+    try
+    {
+        wf1->Run();
+        return true;
+    }
+    catch (AsynWfException we)
+    {
+        emit dataError("RemoveNetworkAndSave", "Error sending request:\n" + QString(we.what()));
+        return false;
+    }
 }

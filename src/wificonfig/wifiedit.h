@@ -29,7 +29,7 @@ private slots:
     void SlotSaveAndClose();
     void SlotSave();
     void SlotResetKey();
-    void SlotKeySaved(QString, QString, bool);
+    void SlotKeySaved(QString, QString, bool, QString);
 
 signals:
     void Saved();

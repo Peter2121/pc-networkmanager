@@ -60,7 +60,14 @@ public:
     bool Run(std::function<void()> waiter, long wait_period_ms) override
     {
         auto task_worker = async::spawn(Worker);
-        auto task_validator = task_worker.then(Validator);
+        //auto task_validator = task_worker.then(Validator);
+        auto task_validator = task_worker.then(
+            [&](async::task<T> parent)
+            {
+                auto result = parent.get();
+                Data = result;
+                return Validator(result);
+            });
         while (!task_validator.ready())
         {
             if(waiter!=nullptr)
@@ -73,11 +80,13 @@ public:
     {
         return Run(Waiter, WaitPeriodMs);
     }
+    T GetData() { return Data; }
 protected:
     std::function<T()> Worker;
     std::function<bool(T)> Validator;
     std::function<void()> Waiter;
     long WaitPeriodMs;
+    T Data;
 };
 
 class AsynWf
