@@ -67,6 +67,7 @@ protected:
     static inline const std::string CMD_WPA_SET_NETWORK_PRI = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_SETPARAM\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\", \"NETID\" : %d, \"PARAM_NAME\" : \"priority\", \"PARAM_VALUE\" : \"%d\", \"PARAM_QUOTES\" : false } }";
     static inline const std::string CMD_WPA_SET_NETWORK_SSID = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_SETPARAM\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\", \"NETID\" : %d, \"PARAM_NAME\" : \"ssid\", \"PARAM_VALUE\" : \"%s\", \"PARAM_QUOTES\" : true } }";
     static inline const std::string CMD_WPA_SET_NETWORK_BSSID = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_SET_BSSID\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\", \"NETID\" : %d, \"BSSID\" : \"%s\" } }";
+    static inline const std::string CMD_WIFI_STATUS = "{ \"SCOPE\" : \"WIFI\", \"CMD\" : \"WIFI_STATUS\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\" } }";
 
     //static inline const QString CMD_GET_WPA_IF_LIST = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_LIST_IF\" }";
     //static inline const QString CMD_GWPA_TSAV = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_SAVE\", \"DATA\" : { \"INTERFACE NAME\" : \"wlan0\" } }";
@@ -83,7 +84,7 @@ protected:
     char buf[NM_MAXBUF];
     //NMDaemonSpy* spy;
     bool DoConnect();
-    bool doDisconnect();
+    bool DoDisconnect();
     void readData();
     QString lastError;
     QJsonObject lastJsonReceived;
@@ -92,8 +93,9 @@ protected:
     QString checkDataResultSource;
     std::function<void()> callbackFunctionSuccess;
     std::function<void()> callbackFunctionError;
-    void CbWifiConnectSsid(QString, QString);
-    void CbWifiConnectNetid(QString, int);
+    //void CbWifiConnectSsid(QString, QString);
+    //void CbWifiConnectNetid(QString, int);
+    bool CheckConnectSuccess(QJsonObject, QString, int);
     //void cbWifiNetEnable(QString, QString);
     void cbWifiNetAdd(QString, QString);
     void cbSendSuccessWifiNetEnable(QString ssid) { emit successWifiNetEnable(ssid); }
@@ -101,6 +103,9 @@ protected:
     void CBUpdateWpaNetworkList(QString);
     QJsonObject GetJsonForSsid(QString);
     QJsonObject GetJsonForSsid(QString, QJsonObject);
+    QJsonObject AsyncSendRequest(QJsonObject);
+    QJsonObject AsyncGetWpaNetworkList(QString, bool=false);
+    int GetWpaNetworkId(QString, QString);
 public:
     static int constexpr DEFAULT_READ_WAIT_TIME_MSEC = 5000;
     static int constexpr SCAN_READ_WAIT_TIME_MSEC = 15000;
@@ -116,7 +121,6 @@ public:
     NMDaemonClient(QString, bool);
     ~NMDaemonClient();
     bool sendRequest(QJsonObject);
-    QJsonObject AsyncSendRequest(QJsonObject);
     QString getLastError();
     bool ConnectWifiNetwork(QString, QString);
     bool ConnectWifiNetwork(QString, int);
@@ -124,13 +128,12 @@ public:
     bool UpdatePskAndSave(QString, QString, QString, bool);
     //bool UpdatePsk(QString, int, QString, bool);
     bool UpdatePskAndSave(QString, int, QString, bool);
-    bool addNetwork(QString, QString, QString, bool);
-    bool addNetwork(QString, QString, QString, QString, bool);
+    bool AddNetwork(QString, QString, QString, bool);
+    bool AddNetwork(QString, QString, QString, QString, bool);
     //bool addOpenNetwork(QString, QString);
     bool saveConfig(QString);
     //bool tsavConfigg(QString);
     //bool EnableNetwork(QString, QString);
-    int getWpaNetworkId(QString, QString);
     QString getWifiNetworkSecurity(QString, QString) const;
     bool CheckSuccess(QJsonObject);
     QString getIPv4Address(QString);
@@ -142,6 +145,7 @@ public:
     bool disableInterface(QString);
     bool sendCommand(QString, QString);
     bool AsyncSendCommand(QString, QString);
+    QJsonObject AsyncSendCommandGetResult(QString, QString);
     bool enableDhcp4(QString);
     bool disableDhcp4(QString);
     bool GetWpaNetworkList(QString, bool=false);

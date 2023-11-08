@@ -366,7 +366,7 @@ void NetworkTray::slotAddNetworkAndConnect(QString key, QString ssid, bool hexke
     nmdStatus->stopMonitoring();
     connect(nmdStatus, &NMDaemonClient::successWifiNetAdd, this, &NetworkTray::slotWifiConnectNetwork);
     connect(nmdStatus, &NMDaemonClient::errorWifiNetAdd, this, &NetworkTray::slotWifiAddError);
-    if(!nmdStatus->addNetwork(IfName, ssid, key, hexkey))
+    if(!nmdStatus->AddNetwork(IfName, ssid, key, hexkey))
     {
         qDebug() << "Error adding network " << ssid;
         nmdStatus->startMonitoring();

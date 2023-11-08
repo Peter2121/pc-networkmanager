@@ -140,7 +140,7 @@ void wificonfigwidgetbase::slotApply()
         if(!found)  // New network
         {
             connect( nmd_status, SIGNAL(successWifiNetAdd(QString,int)), this, SLOT(SlotContinueApply(QString,int)) );
-            if(!nmd_status->addNetwork(DeviceName, ssid, WPANetworksDialog[idial]->GetKey(), WPANetworksDialog[idial]->GetSecurity(), false))
+            if(!nmd_status->AddNetwork(DeviceName, ssid, WPANetworksDialog[idial]->GetKey(), WPANetworksDialog[idial]->GetSecurity(), false))
             {
                 QMessageBox::warning(this, "Cannot add network", "Cannot add network "+ssid+" to the system config");
             }
