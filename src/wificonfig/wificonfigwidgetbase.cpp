@@ -139,7 +139,7 @@ void wificonfigwidgetbase::slotApply()
         }
         if(!found)  // New network
         {
-            connect( nmd_status, SIGNAL(successWifiNetAdd(QString,int)), this, SLOT(SlotContinueApply(QString,int)) );
+            connect( nmd_status, SIGNAL(successWifiNetAdd(QString,int)), this, SLOT(SlotContinueApply(QString,int)), Qt::QueuedConnection );
             if(!nmd_status->AddNetwork(DeviceName, ssid, WPANetworksDialog[idial]->GetKey(), WPANetworksDialog[idial]->GetSecurity(), false))
             {
                 QMessageBox::warning(this, "Cannot add network", "Cannot add network "+ssid+" to the system config");
@@ -1027,13 +1027,13 @@ void wificonfigwidgetbase::slotFinishLoading()
 
 void wificonfigwidgetbase::SlotStartRefreshSSIDList()
 {
-   connect( nmd_status, SIGNAL( UpdatedWpaNetworkList(std::shared_ptr<QVector<QJsonObject>>) ), this, SLOT( SlotFinishRefreshSSIDList(std::shared_ptr<QVector<QJsonObject>>) ) );
-   nmd_status->GetWpaNetworkList(DeviceName, true);
+   connect( nmd_status, SIGNAL( UpdatedWpaNetworkList(QSharedPointer<QVector<QJsonObject>>) ), this, SLOT( SlotFinishRefreshSSIDList(QSharedPointer<QVector<QJsonObject>>) ), Qt::QueuedConnection );
+   nmd_status->UpdateWpaNetworkList(DeviceName, true);
 }
 
-void wificonfigwidgetbase::SlotFinishRefreshSSIDList(std::shared_ptr<QVector<QJsonObject>> wpa_networks)
+void wificonfigwidgetbase::SlotFinishRefreshSSIDList(QSharedPointer<QVector<QJsonObject>> wpa_networks)
 {
-   WPAConfiguredNetworks = *(wpa_networks);
+   WPAConfiguredNetworks = *(wpa_networks.get());
    getWpaNetworks(WPANetworksSystem);
    getWpaNetworks(WPANetworksDialog);
    refreshNetworksList();

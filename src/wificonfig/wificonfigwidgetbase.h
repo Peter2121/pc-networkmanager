@@ -86,7 +86,7 @@ private slots:
     void slotItemDoubleClicked(QListWidgetItem*);
     void slotStartRescan();
     void SlotContinueApply(QString,int);
-    void SlotFinishRefreshSSIDList(std::shared_ptr<QVector<QJsonObject>>);
+    void SlotFinishRefreshSSIDList(QSharedPointer<QVector<QJsonObject>>);
     void SlotConnect();
     void SlotConnectSuccess(int);
     void SlotConnectError(int, QString);

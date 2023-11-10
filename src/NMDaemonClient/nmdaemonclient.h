@@ -12,6 +12,7 @@
 //#include <QMutex>
 #include <QSemaphore>
 #include <QtConcurrent>
+#include <QSharedPointer>
 #include <functional>
 #include <unistd.h>
 #include <sockpp/unix_connector.h>
@@ -97,10 +98,12 @@ protected:
     //void CbWifiConnectNetid(QString, int);
     bool CheckConnectSuccess(QJsonObject, QString, int);
     //void cbWifiNetEnable(QString, QString);
-    void cbWifiNetAdd(QString, QString);
+    //void cbWifiNetAdd(QString, QString);
     void cbSendSuccessWifiNetEnable(QString ssid) { emit successWifiNetEnable(ssid); }
-    void cbSendSuccessWifiNetAdd(QString ssid, int id) { emit successWifiNetAdd(ssid,id); }
-    void CBUpdateWpaNetworkList(QString);
+    //void cbSendSuccessWifiNetAdd(QString ssid, int id) { emit successWifiNetAdd(ssid,id); }
+    bool CheckUpdateWpaNetworkListResult(QJsonObject);
+    bool CheckAddNetworkResult(QJsonObject, QString);
+    //void CBUpdateWpaNetworkList(QString);
     QJsonObject GetJsonForSsid(QString);
     QJsonObject GetJsonForSsid(QString, QJsonObject);
     QJsonObject AsyncSendRequest(QJsonObject);
@@ -148,7 +151,7 @@ public:
     QJsonObject AsyncSendCommandGetResult(QString, QString);
     bool enableDhcp4(QString);
     bool disableDhcp4(QString);
-    bool GetWpaNetworkList(QString, bool=false);
+    bool UpdateWpaNetworkList(QString, bool=false);
     bool SetNetworkEnabled(QString, int, bool);
     bool SetNetworkPriority(QString, int, int);
     bool RemoveNetwork(QString, int);
@@ -170,7 +173,7 @@ signals:
     void errorWifiNetEnable(QString, QString);
     void successWifiNetAdd(QString,int);
     void errorWifiNetAdd(QString, QString);
-    void UpdatedWpaNetworkList(std::shared_ptr<QVector<QJsonObject>>);
+    void UpdatedWpaNetworkList(QSharedPointer<QVector<QJsonObject>>);
 private slots:
     void slotDataReceived();
     void slotCheckDataResult(QJsonObject);
