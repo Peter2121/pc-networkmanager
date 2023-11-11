@@ -61,12 +61,26 @@ public:
     {
         auto task_worker = async::spawn(Worker);
         //auto task_validator = task_worker.then(Validator);
+        /*
         auto task_validator = task_worker.then(
             [&](async::task<T> parent)
             {
                 auto result = parent.get();
                 Data = result;
                 return Validator(result);
+            });
+        */
+        while (!task_worker.ready())
+        {
+            if(waiter!=nullptr)
+                waiter();
+            std::this_thread::sleep_for(std::chrono::milliseconds(wait_period_ms));
+        }
+        Data = task_worker.get();
+        auto task_validator = async::spawn(
+            [&]()
+            {
+                return Validator(Data);
             });
         while (!task_validator.ready())
         {

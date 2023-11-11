@@ -555,11 +555,11 @@ void  NetworkTray::openWlanConfigDlg() {
         if(WlanConfig!=nullptr)
             delete WlanConfig;   // TODO: What if we open multiple WlanConfig dialogs??
         WlanConfig = new wificonfigwidgetbase();
-        WlanConfig->setDevice(IfName);
-        WlanConfig->setWindowTitle("WLAN " + IfName + " " + "configuration");
         WlanConfig->setIsMain(false);
+        WlanConfig->setWindowTitle("WLAN " + IfName + " " + "configuration");
 //        WlanConfig->programInit();
         WlanConfig->show();
+        WlanConfig->setDevice(IfName);
 }
 
 void NetworkTray::resetWpaSupplicant() {

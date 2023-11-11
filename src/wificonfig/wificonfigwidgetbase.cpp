@@ -32,6 +32,7 @@ wificonfigwidgetbase::wificonfigwidgetbase() : QWidget()
     nmd_status = new NMDaemonCheckStatus();
     OwnNmdStatus = true;
     IsMain = false;
+    qRegisterMetaType<QSharedPointer<QVector<QJsonObject>>>();
 }
 
 wificonfigwidgetbase::wificonfigwidgetbase(NMDaemonCheckStatus* nmd) : QWidget()
@@ -256,7 +257,6 @@ void wificonfigwidgetbase::setIsMain(bool is_main)
 // Function which is called at the program init
 void wificonfigwidgetbase::setDevice( QString Device )
 {
-
   // Connect our add / remove buttons for wifi
   connect( pushDown, SIGNAL( clicked() ), this, SLOT( slotMoveDown() ) );
   connect( pushUp, SIGNAL( clicked() ), this, SLOT( slotMoveUp() ) );
@@ -269,34 +269,25 @@ void wificonfigwidgetbase::setDevice( QString Device )
   connect( pushAddHidden, SIGNAL( clicked() ), this, SLOT( slotAddHiddenProfile() ) );
   connect( pushConnect, SIGNAL( clicked() ), this, SLOT( SlotConnect() ) );
   connect( groupCountryCode, SIGNAL( clicked() ), this, SLOT( slotCheckGlobalText() ) );
-  connect( listWifi, SIGNAL(itemDoubleClicked(QListWidgetItem*)), this, SLOT(slotItemDoubleClicked(QListWidgetItem*)));
+  connect( listWifi, SIGNAL( itemDoubleClicked(QListWidgetItem*)), this, SLOT(slotItemDoubleClicked(QListWidgetItem*)));
+  connect( this, SIGNAL( RefreshWPANetworks()), SLOT( SlotStartRefreshSSIDList() ));
+  connect( this, SIGNAL( StartRescan()), SLOT( slotStartRescan() ));
 
-  // Save the device name for later
   DeviceName = Device;
   pushApply->setEnabled(false);
-  slotStartRescan();
-
-  // Center the dialog window
-  //QDesktopWidget *d = QApplication::desktop();
-  //move(d->width() / 3, d->height() / 4);
-
-  // Connect the slot to refresh
-  //QTimer::singleShot(100,  this,  SLOT(slotFinishLoading() ) );
 
   // Check if we are using the lagg0 device
   //QSettings settings("PCBSD");
   //usingLagg = settings.value("/pc-netmanager/useLagg", false).toBool();
 
-  //Load the available wifi access points
-  //slotFinishRescan();
-  loadCountryCodes();
+  //loadCountryCodes();
 
   listWifi->clear();
   listWifi->addItem("Please, wait...");
   listWifi->update();
-  SlotStartRefreshSSIDList();
-  // Load the list of country codes we can set
-
+  QCoreApplication::processEvents();
+  emit StartRescan();
+  emit RefreshWPANetworks();
 }
 
 void wificonfigwidgetbase::loadCountryCodes()

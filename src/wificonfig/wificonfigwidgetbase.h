@@ -39,6 +39,8 @@
 #define KEYPHASE2CHAP 5
 #define KEYPHASE2MSCHAP 6
 
+Q_DECLARE_METATYPE(QSharedPointer<QVector<QJsonObject>>)
+
 class wificonfigwidgetbase : public QWidget, private Ui::wificonfigwidgetbase
 {
         Q_OBJECT
@@ -147,5 +149,7 @@ private:
 signals:
   void connectSSID(QString); //internal signal for launching the connection dialog for an SSID
   void ApplyConfig();
+  void RefreshWPANetworks();
+  void StartRescan();
 } ;
 #endif // WIFICONFIGWIDGETBASE_H
