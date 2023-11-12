@@ -32,32 +32,32 @@ protected:
     QTimer *timerMonitoring;
     NMDaemonSpy* spy;
 public slots:
-        void updateStatus();
-        void slotStartMonitoring();
+        void UpdateStatus();
+        void SlotStartMonitoring();
 public:
     NMDaemonCheckStatus(int, QString);  // msec
     NMDaemonCheckStatus(QString);  // msec
     NMDaemonCheckStatus(int);  // msec
     NMDaemonCheckStatus();
     ~NMDaemonCheckStatus();
-    void startMonitoring();
-    void stopMonitoring();
-    void setInterval(int);
-    bool updateStatusInterfaces();
-    bool updateStatusJails();
-    bool updateStatusWifi();
+    void StartMonitoring();
+    void StopMonitoring();
+    void SetInterval(int);
+    bool UpdateStatusInterfaces();
+    bool UpdateStatusJails();
+    bool UpdateStatusWifi();
     QJsonArray getLastIfStatus() const { return lastIfStatus; }
     QJsonArray getLastJailStatus() const { return lastJailStatus; }
     QVector<QPair<QString,QJsonObject>> getLastWifiNetStatus() const { return lastWifiNetStatus; }
     QVector<QPair<QString,QJsonObject>> getLastWifiIfStatus() const { return lastWifiIfStatus; }
-    QPair<QString,int> getLastIfWifiNetwork(QString ifname) const;  // <SSID,power>
-    QVector<QPair<QString,int>> getLastNetsWifiPower(QString) const;
-    QVector<WifiNetworkDetails> getLastNetsWifiDetails(QString) const;
-    QString getLastIfStatusString(QString) const;
+    QPair<QString,int> GetLastIfWifiNetwork(QString ifname) const;  // <SSID,power>
+    QVector<QPair<QString,int>> GetLastNetsWifiPower(QString) const;
+    QVector<WifiNetworkDetails> GetLastNetsWifiDetails(QString) const;
+    QString GetLastIfStatusString(QString) const;
     QPair<QString,QString> getIfMedia(QString) const;   // Status, Media
-    std::shared_ptr<QVector<QString>> getLastIPv4AliasesFromInterface(QString);
-    std::unique_ptr<QVector<QString>> getLastJailsIPv4();
-    std::unique_ptr<QVector<QString>> getLastJailsIPv6();
+    std::shared_ptr<QVector<QString>> GetLastIPv4AliasesFromInterface(QString);
+    std::unique_ptr<QVector<QString>> GetLastJailsIPv4();
+    std::unique_ptr<QVector<QString>> GetLastJailsIPv6();
     signals:
         void wifiIfListUpdated();
         void ifStatusUpdated();

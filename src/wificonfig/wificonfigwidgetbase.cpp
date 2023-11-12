@@ -333,7 +333,7 @@ void wificonfigwidgetbase::loadCountryCodes()
 void wificonfigwidgetbase::slotStartRescan()
 {
     connect(nmd_status, SIGNAL(wifiNetStatusUpdated()), this, SLOT(slotFinishRescan()));
-    nmd_status->updateStatus();
+    nmd_status->UpdateStatus();
 }
 
 void wificonfigwidgetbase::slotFinishRescan()
@@ -346,7 +346,7 @@ void wificonfigwidgetbase::slotFinishRescan()
     // Clear the list box and disable the add button
     listNewWifi->clear();
     pushAddWifi->setEnabled(false);
-    QVector<WifiNetworkDetails> wifi_networks = nmd_status->getLastNetsWifiDetails(DeviceName);
+    QVector<WifiNetworkDetails> wifi_networks = nmd_status->GetLastNetsWifiDetails(DeviceName);
 
     foreach(const auto &net, wifi_networks)
     {

@@ -155,7 +155,7 @@ void NetworkTray::programInit(QString device)
   if(device.startsWith(IF_WIFI_PREFIX))
   {
     TrayIcon->setIcon(IconWifiDisconnect);
-    QPair<QString,int> wifi_status = nmdStatus->getLastIfWifiNetwork(device);
+    QPair<QString,int> wifi_status = nmdStatus->GetLastIfWifiNetwork(device);
     if(!wifi_status.first.isEmpty())
     {
         LastWifiNetwork = wifi_status.first;
@@ -177,7 +177,7 @@ void NetworkTray::programInit(QString device)
     TrayIconMenu->addAction(StatusAction);
 
     TrayIconMenu->addAction(SeparatorActions[1]);
-    QVector<QPair<QString,int>> wifi_networks = nmdStatus->getLastNetsWifiPower(device);
+    QVector<QPair<QString,int>> wifi_networks = nmdStatus->GetLastNetsWifiPower(device);
     foreach(const auto &net, wifi_networks)
     {
         if( !wifi_status.first.isEmpty() && (net.first == wifi_status.first) )
@@ -214,10 +214,10 @@ This signal is emitted just before the menu is shown to the user.
 void QMenu::aboutToHide()
 This signal is emitted just before the menu is hidden from the user.
 */
-  connect(nmdStatus, &NMDaemonCheckStatus::wifiIfListUpdated, this, &NetworkTray::updateStatus);
-  connect(nmdStatus, &NMDaemonCheckStatus::ifStatusUpdated, this, &NetworkTray::updateStatus);
-  connect(nmdStatus, &NMDaemonCheckStatus::wifiNetStatusUpdated, this, &NetworkTray::updateStatus);
-  connect(nmdStatus, &NMDaemonCheckStatus::wifiIfStatusUpdated, this, &NetworkTray::updateStatus);
+  connect(nmdStatus, &NMDaemonCheckStatus::wifiIfListUpdated, this, &NetworkTray::UpdateStatus);
+  connect(nmdStatus, &NMDaemonCheckStatus::ifStatusUpdated, this, &NetworkTray::UpdateStatus);
+  connect(nmdStatus, &NMDaemonCheckStatus::wifiNetStatusUpdated, this, &NetworkTray::UpdateStatus);
+  connect(nmdStatus, &NMDaemonCheckStatus::wifiIfStatusUpdated, this, &NetworkTray::UpdateStatus);
   connect(nmdStatus, &NMDaemonCheckStatus::dataError, this, &NetworkTray::slotShowError);
   connect(TrayIconMenu, &QMenu::aboutToShow, this, &NetworkTray::setActiveScanTimeout);
   connect(TrayIconMenu, &QMenu::aboutToHide, this, &NetworkTray::setIdleScanTimeout);
@@ -231,7 +231,7 @@ This signal is emitted just before the menu is hidden from the user.
   });
 */
   LastUpdateTime = QDateTime::currentDateTime();
-//  updateStatus();
+//  UpdateStatus();
 //  monitorStatus();
 }
 
@@ -277,7 +277,7 @@ void NetworkTray::connectWifiNetwork(QString ssid)
     }
     if(numWifiConnectRetries>0)
         qDebug() << "Retrying connect to ssid " << ssid << " for the " << numWifiConnectRetries << "nd time";
-    nmdStatus->stopMonitoring();
+    nmdStatus->StopMonitoring();
     connect(nmdStatus, SIGNAL(successWifiConnect(QString)), this, SLOT(slotWifiConnectSuccess(QString)));
     connect(nmdStatus, SIGNAL(errorWifiConnect(QString, QString)), this, SLOT(slotWifiConnectError(QString, QString)));
     nmdStatus->ConnectWifiNetwork(IfName, ssid);
@@ -290,8 +290,8 @@ void NetworkTray::connectWifiNetwork(QString ssid)
 //nmworkerieee80211.cpp:82     ERR| Error in execCmdNetList: incorrect data received from lib80211
 //    nmdStatus->EnableNetwork(IfName, ssid);
     //nmdStatus->SaveConfig(IfName);
-    //updateStatus();
-    nmdStatus->startMonitoring();
+    //UpdateStatus();
+    nmdStatus->StartMonitoring();
     */
 }
 
@@ -301,7 +301,7 @@ void NetworkTray::slotWifiConnectError(QString ssid, QString result)
     {
         // TODO: Add translations
         QMessageBox::information(this, QString(JSON_DATA_ERR_NOT_AVAILABLE.c_str()), "The requested network " + ssid + " is not available");
-        nmdStatus->startMonitoring();
+        nmdStatus->StartMonitoring();
     }
     else if( (result.toStdString() == JSON_PARAM_ERR) ||
              (result.toStdString() == JSON_DATA_ERR_AUTH_FAILED) )
@@ -311,7 +311,7 @@ void NetworkTray::slotWifiConnectError(QString ssid, QString result)
         dialogNetKey->setSSID(ssid);
         dialogNetKey->showKeyType(true);
         connect(dialogNetKey, SIGNAL( saved(QString,QString,bool,QString) ), this, SLOT( slotUpdatePskAndConnect(QString,QString,bool,QString) ) );
-        connect(dialogNetKey, SIGNAL( cancel() ), nmdStatus, SLOT( slotStartMonitoring() ) );
+        connect(dialogNetKey, SIGNAL( cancel() ), nmdStatus, SLOT( SlotStartMonitoring() ) );
         //Activate the dialog
         dialogNetKey->exec();
     }
@@ -322,13 +322,13 @@ void NetworkTray::slotWifiConnectError(QString ssid, QString result)
         dialogNetKey->setSSID(ssid);
         dialogNetKey->showKeyType(true);
         connect(dialogNetKey, SIGNAL( saved(QString,QString,bool,QString) ), this, SLOT( slotAddNetworkAndConnect(QString,QString,bool,QString) ) );
-        connect(dialogNetKey, SIGNAL( cancel() ), nmdStatus, SLOT( slotStartMonitoring() ) );
+        connect(dialogNetKey, SIGNAL( cancel() ), nmdStatus, SLOT( SlotStartMonitoring() ) );
         //Activate the dialog
         dialogNetKey->exec();
     }
     else if( result.toStdString() == JSON_DATA_ERR_DRV_REQ_FAILED )
     {
-        nmdStatus->startMonitoring();
+        nmdStatus->StartMonitoring();
         QTimer::singleShot(WIFI_CONNECT_RETRY_MSEC, this, [=]() { connectWifiNetwork(ssid); } );
     }
 }
@@ -336,13 +336,13 @@ void NetworkTray::slotWifiConnectError(QString ssid, QString result)
 void NetworkTray::slotWifiConnectSuccess(QString)
 {
     disconnect(nmdStatus, SIGNAL(successWifiConnect(QString)), this, SLOT(slotWifiConnectSuccess(QString)));
-    nmdStatus->updateStatus();
-    nmdStatus->startMonitoring();
+    nmdStatus->UpdateStatus();
+    nmdStatus->StartMonitoring();
 }
 
 void NetworkTray::slotUpdatePskAndConnect(QString key, QString ssid, bool hexkey, QString security)
 {
-    nmdStatus->stopMonitoring();
+    nmdStatus->StopMonitoring();
     //if(nmdStatus->UpdatePsk(IfName, ssid, key, hexkey))
     if(nmdStatus->UpdatePskAndSave(IfName, ssid, key, hexkey))
     {
@@ -358,18 +358,18 @@ void NetworkTray::slotUpdatePskAndConnect(QString key, QString ssid, bool hexkey
   //Inform the user that it is connecting (this is done by libtrueos now)
   //QString msg = tr("Connecting to ") + SSID;
   //trayIcon->showMessage( tr("Please Wait"),msg,QSystemTrayIcon::NoIcon,10000);
-    nmdStatus->startMonitoring();
+    nmdStatus->StartMonitoring();
 }
 
 void NetworkTray::slotAddNetworkAndConnect(QString key, QString ssid, bool hexkey)
 {
-    nmdStatus->stopMonitoring();
+    nmdStatus->StopMonitoring();
     connect(nmdStatus, &NMDaemonClient::successWifiNetAdd, this, &NetworkTray::slotWifiConnectNetwork);
     connect(nmdStatus, &NMDaemonClient::errorWifiNetAdd, this, &NetworkTray::slotWifiAddError);
     if(!nmdStatus->AddNetwork(IfName, ssid, key, hexkey))
     {
         qDebug() << "Error adding network " << ssid;
-        nmdStatus->startMonitoring();
+        nmdStatus->StartMonitoring();
     }
 }
 
@@ -382,17 +382,17 @@ void NetworkTray::slotWifiEnableError(QString ssid, QString result)
 {
     qDebug() << "Error enabling network " << ssid;
     QMessageBox::information(this, QString("ERROR"), QString("Cannot enable network ") + ssid);
-    nmdStatus->startMonitoring();
+    nmdStatus->StartMonitoring();
 }
 
 void NetworkTray::slotWifiAddError(QString ssid, QString result)
 {
     qDebug() << "Error adding network " << ssid;
     QMessageBox::information(this, QString("ERROR"), QString("Cannot add network ") + ssid);
-    nmdStatus->startMonitoring();
+    nmdStatus->StartMonitoring();
 }
 
-void NetworkTray::updateStatus()
+void NetworkTray::UpdateStatus()
 {
     QAction* new_action = nullptr;
     QString status;
@@ -407,7 +407,7 @@ void NetworkTray::updateStatus()
     if(IfName.startsWith(IF_WIFI_PREFIX))
     {
         // Update connected network menu item and tray icon
-        QPair<QString,int> wifi_status = nmdStatus->getLastIfWifiNetwork(IfName);
+        QPair<QString,int> wifi_status = nmdStatus->GetLastIfWifiNetwork(IfName);
         //getIfMedia(IfName) if the status is not "Associated" - we should not consider this network as connected to
         if(!wifi_status.first.isEmpty())
         {
@@ -440,7 +440,7 @@ void NetworkTray::updateStatus()
             LastWifiNetwork = "";
         }
         // Update network list
-        QVector<QPair<QString,int>> wifi_networks = nmdStatus->getLastNetsWifiPower(IfName);
+        QVector<QPair<QString,int>> wifi_networks = nmdStatus->GetLastNetsWifiPower(IfName);
         // First outer cycle - by networks
         foreach(const auto &net, wifi_networks)
         {
@@ -517,7 +517,7 @@ void NetworkTray::updateStatus()
 
 void NetworkTray::slotShowIfStatus()
 {
-    QString status = nmdStatus->getLastIfStatusString(IfName);
+    QString status = nmdStatus->GetLastIfStatusString(IfName);
     QMessageBox::information(this, IfName+" "+tr("Status"), status);
 }
 
@@ -565,30 +565,30 @@ void  NetworkTray::openWlanConfigDlg() {
 void NetworkTray::resetWpaSupplicant() {
     QString req_string = QString::asprintf(CMD_RESET_WPA.c_str(), IfName.toStdString().c_str());
     QJsonObject req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
-    nmdStatus->stopMonitoring();
+    nmdStatus->StopMonitoring();
     if(!nmdStatus->sendRequest(req_object))
         QMessageBox::warning(this, IfName, "Cannot send WPA_RESET command to backend");
-    nmdStatus->startMonitoring();
+    nmdStatus->StartMonitoring();
 }
 
 void NetworkTray::scanWifi()
 {
-    nmdStatus->stopMonitoring();
-    nmdStatus->updateStatus();
-    nmdStatus->startMonitoring();
+    nmdStatus->StopMonitoring();
+    nmdStatus->UpdateStatus();
+    nmdStatus->StartMonitoring();
 }
 
 void NetworkTray::setIdleScanTimeout()
 {
-    nmdStatus->setInterval(IDLE_REFRESH_TIME_MSEC);
+    nmdStatus->SetInterval(IDLE_REFRESH_TIME_MSEC);
 }
 
 void NetworkTray::setActiveScanTimeout()
 {
-    nmdStatus->stopMonitoring();
-    nmdStatus->updateStatus();
-    nmdStatus->setInterval(ACTIVE_REFRESH_TIME_MSEC);
-    nmdStatus->startMonitoring();
+    nmdStatus->StopMonitoring();
+    nmdStatus->UpdateStatus();
+    nmdStatus->SetInterval(ACTIVE_REFRESH_TIME_MSEC);
+    nmdStatus->StartMonitoring();
 }
 
 // Load all the icons we'll be using

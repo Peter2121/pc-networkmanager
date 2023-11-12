@@ -62,7 +62,7 @@ dialogConfigData = nullptr;
 
 ethernetconfig::~ethernetconfig()
 {
-    nmd_status->stopMonitoring();
+    nmd_status->StopMonitoring();
     delete nmd_status;
 }
 
@@ -246,15 +246,15 @@ void ethernetconfig::programInit()
    connect(lineMAC, SIGNAL(textChanged(const QString &)), this, SLOT(slotCheckGlobalText() ) );
    connect(pushWPAE, SIGNAL(clicked()), this, SLOT(slotConfigWPA()) );
    connect(nmd_status, SIGNAL(ifStatusUpdated()), this, SLOT(slotFinishLoad()));
-   nmd_status->updateStatusJails();
-   nmd_status->updateStatusInterfaces();
+   nmd_status->UpdateStatusJails();
+   nmd_status->UpdateStatusInterfaces();
    /*
    NMDaemonSpy* spy = new NMDaemonSpy(nmd_status, &NMDaemonCheckStatus::ifStatusUpdated);
-   nmd_status->startMonitoring();
+   nmd_status->StartMonitoring();
    if(!spy->wait(10000))
        qDebug() << "Signal NMDaemonCheckStatus::ifStatusUpdated was not received in time";
    delete spy;
-   nmd_status->stopMonitoring();
+   nmd_status->StopMonitoring();
    */
 //   QTimer::singleShot(30,  this,  SLOT(loadInfo()));
 //   QTimer::singleShot(30,  this,  SLOT(slotFinishLoad()));

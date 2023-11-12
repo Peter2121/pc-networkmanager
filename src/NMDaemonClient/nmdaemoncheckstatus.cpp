@@ -6,7 +6,7 @@ NMDaemonCheckStatus::NMDaemonCheckStatus(int refresh_time, QString socket_path) 
     spy = nullptr;
     timerMonitoring = new QTimer(this);
     timerMonitoring->setInterval(refreshTime);
-    connect(timerMonitoring, &QTimer::timeout, this, &NMDaemonCheckStatus::updateStatus);
+    connect(timerMonitoring, &QTimer::timeout, this, &NMDaemonCheckStatus::UpdateStatus);
 //    connect(nmdSocket, &QLocalSocket::disconnected, timerMonitoring, &QTimer::stop);
 }
 
@@ -25,34 +25,34 @@ NMDaemonCheckStatus::NMDaemonCheckStatus() : NMDaemonCheckStatus(REFRESH_TIME_DE
 NMDaemonCheckStatus::~NMDaemonCheckStatus()
 {
     if(isMonitoring)
-        stopMonitoring();
+        StopMonitoring();
     delete timerMonitoring;
 }
 
-void NMDaemonCheckStatus::startMonitoring()
+void NMDaemonCheckStatus::StartMonitoring()
 {
     if(isMonitoring)
         return;
     if(!DoConnect())
         return;
     isMonitoring = true;
-    updateStatus();
+    UpdateStatus();
     timerMonitoring->start();
 }
 
-void NMDaemonCheckStatus::slotStartMonitoring()
+void NMDaemonCheckStatus::SlotStartMonitoring()
 {
-    startMonitoring();
+    StartMonitoring();
 }
 
-void NMDaemonCheckStatus::stopMonitoring()
+void NMDaemonCheckStatus::StopMonitoring()
 {
     if(isMonitoring)
         timerMonitoring->stop();
     isMonitoring = false;
 }
 
-bool NMDaemonCheckStatus::updateStatusInterfaces()
+bool NMDaemonCheckStatus::UpdateStatusInterfaces()
 {
     QJsonValue json_value;
     QJsonArray json_array;
@@ -60,7 +60,7 @@ bool NMDaemonCheckStatus::updateStatusInterfaces()
     timerMonitoring->stop();
     lastIfStatus = QJsonArray();
     QString req_string = CMD_GET_SYS_IF_STATUS;
-    QJsonObject ret_object = AsyncSendCommandGetResult(req_string, "updateStatusInterfaces");
+    QJsonObject ret_object = AsyncSendCommandGetResult(req_string, "UpdateStatusInterfaces");
     if(ret_object.empty())
     {
         timerMonitoring->start();
@@ -76,7 +76,7 @@ bool NMDaemonCheckStatus::updateStatusInterfaces()
     return true;
 }
 
-bool NMDaemonCheckStatus::updateStatusWifi()
+bool NMDaemonCheckStatus::UpdateStatusWifi()
 {
     QJsonObject json_object;
     QJsonValue json_value;
@@ -88,7 +88,7 @@ bool NMDaemonCheckStatus::updateStatusWifi()
     timerMonitoring->stop();
     req_string = CMD_GET_WPA_IF_LIST;
     wifiInterfaces.clear();
-    ret_object = AsyncSendCommandGetResult(req_string, "updateStatusWifi-iflist");
+    ret_object = AsyncSendCommandGetResult(req_string, "UpdateStatusWifi-iflist");
     if(ret_object.empty())
     {
         timerMonitoring->start();
@@ -111,7 +111,7 @@ bool NMDaemonCheckStatus::updateStatusWifi()
     foreach(const QString &s, wifiInterfaces)
     {
         req_string = QString::asprintf(CMD_WIFI_SCAN.c_str(), s.toStdString().c_str());
-        ret_object = AsyncSendCommandGetResult(req_string, "updateStatusWifi-scan");
+        ret_object = AsyncSendCommandGetResult(req_string, "UpdateStatusWifi-scan");
         if(ret_object.empty())
             continue;
         json_value = lastJsonReceived.value("DATA");
@@ -123,7 +123,7 @@ bool NMDaemonCheckStatus::updateStatusWifi()
     foreach(const QString &s, wifiInterfaces)
     {
         req_string = QString::asprintf(CMD_WIFI_STATUS.c_str(), s.toStdString().c_str());
-        ret_object = AsyncSendCommandGetResult(req_string, "updateStatusWifi-status");
+        ret_object = AsyncSendCommandGetResult(req_string, "UpdateStatusWifi-status");
         if(ret_object.empty())
             continue;
         json_value = lastJsonReceived.value("DATA");
@@ -137,14 +137,14 @@ bool NMDaemonCheckStatus::updateStatusWifi()
     return updated;
 }
 
-void NMDaemonCheckStatus::updateStatus()
+void NMDaemonCheckStatus::UpdateStatus()
 {
-    updateStatusInterfaces();
-    updateStatusJails();
-    updateStatusWifi();
+    UpdateStatusInterfaces();
+    UpdateStatusJails();
+    UpdateStatusWifi();
 }
 
-QPair<QString,int> NMDaemonCheckStatus::getLastIfWifiNetwork(QString ifname) const
+QPair<QString,int> NMDaemonCheckStatus::GetLastIfWifiNetwork(QString ifname) const
 {
     QPair<QString,int> ret_status;
     QString bssid;
@@ -183,7 +183,7 @@ QPair<QString,int> NMDaemonCheckStatus::getLastIfWifiNetwork(QString ifname) con
     return ret_status;
 }
 
-QVector<QPair<QString,int>> NMDaemonCheckStatus::getLastNetsWifiPower(QString ifname) const
+QVector<QPair<QString,int>> NMDaemonCheckStatus::GetLastNetsWifiPower(QString ifname) const
 {
     QVector<QPair<QString,int>> nets_power;
     QPair<QString,int> net_status;
@@ -213,7 +213,7 @@ QVector<QPair<QString,int>> NMDaemonCheckStatus::getLastNetsWifiPower(QString if
     return nets_power;
 }
 
-QVector<WifiNetworkDetails> NMDaemonCheckStatus::getLastNetsWifiDetails(QString ifname) const
+QVector<WifiNetworkDetails> NMDaemonCheckStatus::GetLastNetsWifiDetails(QString ifname) const
 {
     QVector<WifiNetworkDetails> nets_details;
     WifiNetworkDetails details;
@@ -253,7 +253,7 @@ QVector<WifiNetworkDetails> NMDaemonCheckStatus::getLastNetsWifiDetails(QString 
     return nets_details;
 }
 
-QString NMDaemonCheckStatus::getLastIfStatusString(QString ifname) const
+QString NMDaemonCheckStatus::GetLastIfStatusString(QString ifname) const
 {
     QString ret_string;
     QJsonArray json_arr;
@@ -288,12 +288,12 @@ QString NMDaemonCheckStatus::getLastIfStatusString(QString ifname) const
     return ret_string;
 }
 
-void NMDaemonCheckStatus::setInterval(int timeout)
+void NMDaemonCheckStatus::SetInterval(int timeout)
 {
     timerMonitoring->setInterval(timeout);
 }
 
-std::shared_ptr<QVector<QString>> NMDaemonCheckStatus::getLastIPv4AliasesFromInterface(QString ifname)
+std::shared_ptr<QVector<QString>> NMDaemonCheckStatus::GetLastIPv4AliasesFromInterface(QString ifname)
 {
     std::shared_ptr<QVector<QString>> ret_aliases = std::make_shared<QVector<QString>>(0);
     QJsonObject json_object, json_obj;
@@ -332,7 +332,7 @@ std::shared_ptr<QVector<QString>> NMDaemonCheckStatus::getLastIPv4AliasesFromInt
     return ret_aliases;
 }
 
-std::unique_ptr<QVector<QString>> NMDaemonCheckStatus::getLastJailsIPv4()
+std::unique_ptr<QVector<QString>> NMDaemonCheckStatus::GetLastJailsIPv4()
 {
     QJsonObject json_object;
     QJsonValue json_value;
@@ -352,7 +352,7 @@ std::unique_ptr<QVector<QString>> NMDaemonCheckStatus::getLastJailsIPv4()
     return ret_addr4;
 }
 
-std::unique_ptr<QVector<QString>> NMDaemonCheckStatus::getLastJailsIPv6()
+std::unique_ptr<QVector<QString>> NMDaemonCheckStatus::GetLastJailsIPv6()
 {
     QJsonObject json_object;
     QJsonValue json_value;
@@ -372,7 +372,7 @@ std::unique_ptr<QVector<QString>> NMDaemonCheckStatus::getLastJailsIPv6()
     return ret_addr6;
 }
 
-bool NMDaemonCheckStatus::updateStatusJails()
+bool NMDaemonCheckStatus::UpdateStatusJails()
 {
     QJsonValue json_value;
     QJsonArray json_array;
@@ -381,7 +381,7 @@ bool NMDaemonCheckStatus::updateStatusJails()
     timerMonitoring->stop();
     lastJailStatus = QJsonArray();
     QString req_string = CMD_GET_SYS_JAIL_LIST;
-    QJsonObject ret_object = AsyncSendCommandGetResult(req_string, "updateStatusJails");
+    QJsonObject ret_object = AsyncSendCommandGetResult(req_string, "UpdateStatusJails");
     if(ret_object.empty())
     {
         timerMonitoring->start();

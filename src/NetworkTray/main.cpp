@@ -38,7 +38,7 @@ int  main(int argc, char *argv[]) {
     nmd_status = new NMDaemonCheckStatus();
     //nmd_status = new NMDaemonCheckStatus("/var/run/debug.socket");
 //    NMDaemonSpy* spy = new NMDaemonSpy(nmd_status, &NMDaemonCheckStatus::ifStatusUpdated);
-    nmd_status->startMonitoring();
+    nmd_status->StartMonitoring();
     sleep(2);
 //    if(!spy->wait(30000))
 //        qDebug() << "Signal NMDaemonCheckStatus::ifStatusUpdated was not received in time";
