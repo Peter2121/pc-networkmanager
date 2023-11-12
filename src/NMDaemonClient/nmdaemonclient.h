@@ -54,6 +54,7 @@ protected:
     static inline const std::string CMD_WPA_ENABLE_NETWORK = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_SETPARAM\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\", \"NETID\" : %d, \"PARAM_NAME\" : \"disabled\", \"PARAM_VALUE\" : \"0\", \"PARAM_QUOTES\" : false } }";
     static inline const std::string CMD_WPA_DISABLE_NETWORK = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_SETPARAM\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\", \"NETID\" : %d, \"PARAM_NAME\" : \"disabled\", \"PARAM_VALUE\" : \"1\", \"PARAM_QUOTES\" : false } }";
     static inline const std::string CMD_WPA_REMOVE_NETWORK = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_REMOVE\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\", \"NETID\" : %d } }";
+    static inline const std::string CMD_WPA_RESET = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_RESET\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\" } }";
     static inline const std::string CMD_WIFI_SCAN_RESULTS = "{ \"SCOPE\" : \"WIFI\", \"CMD\" : \"WIFI_SCAN_RESULTS\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\" } }";
     static inline const std::string CMD_WIFI_SCAN = "{ \"SCOPE\" : \"WIFI\", \"CMD\" : \"WIFI_SCAN\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\" } }";
     static inline const std::string CMD_GET_IPV4_ADDRESS = "{ \"SCOPE\" : \"INTERFACE\", \"CMD\" : \"IP4_ADDR_GET\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\" } }";
@@ -123,7 +124,7 @@ public:
     NMDaemonClient(bool);
     NMDaemonClient(QString, bool);
     ~NMDaemonClient();
-    bool sendRequest(QJsonObject);
+    //bool sendRequest(QJsonObject);
     QString GetLastError();
     bool ConnectWifiNetwork(QString, QString);
     bool ConnectWifiNetwork(QString, int);
@@ -146,7 +147,7 @@ public:
     bool RemoveIPv4Address(QString, QString, QString);
     bool EnableInterface(QString);
     bool DisableInterface(QString);
-    bool sendCommand(QString, QString);
+    //bool sendCommand(QString, QString);
     bool AsyncSendCommand(QString, QString);
     QJsonObject AsyncSendCommandGetResult(QString, QString);
     bool EnableDhcp4(QString);
@@ -158,6 +159,7 @@ public:
     bool RemoveNetworkAndSave(QString, int);
     bool SetNetworkSsid(QString, int, QString);
     bool SetNetworkBssid(QString, int, QString);
+    bool ResetWpa(QString);
 signals:
     void dataReady(QJsonObject);
     void connected();

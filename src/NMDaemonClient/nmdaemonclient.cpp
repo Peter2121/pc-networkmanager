@@ -164,6 +164,7 @@ QJsonObject NMDaemonClient::AsyncSendRequest(QJsonObject json_command)
     return json_received;
 }
 
+/*
 bool NMDaemonClient::sendRequest(QJsonObject json_command)
 {
     QString qstr_received = "";
@@ -242,6 +243,7 @@ bool NMDaemonClient::sendRequest(QJsonObject json_command)
         return true;
     }
 }
+*/
 
 void NMDaemonClient::SlotDataError(const QString& error)
 {
@@ -917,6 +919,7 @@ bool NMDaemonClient::AsyncSendCommand(QString command, QString source)
     }
 }
 
+/*
 bool NMDaemonClient::sendCommand(QString command, QString source)
 {
     QJsonObject req_object = QJsonDocument::fromJson(command.toUtf8()).object();
@@ -929,6 +932,7 @@ bool NMDaemonClient::sendCommand(QString command, QString source)
     }
     return true;
 }
+*/
 
 bool NMDaemonClient::SetIPv4Address(QString ifname, QString address, QString mask)
 {
@@ -979,6 +983,12 @@ bool NMDaemonClient::DisableDhcp4(QString ifname)
 {
     QString req_string = QString::asprintf(CMD_SET_IPV4_DHCP_DISABLE.c_str(), ifname.toStdString().c_str());
     return AsyncSendCommand(req_string, "DisableDhcp4");
+}
+
+bool NMDaemonClient::ResetWpa(QString ifname)
+{
+    QString req_string = QString::asprintf(CMD_WPA_RESET.c_str(), ifname.toStdString().c_str());
+    return AsyncSendCommand(req_string, "ResetWpa");
 }
 
 bool NMDaemonClient::SetNetworkEnabled(QString ifname, int netid, bool is_enabled)

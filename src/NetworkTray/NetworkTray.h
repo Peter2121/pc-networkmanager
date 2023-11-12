@@ -34,7 +34,7 @@ private:
     static constexpr int IDLE_REFRESH_TIME_MSEC = 180000;
     static constexpr int ACTIVE_REFRESH_TIME_MSEC = 10000;
     static inline const std::string CMD_CONNECT_WIFI_NETWORK = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_CONNECT\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\", \"SSID\" : \"%s\" } }";
-    static inline const std::string CMD_RESET_WPA = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_RESET\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\" } }";
+//    static inline const std::string CMD_RESET_WPA = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_RESET\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\" } }";
 
 public:
    NetworkTray(NMDaemonCheckStatus* nmds);

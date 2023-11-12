@@ -563,12 +563,17 @@ void  NetworkTray::openWlanConfigDlg() {
 }
 
 void NetworkTray::resetWpaSupplicant() {
+    nmdStatus->StopMonitoring();
+    nmdStatus->ResetWpa(IfName);
+    nmdStatus->StartMonitoring();
+    /*
     QString req_string = QString::asprintf(CMD_RESET_WPA.c_str(), IfName.toStdString().c_str());
     QJsonObject req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
     nmdStatus->StopMonitoring();
     if(!nmdStatus->sendRequest(req_object))
         QMessageBox::warning(this, IfName, "Cannot send WPA_RESET command to backend");
     nmdStatus->StartMonitoring();
+    */
 }
 
 void NetworkTray::scanWifi()
