@@ -81,7 +81,7 @@ void NetworkTray::onActivated(QSystemTrayIcon::ActivationReason reason)
 
 void NetworkTray::slotSave()
 {
-    nmdStatus->saveConfig(IfName);
+    nmdStatus->SaveConfig(IfName);
 }
 
 void NetworkTray::programInit(QString device)
@@ -289,7 +289,7 @@ void NetworkTray::connectWifiNetwork(QString ssid)
 //nmworkerwpa.cpp:256    ERR| wpaCtrlCmd cannot connect to client socket /tmp/nmd_wpaw.xrEFI : Address already in use
 //nmworkerieee80211.cpp:82     ERR| Error in execCmdNetList: incorrect data received from lib80211
 //    nmdStatus->EnableNetwork(IfName, ssid);
-    //nmdStatus->saveConfig(IfName);
+    //nmdStatus->SaveConfig(IfName);
     //updateStatus();
     nmdStatus->startMonitoring();
     */

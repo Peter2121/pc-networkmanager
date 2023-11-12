@@ -105,9 +105,9 @@ void ethernetconfig::slot_apply()
     if( dialogConfigData->isUpAndRunning != runningConfigData->isUpAndRunning )
     {
         if(dialogConfigData->isUpAndRunning)
-            nmd_status->enableInterface(DeviceName);
+            nmd_status->EnableInterface(DeviceName);
         else
-            nmd_status->disableInterface(DeviceName);
+            nmd_status->DisableInterface(DeviceName);
         action = true;
     }
 
@@ -129,15 +129,15 @@ void ethernetconfig::slot_apply()
     foreach(const QString alias, *aliases_to_add)
     {
         qDebug() << "Adding alias " << alias;
-        nmd_status->addIPv4Address(DeviceName, alias.split("/").value(0).trimmed(), alias.split("/").value(1).trimmed());
+        nmd_status->AddIPv4Address(DeviceName, alias.split("/").value(0).trimmed(), alias.split("/").value(1).trimmed());
         action = true;
     }
     foreach(const QString alias, *aliases_to_remove)
     {
         qDebug() << "Removing alias " << alias;
-        nmd_status->removeIPv4Address(DeviceName, alias.split("/").value(0).trimmed(), alias.split("/").value(1).trimmed());
+        nmd_status->RemoveIPv4Address(DeviceName, alias.split("/").value(0).trimmed(), alias.split("/").value(1).trimmed());
         if(dialogConfigData->isUpAndRunning)
-            nmd_status->enableInterface(DeviceName);
+            nmd_status->EnableInterface(DeviceName);
         action = true;
     }
 
@@ -166,12 +166,12 @@ void ethernetconfig::slot_apply()
                 tr("Netmask is out of range! (") + lineNetmask->text() + tr(") Fields must be between 0-255.") );
                 validate_input = false;
             }
-            if( validate_input && nmd_status->setIPv4Address(DeviceName, lineIP->text(), lineNetmask->text()) )
+            if( validate_input && nmd_status->SetIPv4Address(DeviceName, lineIP->text(), lineNetmask->text()) )
                 action = true;
         }
         else
         {
-            if(nmd_status->enableDhcp4(DeviceName))
+            if(nmd_status->EnableDhcp4(DeviceName))
                 action = true;
         }
     }

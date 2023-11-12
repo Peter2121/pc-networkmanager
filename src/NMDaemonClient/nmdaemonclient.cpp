@@ -56,7 +56,7 @@ bool NMDaemonClient::DoDisconnect()
     return true;
 }
 
-QString NMDaemonClient::getLastError()
+QString NMDaemonClient::GetLastError()
 {
     return lastError;
 }
@@ -595,7 +595,7 @@ bool NMDaemonClient::AddNetwork(QString ifname, QString ssid, QString psk, bool 
             ies = json_object.value("IES").toString();
             if( (!caps.isEmpty()) && (!ies.isEmpty()) )
             {
-                security = getWifiNetworkSecurity(caps, ies);
+                security = GetWifiNetworkSecurity(caps, ies);
             }
             return AddNetwork(ifname, ssid, psk, security, hexkey);
         }
@@ -718,7 +718,7 @@ void NMDaemonClient::cbWifiNetAdd(QString ifname, QString ssid)
             lastJsonReceived = QJsonObject();
             checkDataResultSource = "cbWifiNetAdd";
             callbackFunctionSuccess = std::bind(&NMDaemonClient::cbSendSuccessWifiNetAdd, this, ssid, netid);
-            saveConfig(ifname);
+            SaveConfig(ifname);
         }
         else
         {
@@ -731,8 +731,9 @@ void NMDaemonClient::cbWifiNetAdd(QString ifname, QString ssid)
     }
 }
 */
+
 // Used code from trueos-utils-qt5 QString NetworkInterface::parseWifiSecurity( QString caps, QString etc )
-QString NMDaemonClient::getWifiNetworkSecurity(QString caps, QString ies) const
+QString NMDaemonClient::GetWifiNetworkSecurity(QString caps, QString ies) const
 {
     bool isDisabled = !caps.contains("P") && caps.contains("ES");
     bool isWEP = caps.contains("EP");
@@ -764,10 +765,10 @@ QString NMDaemonClient::getWifiNetworkSecurity(QString caps, QString ies) const
     return securityType;
 }
 
-bool NMDaemonClient::saveConfig(QString ifname)
+bool NMDaemonClient::SaveConfig(QString ifname)
 {
     QString req_string = QString::asprintf(CMD_WPA_SAVE.c_str(), ifname.toStdString().c_str());
-    return AsyncSendCommand(req_string, "saveConfig");
+    return AsyncSendCommand(req_string, "SaveConfig");
 }
 
 bool NMDaemonClient::CheckSuccess(QJsonObject data)
@@ -818,70 +819,49 @@ void NMDaemonClient::slotCheckDataResult(QJsonObject data)
     }
 }
 
-QString NMDaemonClient::getIPv4Address(QString ifname)
+QString NMDaemonClient::GetIPv4Address(QString ifname)
 {
-    QString req_string = QString::asprintf(CMD_GET_IPV4_ADDRESS.c_str(), ifname.toStdString().c_str());
-    QJsonObject req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
-    lastJsonReceived = QJsonObject();
-    std::unique_ptr<NMDaemonSpy> readspy = std::make_unique<NMDaemonSpy>(this, &NMDaemonClient::dataReady);
     QJsonObject json_object;
     QJsonValue json_value;
-    QString addr;
-
-    if(!sendRequest(req_object))
-    {
+    QString addr = "";
+    QString req_string = QString::asprintf(CMD_GET_IPV4_ADDRESS.c_str(), ifname.toStdString().c_str());
+    QJsonObject ret_object = AsyncSendCommandGetResult(req_string, "GetIPv4Address");
+    if(ret_object.empty())
         return addr;
-    }
-    readspy->wait(DEFAULT_READ_WAIT_TIME_MSEC);
-    if(!lastJsonReceived.empty())
+
+    json_value = ret_object.value(QString::fromStdString(JSON_PARAM_DATA));
+    json_object = json_value.toObject();
+    if(!json_object.empty())
     {
-        if(CheckSuccess(lastJsonReceived))
-        {
-            json_value = lastJsonReceived.value(QString::fromStdString(JSON_PARAM_DATA));
-            json_object = json_value.toObject();
-            if(!json_object.empty())
-            {
-                json_value = json_object.value(QString::fromStdString(JSON_PARAM_IPV4_ADDR));
-                addr = json_value.toString();
-            }
-        }
+        json_value = json_object.value(QString::fromStdString(JSON_PARAM_IPV4_ADDR));
+        addr = json_value.toString();
     }
     return addr;
 }
 
-bool NMDaemonClient::isDhcp4Enabled(QString ifname)
+bool NMDaemonClient::IsDhcp4Enabled(QString ifname)
 {
-    QString req_string = QString::asprintf(CMD_GET_IPV4_DHCP_STATUS.c_str(), ifname.toStdString().c_str());
-    QJsonObject req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
-    lastJsonReceived = QJsonObject();
-    std::unique_ptr<NMDaemonSpy> readspy = std::make_unique<NMDaemonSpy>(this, &NMDaemonClient::dataReady);
     QJsonObject json_object;
     QJsonValue json_value;
     QString str_status;
     bool status = false;
-
-    if(!sendRequest(req_object))
-    {
+    QString req_string = QString::asprintf(CMD_GET_IPV4_DHCP_STATUS.c_str(), ifname.toStdString().c_str());
+    QJsonObject ret_object = AsyncSendCommandGetResult(req_string, "IsDhcp4Enabled");
+    if(ret_object.empty())
         return status;
-    }
-    readspy->wait(DEFAULT_READ_WAIT_TIME_MSEC);
-    if(!lastJsonReceived.empty())
+
+    json_value = lastJsonReceived.value(QString::fromStdString(JSON_PARAM_DATA));
+    json_object = json_value.toObject();
+    if(!json_object.empty())
     {
-        if(CheckSuccess(lastJsonReceived))
-        {
-            json_value = lastJsonReceived.value(QString::fromStdString(JSON_PARAM_DATA));
-            json_object = json_value.toObject();
-            if(!json_object.empty())
-            {
-                json_value = json_object.value(QString::fromStdString(JSON_DATA_DHCP_STATUS));
-                str_status = json_value.toString();
-                if(str_status.toStdString()==JSON_DATA_ENABLED)
-                    status = true;
-            }
-        }
+        json_value = json_object.value(QString::fromStdString(JSON_DATA_DHCP_STATUS));
+        str_status = json_value.toString();
+        if(str_status.toStdString()==JSON_DATA_ENABLED)
+            status = true;
     }
     return status;
 }
+
 QJsonObject NMDaemonClient::AsyncSendCommandGetResult(QString command, QString source)
 {
     QJsonObject ret_object = QJsonObject();
@@ -950,55 +930,55 @@ bool NMDaemonClient::sendCommand(QString command, QString source)
     return true;
 }
 
-bool NMDaemonClient::setIPv4Address(QString ifname, QString address, QString mask)
+bool NMDaemonClient::SetIPv4Address(QString ifname, QString address, QString mask)
 {
     QString req_string = QString::asprintf(CMD_SET_IPV4_ADDRESS.c_str(),
                                                 ifname.toStdString().c_str(),
                                                 address.toStdString().c_str(),
                                                 mask.toStdString().c_str() );
-    return AsyncSendCommand(req_string, "setIPv4Address");
+    return AsyncSendCommand(req_string, "SetIPv4Address");
 }
 
-bool NMDaemonClient::addIPv4Address(QString ifname, QString address, QString mask)
+bool NMDaemonClient::AddIPv4Address(QString ifname, QString address, QString mask)
 {
     QString req_string = QString::asprintf(CMD_ADD_IPV4_ADDRESS.c_str(),
                                                 ifname.toStdString().c_str(),
                                                 address.toStdString().c_str(),
                                                 mask.toStdString().c_str() );
-    return AsyncSendCommand(req_string, "addIPv4Address");
+    return AsyncSendCommand(req_string, "AddIPv4Address");
 }
 
-bool NMDaemonClient::removeIPv4Address(QString ifname, QString address, QString mask)
+bool NMDaemonClient::RemoveIPv4Address(QString ifname, QString address, QString mask)
 {
     QString req_string = QString::asprintf(CMD_REMOVE_IPV4_ADDRESS.c_str(),
                                                 ifname.toStdString().c_str(),
                                                 address.toStdString().c_str(),
                                                 mask.toStdString().c_str() );
-    return AsyncSendCommand(req_string, "removeIPv4Address");
+    return AsyncSendCommand(req_string, "RemoveIPv4Address");
 }
 
-bool NMDaemonClient::enableInterface(QString ifname)
+bool NMDaemonClient::EnableInterface(QString ifname)
 {
     QString req_string = QString::asprintf(CMD_SET_IF_ENABLE.c_str(), ifname.toStdString().c_str());
-    return AsyncSendCommand(req_string, "enableInterface");
+    return AsyncSendCommand(req_string, "EnableInterface");
 }
 
-bool NMDaemonClient::disableInterface(QString ifname)
+bool NMDaemonClient::DisableInterface(QString ifname)
 {
     QString req_string = QString::asprintf(CMD_SET_IF_DISABLE.c_str(), ifname.toStdString().c_str());
-    return AsyncSendCommand(req_string, "disableInterface");
+    return AsyncSendCommand(req_string, "DisableInterface");
 }
 
-bool NMDaemonClient::enableDhcp4(QString ifname)
+bool NMDaemonClient::EnableDhcp4(QString ifname)
 {
     QString req_string = QString::asprintf(CMD_SET_IPV4_DHCP_ENABLE.c_str(), ifname.toStdString().c_str());
-    return AsyncSendCommand(req_string, "enableDhcp4");
+    return AsyncSendCommand(req_string, "EnableDhcp4");
 }
 
-bool NMDaemonClient::disableDhcp4(QString ifname)
+bool NMDaemonClient::DisableDhcp4(QString ifname)
 {
     QString req_string = QString::asprintf(CMD_SET_IPV4_DHCP_DISABLE.c_str(), ifname.toStdString().c_str());
-    return AsyncSendCommand(req_string, "disableDhcp4");
+    return AsyncSendCommand(req_string, "DisableDhcp4");
 }
 
 bool NMDaemonClient::SetNetworkEnabled(QString ifname, int netid, bool is_enabled)

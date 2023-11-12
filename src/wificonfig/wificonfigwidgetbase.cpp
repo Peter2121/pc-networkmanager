@@ -207,13 +207,13 @@ void wificonfigwidgetbase::slotApply()
         nmd_status -> SetNetworkPriority(DeviceName, netid, WPANetworksSystem[i]->GetPriority());
         nmd_status -> SetNetworkSsid(DeviceName, netid, WPANetworksSystem[i]->GetSsid());
         nmd_status -> SetNetworkBssid(DeviceName, netid, WPANetworksSystem[i]->GetBssid());
-        nmd_status -> saveConfig(DeviceName);
+        nmd_status -> SaveConfig(DeviceName);
     }
 
     // Update keys
     foreach (auto psk, psks) {
         //nmd_status -> UpdatePsk(DeviceName, std::get<0>(psk), std::get<1>(psk), false);
-        //nmd_status -> saveConfig(DeviceName);
+        //nmd_status -> SaveConfig(DeviceName);
         nmd_status -> UpdatePskAndSave(DeviceName, std::get<0>(psk), std::get<1>(psk), false);
     }
 
@@ -235,7 +235,7 @@ void wificonfigwidgetbase::slotApply()
     }
     foreach (int id, IdToRemove) {
         //nmd_status -> RemoveNetwork(DeviceName, id);
-        //nmd_status -> saveConfig(DeviceName);
+        //nmd_status -> SaveConfig(DeviceName);
         nmd_status -> RemoveNetworkAndSave(DeviceName, id);
     }
 

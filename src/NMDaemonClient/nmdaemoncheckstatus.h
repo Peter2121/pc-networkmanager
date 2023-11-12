@@ -45,6 +45,7 @@ public:
     void setInterval(int);
     bool updateStatusInterfaces();
     bool updateStatusJails();
+    bool updateStatusWifi();
     QJsonArray getLastIfStatus() const { return lastIfStatus; }
     QJsonArray getLastJailStatus() const { return lastJailStatus; }
     QVector<QPair<QString,QJsonObject>> getLastWifiNetStatus() const { return lastWifiNetStatus; }

@@ -54,150 +54,94 @@ void NMDaemonCheckStatus::stopMonitoring()
 
 bool NMDaemonCheckStatus::updateStatusInterfaces()
 {
-    std::unique_ptr<NMDaemonSpy> spy = nullptr;
     QJsonValue json_value;
     QJsonArray json_array;
     QJsonObject json_obj;
-    if(!DoConnect())
-        return false;
     timerMonitoring->stop();
     lastIfStatus = QJsonArray();
-    QJsonObject req_object = QJsonDocument::fromJson(CMD_GET_SYS_IF_STATUS.toUtf8()).object();
-    spy = std::make_unique<NMDaemonSpy>(this, &NMDaemonClient::dataReady);
-    if(!sendRequest(req_object))
+    QString req_string = CMD_GET_SYS_IF_STATUS;
+    QJsonObject ret_object = AsyncSendCommandGetResult(req_string, "updateStatusInterfaces");
+    if(ret_object.empty())
     {
         timerMonitoring->start();
         return false;
     }
-    if(!spy->wait(DEFAULT_READ_WAIT_TIME_MSEC))
-        writeSocket.release();
-    if(!lastJsonReceived.empty())
+    json_value = ret_object.value(QString::fromStdString(JSON_PARAM_DATA));
+    json_obj = json_value.toObject();
+    json_value = json_obj.value(QString::fromStdString(JSON_PARAM_INTERFACES));
+    json_array = json_value.toArray();
+    lastIfStatus = json_array;
+    emit ifStatusUpdated();
+    timerMonitoring->start();
+    return true;
+}
+
+bool NMDaemonCheckStatus::updateStatusWifi()
+{
+    QJsonObject json_object;
+    QJsonValue json_value;
+    QJsonArray json_array;
+    QString req_string;
+    QJsonObject ret_object;
+    QString if_name;
+    bool updated = false;
+    timerMonitoring->stop();
+    req_string = CMD_GET_WPA_IF_LIST;
+    wifiInterfaces.clear();
+    ret_object = AsyncSendCommandGetResult(req_string, "updateStatusWifi-iflist");
+    if(ret_object.empty())
     {
-        json_value = lastJsonReceived.value(QString::fromStdString(JSON_PARAM_RESULT));
-        if( json_value.toString() == QString::fromStdString(JSON_PARAM_SUCC) )
-        {
-            json_value = lastJsonReceived.value(QString::fromStdString(JSON_PARAM_DATA));
-            json_obj = json_value.toObject();
-            json_value = json_obj.value(QString::fromStdString(JSON_PARAM_INTERFACES));
-            json_array = json_value.toArray();
-            lastIfStatus = json_array;
-            emit ifStatusUpdated();
-            timerMonitoring->start();
-            return true;
-        }
+        timerMonitoring->start();
+        return false;
+    }
+    json_value = lastJsonReceived.value("DATA");
+    json_object = json_value.toObject();
+    json_value = json_object.value("INTERFACES");
+    json_array = json_value.toArray();
+    foreach (const QJsonValue &v, json_array)
+    {
+        wifiInterfaces.push_back(v.toString());
+    }
+    if(wifiInterfaces.empty())
+    {
+        timerMonitoring->start();
+        return false;
+    }
+    lastWifiNetStatus.clear();
+    foreach(const QString &s, wifiInterfaces)
+    {
+        req_string = QString::asprintf(CMD_WIFI_SCAN.c_str(), s.toStdString().c_str());
+        ret_object = AsyncSendCommandGetResult(req_string, "updateStatusWifi-scan");
+        if(ret_object.empty())
+            continue;
+        json_value = lastJsonReceived.value("DATA");
+        json_object = json_value.toObject();
+        lastWifiNetStatus.push_back(QPair<QString,QJsonObject>(s, json_object));
+        updated = true;
+    }
+    lastWifiIfStatus.clear();
+    foreach(const QString &s, wifiInterfaces)
+    {
+        req_string = QString::asprintf(CMD_WIFI_STATUS.c_str(), s.toStdString().c_str());
+        ret_object = AsyncSendCommandGetResult(req_string, "updateStatusWifi-status");
+        if(ret_object.empty())
+            continue;
+        json_value = lastJsonReceived.value("DATA");
+        json_object = json_value.toObject();
+        lastWifiIfStatus.push_back(QPair<QString,QJsonObject>(s,json_object));
+        updated = true;
     }
     timerMonitoring->start();
-    return false;
+    if(updated)
+        emit wifiNetStatusUpdated();
+    return updated;
 }
 
 void NMDaemonCheckStatus::updateStatus()
 {
-    std::unique_ptr<NMDaemonSpy> spy = nullptr;
-    QString if_name;
-    QString req_string;
-    QJsonObject json_object;
-    QJsonValue json_value;
-    QJsonArray json_array;
-    QJsonObject req_object;
-    bool iflistupdated = false;
-    bool netstatusupdated = false;
-    bool ifstatusupdated = false;
-    bool jailstatusupdated = false;
-    bool need_to_restart_timer = false;
-    // Get list of all netwok interfaces
-    ifstatusupdated = updateStatusInterfaces();
-    jailstatusupdated = updateStatusJails();
-    // TODO: move the code into updateStatusWifi();
-    if(timerMonitoring->isActive())
-    {
-        timerMonitoring->stop();
-        need_to_restart_timer = true;
-    }
-    if(!DoConnect())
-        return;
-    // Get list of wireless interfaces available for wpa_supplicant
-    req_object = QJsonDocument::fromJson(CMD_GET_WPA_IF_LIST.toUtf8()).object();
-    lastJsonReceived = QJsonObject();
-    wifiInterfaces.clear();
-    spy = std::make_unique<NMDaemonSpy>(this, &NMDaemonClient::dataReady);
-    if(!sendRequest(req_object))
-        goto label_exit;
-    if(!spy->wait(DEFAULT_READ_WAIT_TIME_MSEC))
-        writeSocket.release();
-    if(!lastJsonReceived.empty())
-//    { "DATA": { "INTERFACES": [ "wlan0", "wlan1" ] }, "RESULT": "SUCCESS" }
-    {
-        json_value = lastJsonReceived.value("RESULT");
-        if(json_value.toString() == "SUCCESS")
-        {
-            json_value = lastJsonReceived.value("DATA");
-            json_object = json_value.toObject();
-            json_value = json_object.value("INTERFACES");
-            json_array = json_value.toArray();
-            foreach (const QJsonValue &v, json_array)
-            {
-                if_name = v.toString();
-                wifiInterfaces.push_back(if_name);
-            }
-        }
-    }
-    iflistupdated = true;
-    lastWifiNetStatus.clear();
-    // Get list of wireless networks for each wireless interface
-    foreach(const QString &s, wifiInterfaces)
-    {
-        req_string = QString::asprintf(CMD_WIFI_SCAN.c_str(), s.toStdString().c_str());
-        req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
-        //spy = new NMDaemonSpy(this, &NMDaemonCheckStatus::dataReady);
-        spy = std::make_unique<NMDaemonSpy>(this, &NMDaemonClient::dataReady);
-        if(!sendRequest(req_object))
-            goto label_exit;
-        if(!spy->wait(SCAN_READ_WAIT_TIME_MSEC))
-            writeSocket.release();
-        if(!lastJsonReceived.empty())
-        {
-            json_value = lastJsonReceived.value("RESULT");
-            if(json_value.toString() == "SUCCESS")
-            {
-                json_value = lastJsonReceived.value("DATA");
-                json_object = json_value.toObject();
-                lastWifiNetStatus.push_back(QPair<QString,QJsonObject>(s,json_object));
-            }
-        }
-    }
-    netstatusupdated = true;
-    lastWifiIfStatus.clear();
-    // Get status of each wireless interface
-    foreach(const QString &s, wifiInterfaces)
-    {
-        req_string = QString::asprintf(CMD_WIFI_STATUS.c_str(), s.toStdString().c_str());
-        req_object = QJsonDocument::fromJson(req_string.toUtf8()).object();
-        //spy = new NMDaemonSpy(this, &NMDaemonCheckStatus::dataReady);
-        spy = std::make_unique<NMDaemonSpy>(this, &NMDaemonClient::dataReady);
-        if(!sendRequest(req_object))
-            goto label_exit;
-        if(!spy->wait(DEFAULT_READ_WAIT_TIME_MSEC))
-            writeSocket.release();
-        if(!lastJsonReceived.empty())
-        {
-            json_value = lastJsonReceived.value("RESULT");
-            if(json_value.toString() == "SUCCESS")
-            {
-                json_value = lastJsonReceived.value("DATA");
-                json_object = json_value.toObject();
-                lastWifiIfStatus.push_back(QPair<QString,QJsonObject>(s,json_object));
-            }
-        }
-    }
-label_exit:
-//    if(ifstatusupdated)  ****** updateStatusInterfaces() emits this signal if the data is updated!!
-//        emit ifStatusUpdated();
-    if(netstatusupdated)
-        emit wifiNetStatusUpdated();
-    if(iflistupdated)
-        emit wifiIfListUpdated();
-    if(need_to_restart_timer)
-        timerMonitoring->start();
+    updateStatusInterfaces();
+    updateStatusJails();
+    updateStatusWifi();
 }
 
 QPair<QString,int> NMDaemonCheckStatus::getLastIfWifiNetwork(QString ifname) const
@@ -298,7 +242,7 @@ QVector<WifiNetworkDetails> NMDaemonCheckStatus::getLastNetsWifiDetails(QString 
                     ies = net.toObject().value("IES").toString();
                     if( (!caps.isEmpty()) && (!ies.isEmpty()) )
                     {
-                        details.Security = getWifiNetworkSecurity(caps, ies);
+                        details.Security = GetWifiNetworkSecurity(caps, ies);
                     }
                     nets_details.push_back(details);
                 }
@@ -430,36 +374,24 @@ std::unique_ptr<QVector<QString>> NMDaemonCheckStatus::getLastJailsIPv6()
 
 bool NMDaemonCheckStatus::updateStatusJails()
 {
-    std::unique_ptr<NMDaemonSpy> spy = nullptr;
     QJsonValue json_value;
     QJsonArray json_array;
     if(!DoConnect())
         return false;
     timerMonitoring->stop();
-    QJsonObject req_object = QJsonDocument::fromJson(CMD_GET_SYS_JAIL_LIST.toUtf8()).object();
-    spy = std::make_unique<NMDaemonSpy>(this, &NMDaemonClient::dataReady);
-    if(!sendRequest(req_object))
+    lastJailStatus = QJsonArray();
+    QString req_string = CMD_GET_SYS_JAIL_LIST;
+    QJsonObject ret_object = AsyncSendCommandGetResult(req_string, "updateStatusJails");
+    if(ret_object.empty())
     {
         timerMonitoring->start();
         return false;
     }
-    if(!spy->wait(DEFAULT_READ_WAIT_TIME_MSEC))
-        writeSocket.release();
-    if(!lastJsonReceived.empty())
-    {
-//        lastJailStatus = QJsonArray();
-        json_value = lastJsonReceived.value(QString::fromStdString(JSON_PARAM_RESULT));
-        if( json_value.toString() == QString::fromStdString(JSON_PARAM_SUCC) )
-        {
-            json_value = lastJsonReceived.value(QString::fromStdString(JSON_PARAM_DATA)).toObject().value(QString::fromStdString(JSON_PARAM_JAILS));
-            json_array = json_value.toArray();
-            lastJailStatus = json_array;
-            emit jailStatusUpdated();
-            timerMonitoring->start();
-            return true;
-        }
-    }
+    json_value = ret_object.value(QString::fromStdString(JSON_PARAM_DATA)).toObject().value(QString::fromStdString(JSON_PARAM_JAILS));
+    json_array = json_value.toArray();
+    lastJailStatus = json_array;
+    emit jailStatusUpdated();
     timerMonitoring->start();
-    return false;
+    return true;
 }
 

@@ -18,7 +18,7 @@ EthernetConfigData::EthernetConfigData(ethernetconfig* ethc, NMDaemonCheckStatus
     try
     {
         ifName = ethc->getDeviceName();
-        ipv4Address = nmd->getIPv4Address(ifName);
+        ipv4Address = nmd->GetIPv4Address(ifName);
         ipv4Aliases = nmd->getLastIPv4AliasesFromInterface(ifName);
         ipv4_jail_addresses = nmd->getLastJailsIPv4();
         auto end = std::remove_if(  ipv4Aliases->begin(), ipv4Aliases->end(),
