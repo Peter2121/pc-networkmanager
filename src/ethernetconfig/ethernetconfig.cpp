@@ -144,30 +144,46 @@ void ethernetconfig::slot_apply()
     // Manage static IPv4 address
     if( (dialogConfigData->isIpv4Static != runningConfigData->isIpv4Static) ||
         (dialogConfigData->ipv4Address != runningConfigData->ipv4Address) ||
-        (dialogConfigData->ipv4Mask != runningConfigData->ipv4Mask) )
+        (dialogConfigData->ipv4Mask != runningConfigData->ipv4Mask) ||
+        (dialogConfigData->ipv4Gateway != runningConfigData->ipv4Gateway) )
     {
         if(dialogConfigData->isIpv4Static)
         {
             validate_input = true;
             if ( lineIP->text() == "..." || lineNetmask->text() == "..." )
             {
-                QMessageBox::information( this, tr("Missing Fields"), tr("You must enter an IP and Netmask to continue!\n") );
+                QMessageBox::information( this, tr("Missing Fields"),
+                    tr("You must enter an IP and Netmask to continue!\n") );
                 validate_input = false;
             }
             if ( ! Utils::validateIPv4(lineIP->text() ) )
             {
                 QMessageBox::warning( this, tr("Warning"),
-                tr("IP Address is out of range! (") + lineIP->text() + tr(") Fields must be between 0-255.") );
+                    tr("IP Address is out of range! (") + lineIP->text() + tr(") Fields must be between 0-255.") );
                 validate_input = false;
             }
             if ( ! Utils::validateIPv4(lineNetmask->text() ) )
             {
                 QMessageBox::warning( this, tr("Warning"),
-                tr("Netmask is out of range! (") + lineNetmask->text() + tr(") Fields must be between 0-255.") );
+                    tr("Netmask is out of range! (") + lineNetmask->text() + tr(") Fields must be between 0-255.") );
                 validate_input = false;
             }
             if( validate_input && nmd_status->SetIPv4Address(DeviceName, lineIP->text(), lineNetmask->text()) )
+            {
                 action = true;
+            }
+            if( Utils::validateIPv4(lineGateway->text()) )
+            {
+                if( nmd_status->SetDefaultGateway4(lineGateway->text()) )
+                {
+                    action = true;
+                }
+            }
+            else
+            {
+                QMessageBox::warning( this, tr("Warning"),
+                    tr("Default Gateway Address is out of range! (") + lineGateway->text() + tr(") Fields must be between 0-255.") );
+            }
         }
         else
         {
@@ -241,11 +257,13 @@ void ethernetconfig::programInit()
    connect(checkMAC, SIGNAL(clicked()), this, SLOT(slotMacClicked()) );
    connect(lineIP, SIGNAL(textChanged(const QString &)), this, SLOT(slotCheckGlobalText() ) );
    connect(lineNetmask, SIGNAL(textChanged(const QString &)), this, SLOT(slotCheckGlobalText() ) );
+   connect(lineGateway, SIGNAL(textChanged(const QString &)), this, SLOT(slotCheckGlobalText() ) );
    connect(checkIPv6Enable, SIGNAL(clicked()), this, SLOT(slotIPv6clicked() ) );
    connect(lineIPv6Address, SIGNAL(textChanged(const QString &)), this, SLOT(slotCheckGlobalText() ) );
    connect(lineMAC, SIGNAL(textChanged(const QString &)), this, SLOT(slotCheckGlobalText() ) );
    connect(pushWPAE, SIGNAL(clicked()), this, SLOT(slotConfigWPA()) );
    connect(nmd_status, SIGNAL(ifStatusUpdated()), this, SLOT(slotFinishLoad()));
+   connect(nmd_status, SIGNAL(dataError(QString, QString)), this, SLOT(slotShowError(QString, QString)));
    nmd_status->UpdateStatusJails();
    nmd_status->UpdateStatusInterfaces();
    /*
@@ -534,6 +552,7 @@ void ethernetconfig::slotFinishLoad()
        checkDisableNetwork->setChecked(true);
        tabMainWidget->setEnabled(false);
    }
+   lineGateway->setText(runningConfigData->ipv4Gateway);
    lineIP->setText(runningConfigData->ipv4Address);
    lineNetmask->setText(runningConfigData->ipv4Mask);
    textIP->setText(runningConfigData->ipv4Address+" / "+runningConfigData->ipv4Mask);
@@ -750,4 +769,9 @@ std::shared_ptr<QVector<QString>> ethernetconfig::getIPv4AliasesFromUi()
              ret_aliases->push_back(listAliases->item(row)->text());
     }
     return ret_aliases;
+}
+
+void ethernetconfig::slotShowError(QString source, QString message)
+{
+    QMessageBox::critical(this, "Error from "+source, message);
 }

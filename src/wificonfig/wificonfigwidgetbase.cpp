@@ -272,6 +272,7 @@ void wificonfigwidgetbase::setDevice( QString Device )
   connect( listWifi, SIGNAL( itemDoubleClicked(QListWidgetItem*)), this, SLOT(slotItemDoubleClicked(QListWidgetItem*)));
   connect( this, SIGNAL( RefreshWPANetworks()), SLOT( SlotStartRefreshSSIDList() ));
   connect( this, SIGNAL( StartRescan()), SLOT( slotStartRescan() ));
+  connect( nmd_status, SIGNAL(dataError(QString, QString)), this, SLOT(slotShowError(QString, QString)));
 
   DeviceName = Device;
   pushApply->setEnabled(false);
@@ -1200,4 +1201,9 @@ void wificonfigwidgetbase::SlotConnectSuccess(int)
 void wificonfigwidgetbase::SlotConnectError(int netid, QString)
 {
     QMessageBox::information(this, QString("ERROR"), QString("Cannot connect to network ") + QString(netid));
+}
+
+void wificonfigwidgetbase::slotShowError(QString source, QString message)
+{
+    QMessageBox::critical(this, "Error from "+source, message);
 }

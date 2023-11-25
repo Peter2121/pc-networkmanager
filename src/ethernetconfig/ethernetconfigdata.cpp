@@ -19,6 +19,9 @@ EthernetConfigData::EthernetConfigData(ethernetconfig* ethc, NMDaemonCheckStatus
     {
         ifName = ethc->getDeviceName();
         ipv4Address = nmd->GetIPv4Address(ifName);
+        auto ipv4_gateway = nmd->GetRouteDefault4();
+        if(ipv4_gateway.first==ifName)
+            ipv4Gateway = ipv4_gateway.second;
         ipv4Aliases = nmd->GetLastIPv4AliasesFromInterface(ifName);
         ipv4_jail_addresses = nmd->GetLastJailsIPv4();
         auto end = std::remove_if(  ipv4Aliases->begin(), ipv4Aliases->end(),
@@ -111,6 +114,7 @@ EthernetConfigData::EthernetConfigData(ethernetconfig* ethc)
         ifName = ethc->getDeviceName();
         ipv4Address = ethc->lineIP->text();
         ipv4Mask = ethc->lineNetmask->text();
+        ipv4Gateway = ethc->lineGateway->text();
         ipv4Aliases = ethc->getIPv4AliasesFromUi();
         macAddress = ethc->textMac->text();
         ipv6Address = ethc->textIPv6->text();

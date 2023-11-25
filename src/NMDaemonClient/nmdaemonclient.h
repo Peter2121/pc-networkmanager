@@ -70,6 +70,9 @@ protected:
     static inline const std::string CMD_WPA_SET_NETWORK_SSID = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_SETPARAM\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\", \"NETID\" : %d, \"PARAM_NAME\" : \"ssid\", \"PARAM_VALUE\" : \"%s\", \"PARAM_QUOTES\" : true } }";
     static inline const std::string CMD_WPA_SET_NETWORK_BSSID = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_SET_BSSID\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\", \"NETID\" : %d, \"BSSID\" : \"%s\" } }";
     static inline const std::string CMD_WIFI_STATUS = "{ \"SCOPE\" : \"WIFI\", \"CMD\" : \"WIFI_STATUS\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\" } }";
+    static inline const std::string CMD_ROUTE_GET_DEFAULT = "{ \"SCOPE\" : \"ROUTE\", \"CMD\" : \"RT_DEF_GET\" }";
+    static inline const std::string CMD_ROUTE_SET_DEFAULT = "{ \"SCOPE\" : \"ROUTE\", \"CMD\" : \"RT_DEF_SET\", \"DATA\" : { \"IPV4 GATEWAY\" : \"%s\" } }";
+    static inline const std::string CMD_ROUTES_LIST = "{ \"SCOPE\" : \"ROUTE\", \"CMD\" : \"RT_LIST\" }";
 
     //static inline const QString CMD_GET_WPA_IF_LIST = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_LIST_IF\" }";
     //static inline const QString CMD_GWPA_TSAV = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_SAVE\", \"DATA\" : { \"INTERFACE NAME\" : \"wlan0\" } }";
@@ -160,6 +163,8 @@ public:
     bool SetNetworkSsid(QString, int, QString);
     bool SetNetworkBssid(QString, int, QString);
     bool ResetWpa(QString);
+    QPair<QString, QString> GetRouteDefault4();
+    bool SetDefaultGateway4(QString);
 signals:
     void dataReady(QJsonObject);
     void connected();

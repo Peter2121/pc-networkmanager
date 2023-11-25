@@ -92,6 +92,7 @@ private slots:
     void SlotConnect();
     void SlotConnectSuccess(int);
     void SlotConnectError(int, QString);
+    void slotShowError(QString, QString);
 
 private:
     QString getLineFromCommandOutput( QString command );

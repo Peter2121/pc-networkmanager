@@ -1066,3 +1066,72 @@ bool NMDaemonClient::RemoveNetworkAndSave(QString ifname, int netid)
         return false;
     }
 }
+
+QPair<QString, QString> NMDaemonClient::GetRouteDefault4()
+{
+    QJsonObject json_object;
+    QJsonValue json_value;
+    QJsonArray json_array;
+    QPair<QString, QString> def_route;  // ifname, ip4_address
+    QString def_route_addr4 = "";
+    QString ifname = "";
+    QString req_string = QString::fromStdString(CMD_ROUTE_GET_DEFAULT);
+    QJsonObject ret_object = AsyncSendCommandGetResult(req_string, "GetRouteDefault");
+    if(ret_object.empty())
+    {
+        return QPair<QString, QString>("", "");
+    }
+    json_value = lastJsonReceived.value(QString::fromStdString(JSON_PARAM_DATA));
+    json_object = json_value.toObject();
+    json_value = json_object.value(QString::fromStdString(JSON_PARAM_IPV4_GW));
+    def_route_addr4 = json_value.toString();
+    if(def_route_addr4.isEmpty())
+    {
+        return QPair<QString, QString>("", "");
+    }
+
+    req_string = QString::fromStdString(CMD_ROUTES_LIST);
+    ret_object = AsyncSendCommandGetResult(req_string, "GetRouteDefault");
+    if(ret_object.empty())
+    {
+        return QPair<QString, QString>("", "");
+    }
+    json_value = lastJsonReceived.value(QString::fromStdString(JSON_PARAM_DATA));
+    json_object = json_value.toObject();
+    json_value = json_object.value(QString::fromStdString(JSON_PARAM_ROUTES));
+    json_array = json_value.toArray();
+    foreach (const QJsonValue &v, json_array)   // Loop routes array
+    {
+        if(!v.toObject().value(QString::fromStdString(JSON_PARAM_UP)).toBool())
+            continue;
+        ifname = v.toObject().value(QString::fromStdString(JSON_PARAM_IF_NAME)).toString();
+        if(ifname.isEmpty())
+            continue;
+        QJsonArray json_array1 = v.toObject().value(QString::fromStdString(JSON_PARAM_ADDRESSES)).toArray();
+        foreach (const QJsonValue &v1, json_array1) // Loop addresses array
+        {
+            if(v1.toObject().value(QString::fromStdString(JSON_PARAM_ADDR_TYPE))=="ROUTE")
+            {
+                QJsonObject json_route = v1.toObject().value("ROUTE").toObject();
+                if(json_route.value(QString::fromStdString(JSON_PARAM_IPV4_ADDR))!="0.0.0.0")
+                    continue;
+                if(json_route.value(QString::fromStdString(JSON_PARAM_IPV4_GW))==def_route_addr4)
+                {
+                    QJsonArray json_array2 = json_route.value(QString::fromStdString(JSON_PARAM_FLAGS)).toArray();
+                    foreach (const QJsonValue &v2, json_array2)
+                    {
+                        if(v2.toString()==QString::fromStdString(JSON_PARAM_UP))
+                            return QPair<QString, QString>(ifname, def_route_addr4);
+                    }
+                }
+            }
+        }
+    }
+    return QPair<QString, QString>("", "");
+}
+
+bool NMDaemonClient::SetDefaultGateway4(QString ip4_gateway)
+{
+    QString req_string = QString::asprintf(CMD_ROUTE_SET_DEFAULT.c_str(), ip4_gateway.toStdString().c_str());
+    return AsyncSendCommand(req_string, "SetDefaultGateway4");
+}

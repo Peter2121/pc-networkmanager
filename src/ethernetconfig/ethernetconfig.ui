@@ -171,6 +171,23 @@
             </property>
            </widget>
           </item>
+          <item row="2" column="1">
+           <widget class="QLineEdit" name="lineGateway">
+            <property name="inputMask">
+             <string>999\.999\.999\.999</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="textLabel2_3">
+            <property name="text">
+             <string>Default Gateway</string>
+            </property>
+           </widget>
+          </item>
          </layout>
         </widget>
        </item>

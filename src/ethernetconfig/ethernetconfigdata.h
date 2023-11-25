@@ -23,6 +23,7 @@ public:
     QString ifName;
     QString ipv4Address;
     QString ipv4Mask;
+    QString ipv4Gateway;
     QString macAddress;
     bool isUpAndRunning;
     bool isIpv4Static;

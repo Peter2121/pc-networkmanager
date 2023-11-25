@@ -61,6 +61,7 @@ public slots:
     virtual void slotRemoveAlias();
     virtual void slotAddAlias();
     virtual void slotAddAliasToList(QString, QString);
+    void slotShowError(QString, QString);
 
 private:
     void runCommand( QString command );
