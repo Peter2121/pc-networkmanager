@@ -172,17 +172,20 @@ void ethernetconfig::slot_apply()
             {
                 action = true;
             }
-            if( Utils::validateIPv4(lineGateway->text()) )
+            if(lineGateway->text() != "...")
             {
-                if( nmd_status->SetDefaultGateway4(lineGateway->text()) )
+                if( Utils::validateIPv4(lineGateway->text()) )
                 {
-                    action = true;
+                    if( nmd_status->SetDefaultGateway4(lineGateway->text()) )
+                    {
+                        action = true;
+                    }
                 }
-            }
-            else
-            {
-                QMessageBox::warning( this, tr("Warning"),
-                    tr("Default Gateway Address is out of range! (") + lineGateway->text() + tr(") Fields must be between 0-255.") );
+                else
+                {
+                    QMessageBox::warning( this, tr("Warning"),
+                        tr("Default Gateway Address is out of range! (") + lineGateway->text() + tr(") Fields must be between 0-255.") );
+                }
             }
         }
         else
