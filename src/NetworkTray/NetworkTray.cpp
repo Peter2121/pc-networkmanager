@@ -184,6 +184,7 @@ void NetworkTray::programInit(QString device)
             continue;
         status = getWifiStatusLine(net, false);
         connect_action = new QAction(status, this);
+        connect_action->setData(net.first);
         if(net.second>0)
         {
             connect_action->setIcon(getWifiIcon(net.second));
@@ -263,7 +264,8 @@ void NetworkTray::slotConnect()
 // TODO: check if psk is already present in WPA config file and ask user for the psk if needed
     if(numWifiConnectRetries>0)
         return;
-    QString ssid = sender()->property("text").toString().split(" ").at(0);
+    //QString ssid = sender()->property("text").toString().split(" ").at(0);
+    QString ssid = (((QAction*)sender())->data()).toString();
     numWifiConnectRetries = 0;
     connectWifiNetwork(ssid);
 }

@@ -147,6 +147,7 @@ QJsonObject NMDaemonClient::AsyncSendRequest(QJsonObject json_command)
     {
         lastError = QString::fromStdString(nmdUnixSocket->last_error_str());
         qDebug() << "AsyncSendRequest: Error reading from socket: " << lastError;
+        writeSocket.release();
         throw AsynStepException("AsyncSendRequest: Error reading from socket " + nmdUnixSocket->last_error_str());
     }
 
