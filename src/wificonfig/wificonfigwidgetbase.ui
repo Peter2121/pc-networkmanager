@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>523</width>
-    <height>558</height>
+    <width>584</width>
+    <height>629</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -165,8 +165,7 @@
               <string>Enable</string>
              </property>
              <property name="icon">
-              <iconset theme="/usr/local/share/icons/HighContrast/48x48/actions/object-select.png">
-               <normaloff>.</normaloff>.</iconset>
+              <iconset theme="/usr/local/share/icons/HighContrast/48x48/actions/object-select.png"/>
              </property>
             </widget>
            </item>

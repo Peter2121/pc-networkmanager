@@ -22,6 +22,9 @@ FORMS	= networkman.ui \
 
 RESOURCES += NetworkManager.qrc 
 
+include("../NMDaemonClient/NMDaemonClient.pri")
+include("../Utils/Utils.pri")
+
 TARGET  = pc-netmanager
 target.path = /usr/local/bin/
 
