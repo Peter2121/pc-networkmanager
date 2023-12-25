@@ -42,7 +42,8 @@ FORMS   += ../wificonfig/wificonfigwidgetbase.ui
 FORMS   += ../wificonfig/wifiedit.ui
 
 
-RESOURCES += ../ethernetconfig/ethernetconfig.qrc
+RESOURCES += ../ethernetconfig/ethernetconfig.qrc \
+    pics.qrc
 RESOURCES += ../wificonfig/wificonfig.qrc
 
 TRANSLATIONS =  i18n/NetworkTray_af.ts \

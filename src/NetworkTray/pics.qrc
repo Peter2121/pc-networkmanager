@@ -1,0 +1,13 @@
+<RCC>
+    <qresource prefix="/icons/wifi">
+        <file>pics/64x64/nm-signal-00.png</file>
+        <file>pics/64x64/nm-signal-25.png</file>
+        <file>pics/64x64/nm-signal-50.png</file>
+        <file>pics/64x64/nm-signal-75.png</file>
+        <file>pics/64x64/nm-signal-100.png</file>
+    </qresource>
+    <qresource prefix="/icons/eth">
+        <file>pics/64x64/nm-eth-connected.png</file>
+        <file>pics/64x64/nm-eth-disconnected.png</file>
+    </qresource>
+</RCC>

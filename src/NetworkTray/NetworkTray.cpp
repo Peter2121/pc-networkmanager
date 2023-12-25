@@ -611,15 +611,32 @@ void NetworkTray::loadIcons() {
     IconLocked.addFile( PROGPATH + "/pics/object-locked.png");
     IconUnlocked.addFile( PROGPATH + "/pics/object-unlocked.png");
 #else
-    iconWiredConnect.addFile(PROGPATH + "/pics/24x24/nm-adhoc.png");
-    iconWiredDisconnect.addFile( PROGPATH + "/pics/24x24/nm-no-connection.png");
-    iconWifiConnect.addFile( PROGPATH + "/pics/24x24/nm-signal-100.png");
-    iconWifiDisconnect.addFile( PROGPATH + "/pics/24x24/nm-signal-00.png");
-    iconWifiConnect25.addFile( PROGPATH + "/pics/24x24/nm-signal-25.png");
-    iconWifiConnect50.addFile( PROGPATH + "/pics/24x24/nm-signal-50.png");
-    iconWifiConnect75.addFile( PROGPATH + "/pics/24x24/nm-signal-75.png");
-    iconLocked.addFile( PROGPATH + "/pics/object-locked.png");
-    iconUnlocked.addFile( PROGPATH + "/pics/object-unlocked.png");
+    IconWiredConnect.addFile(":icons/eth/pics/64x64/nm-eth-connected.png");
+    IconWiredDisconnect.addFile(":icons/eth/pics/64x64/nm-eth-disconnected.png");
+    IconWifiConnect.addFile(":icons/wifi/pics/64x64/nm-signal-100.png");
+    IconWifiDisconnect.addFile(":icons/wifi/pics/64x64/nm-signal-00.png");
+    IconWifiConnect25.addFile(":icons/wifi/pics/64x64/nm-signal-25.png");
+    IconWifiConnect50.addFile(":icons/wifi/pics/64x64/nm-signal-50.png");
+    IconWifiConnect75.addFile(":icons/wifi/pics/64x64/nm-signal-75.png");
+/*
+    IconWiredConnect.addFile(PROGPATH + "/pics/64x64/nm-adhoc.png");
+    IconWiredDisconnect.addFile( PROGPATH + "/pics/64x64/nm-no-connection.png");
+    IconWifiConnect.addFile( PROGPATH + "/pics/64x64/nm-signal-100.png");
+    IconWifiDisconnect.addFile( PROGPATH + "/pics/64x64/nm-signal-00.png");
+    IconWifiConnect25.addFile( PROGPATH + "/pics/64x64/nm-signal-25.png");
+    IconWifiConnect50.addFile( PROGPATH + "/pics/64x64/nm-signal-50.png");
+    IconWifiConnect75.addFile( PROGPATH + "/pics/64x64/nm-signal-75.png");
+
+    IconWiredConnect.addFile(PROGPATH + "/pics/24x24/nm-adhoc.png");
+    IconWiredDisconnect.addFile( PROGPATH + "/pics/24x24/nm-no-connection.png");
+    IconWifiConnect.addFile( PROGPATH + "/pics/24x24/nm-signal-100.png");
+    IconWifiDisconnect.addFile( PROGPATH + "/pics/24x24/nm-signal-00.png");
+    IconWifiConnect25.addFile( PROGPATH + "/pics/24x24/nm-signal-25.png");
+    IconWifiConnect50.addFile( PROGPATH + "/pics/24x24/nm-signal-50.png");
+    IconWifiConnect75.addFile( PROGPATH + "/pics/24x24/nm-signal-75.png");
+*/
+    IconLocked.addFile( PROGPATH + "/pics/object-locked.png");
+    IconUnlocked.addFile( PROGPATH + "/pics/object-unlocked.png");
 #endif
     IconConfigure = QIcon::fromTheme("cm_options");
     IconQuit = QIcon::fromTheme("application-exit");

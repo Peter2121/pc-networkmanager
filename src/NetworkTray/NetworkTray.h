@@ -18,7 +18,7 @@
 #define ETHCONFIGPATH QString("../ethernetconfig")
 #define WIFICONFIGPATH QString("../wificonfig")
 #define IFCONFIG QString("/sbin/ifconfig")
-#define USE_SVG = 1
+//#define USE_SVG = 1
 
 class QString;
 class QPixmap;
