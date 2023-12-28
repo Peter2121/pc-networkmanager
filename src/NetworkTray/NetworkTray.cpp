@@ -613,11 +613,13 @@ void NetworkTray::loadIcons() {
 #else
     IconWiredConnect.addFile(":icons/eth/pics/64x64/nm-eth-connected.png");
     IconWiredDisconnect.addFile(":icons/eth/pics/64x64/nm-eth-disconnected.png");
+    /*
     IconWifiConnect.addFile(":icons/wifi/pics/64x64/nm-signal-100.png");
     IconWifiDisconnect.addFile(":icons/wifi/pics/64x64/nm-signal-00.png");
     IconWifiConnect25.addFile(":icons/wifi/pics/64x64/nm-signal-25.png");
     IconWifiConnect50.addFile(":icons/wifi/pics/64x64/nm-signal-50.png");
     IconWifiConnect75.addFile(":icons/wifi/pics/64x64/nm-signal-75.png");
+    */
 /*
     IconWiredConnect.addFile(PROGPATH + "/pics/64x64/nm-adhoc.png");
     IconWiredDisconnect.addFile( PROGPATH + "/pics/64x64/nm-no-connection.png");
@@ -643,6 +645,12 @@ void NetworkTray::loadIcons() {
     IconReset = QIcon::fromTheme("button_cancel");
     IconScan = QIcon::fromTheme("cm_refresh");
     IconSave = QIcon::fromTheme("filesave");
+
+    IconWifiConnect = QIcon::fromTheme("nm-signal-100");
+    IconWifiDisconnect = QIcon::fromTheme("nm-signal-00");
+    IconWifiConnect25 = QIcon::fromTheme("nm-signal-25");
+    IconWifiConnect50 = QIcon::fromTheme("nm-signal-50");
+    IconWifiConnect75 = QIcon::fromTheme("nm-signal-75");
 }
 
 void NetworkTray::slotQuit() {

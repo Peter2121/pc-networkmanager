@@ -4,11 +4,15 @@ LANGUAGE	= C++
 CONFIG	+= qt warn_on release
 CONFIG += ccache
 
-QT += core gui widgets network
+QT += core gui widgets network concurrent
+QT += testlib
 #QT += core5compat
 
 QMAKE_LIBDIR = /usr/local/lib/qt5 $$PWD/../../../trueos-libqt5/src-qt5/libtrueos/
 LIBS	+= -L/usr/local/lib -ltrueos-utils -ltrueos-ui
+LIBS    += /usr/local/lib/libsockpp.a
+LIBS    += /usr/local/lib/libasync++.a
+
 INCLUDEPATH+= /usr/local/include $$PWD/../../../trueos-libqt5/src-qt5/libtrueos/ui $$PWD/../../../trueos-libqt5/src-qt5/libtrueos/utils
 
 HEADERS	+= networkman.h \
