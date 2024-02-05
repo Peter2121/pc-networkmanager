@@ -35,7 +35,8 @@ include("../NMDaemonClient/NMDaemonClient.pri")
 include("../Utils/Utils.pri")
 
 FORMS	+= ../wificonfig/netKey.ui
-FORMS	+= ../ethernetconfig/ethernetconfig.ui ../ethernetconfig/ipv4addrinput.ui
+FORMS	+= ../ethernetconfig/ethernetconfig.ui
+FORMS	+= ../ethernetconfig/ipv4addrinput.ui
 #FORMS   += ../wificonfig/dialogwpaenterprise.ui ../wificonfig/dialogwpapersonal.ui ../wificonfig/wepconfig.ui
 FORMS   += ../wificonfig/wificonfigwidgetbase.ui
 #FORMS   += ../wificonfig/wifiscanssid.ui ../wificonfig/wifiselectiondialog.ui

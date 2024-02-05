@@ -1,3 +1,4 @@
+#include "ethernetconfig.h"
 #include "ethernetconfigdata.h"
 
 EthernetConfigData::EthernetConfigData(ethernetconfig* ethc, NMDaemonCheckStatus* nmd)

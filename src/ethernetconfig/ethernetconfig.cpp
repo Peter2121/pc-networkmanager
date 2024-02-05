@@ -225,8 +225,14 @@ void ethernetconfig::slot_apply()
     
    trueos::Utils::restartNetworking();
 */
+
     if(action)
         buttonApply->setEnabled(false);
+
+    auto result = QMessageBox::question(this, "Modify startup configuration?",
+                                        "The configuration is applied.\nDo you want to apply this configuration at startup too?");
+    if(result==QMessageBox::Yes)
+        nmd_status->SetRcConfEthernet(dialogConfigData.get());
 }
 
 void ethernetconfig::slotIPCheckbox()

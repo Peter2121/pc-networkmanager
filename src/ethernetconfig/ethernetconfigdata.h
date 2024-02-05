@@ -5,9 +5,9 @@
 #include <QString>
 #include <QMessageBox>
 #include "../NMDaemonClient/nmdaemoncheckstatus.h"
-#include "ethernetconfig.h"
+//#include "ethernetconfig.h"
 
-//class ethernetconfig;
+class ethernetconfig;
 
 class EthernetConfigData
 {

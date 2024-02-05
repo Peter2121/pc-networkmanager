@@ -99,4 +99,5 @@ QMAKE_LIBDIR = /usr/local/lib/qt5 $$PWD/../../../trueos-libqt5/src-qt5/libtrueos
 TARGET  = pc-ethernetconfig
 target.path = /usr/local/bin
 
-INCLUDEPATH+= /usr/local/include $$PWD/../../../trueos-libqt5/src-qt5/libtrueos/ui $$PWD/../../../trueos-libqt5/src-qt5/libtrueos/utils
+INCLUDEPATH += $$PWD
+INCLUDEPATH += /usr/local/include $$PWD/../../../trueos-libqt5/src-qt5/libtrueos/ui $$PWD/../../../trueos-libqt5/src-qt5/libtrueos/utils

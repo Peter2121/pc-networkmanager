@@ -5,7 +5,7 @@
 #TEMPLATE = lib
 #DEFINES += NMDAEMONCLIENT_LIBRARY
 
-#CONFIG += c++17
+CONFIG += c++17
 
 # You can make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.
@@ -24,6 +24,10 @@ HEADERS += \
     $${PWD}/NMDaemonClient_global.h \
     $${PWD}/nmdaemoncheckstatus.h \
     $${PWD}/nmdaemonclient.h
+
+#FORMS	= ethernetconfig.ui
+
+INCLUDEPATH += $$PWD $$PWD/../ethernetconfig $$PWD/../wificonfig
 
 # Default rules for deployment.
 #unix {

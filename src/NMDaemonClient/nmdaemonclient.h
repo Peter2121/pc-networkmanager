@@ -23,6 +23,8 @@
 #include "nmdaemonspy.h"
 #include "nmdaemonworker.h"
 
+class EthernetConfigData;
+
 class NMDaemonClientException : public std::exception
 {
 protected:
@@ -73,6 +75,7 @@ protected:
     static inline const std::string CMD_ROUTE_GET_DEFAULT = "{ \"SCOPE\" : \"ROUTE\", \"CMD\" : \"RT_DEF_GET\" }";
     static inline const std::string CMD_ROUTE_SET_DEFAULT = "{ \"SCOPE\" : \"ROUTE\", \"CMD\" : \"RT_DEF_SET\", \"DATA\" : { \"IPV4 GATEWAY\" : \"%s\" } }";
     static inline const std::string CMD_ROUTES_LIST = "{ \"SCOPE\" : \"ROUTE\", \"CMD\" : \"RT_LIST\" }";
+    static inline const std::string CMD_RCCONF_WRITE = "{ \"SCOPE\" : \"SYSTEM\", \"CMD\" : \"RCCONF_WRITE\", \"DATA\" : %s }";
 
     //static inline const QString CMD_GET_WPA_IF_LIST = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_LIST_IF\" }";
     //static inline const QString CMD_GWPA_TSAV = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_SAVE\", \"DATA\" : { \"INTERFACE NAME\" : \"wlan0\" } }";
@@ -113,6 +116,7 @@ protected:
     QJsonObject AsyncSendRequest(QJsonObject);
     QJsonObject AsyncGetWpaNetworkList(QString, bool=false);
     int GetWpaNetworkId(QString, QString);
+    QJsonObject GetJsonForRcConf(EthernetConfigData*);
 public:
     static int constexpr DEFAULT_READ_WAIT_TIME_MSEC = 5000;
     static int constexpr SCAN_READ_WAIT_TIME_MSEC = 15000;
@@ -165,6 +169,7 @@ public:
     bool ResetWpa(QString);
     QPair<QString, QString> GetRouteDefault4();
     bool SetDefaultGateway4(QString);
+    bool SetRcConfEthernet(EthernetConfigData*);
 signals:
     void dataReady(QJsonObject);
     void connected();

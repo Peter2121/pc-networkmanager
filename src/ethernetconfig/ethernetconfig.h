@@ -27,7 +27,6 @@
 #include "ui_ipv4addrinput.h"
 #include "../NMDaemonClient/nmdaemoncheckstatus.h"
 #include "../NMDaemonClient/nmdaemonspy.h"
-//#include "ethernetconfigdata.h"
 
 #ifndef _ETHERNETCONFIG_H_
 #define _ETHERNETCONFIG_H_

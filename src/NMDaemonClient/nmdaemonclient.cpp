@@ -1,4 +1,5 @@
 #include "nmdaemonclient.h"
+#include "ethernetconfigdata.h"
 
 NMDaemonClient::NMDaemonClient() : NMDaemonClient(NMD_SOCKET_DEFAULT, false)
 {
@@ -221,11 +222,11 @@ bool NMDaemonClient::sendRequest(QJsonObject json_command)
     else
     {
         //QtConcurrent::run(this, &NMDaemonClient::readData);   //  Data lost in socket communications due to race conditions
-        //******************************
+        //
         //Writing to socket:  {"CMD":"WPA_SETPARAM","DATA":{"INTERFACE NAME":"wlan0","NETID":11,"PARAM_NAME":"disabled","PARAM_QUOTES":false,"PARAM_VALUE":"0"},"SCOPE":"WPA"}
         //Received from socket:  {"RESULT":"SUCCESS"}
         //FATAL: Cannot acquire write lock on nmdaemon socket trying to write:  "{\"CMD\":\"IF_LIST\",\"SCOPE\":\"SYSTEM\"}"
-        //******************************
+        //
         //readData();    // TODO: call it in a separate thread ??
 
         QThread* read_thread = new QThread;
@@ -1135,4 +1136,88 @@ bool NMDaemonClient::SetDefaultGateway4(QString ip4_gateway)
 {
     QString req_string = QString::asprintf(CMD_ROUTE_SET_DEFAULT.c_str(), ip4_gateway.toStdString().c_str());
     return AsyncSendCommand(req_string, "SetDefaultGateway4");
+}
+
+QJsonObject NMDaemonClient::GetJsonForRcConf(EthernetConfigData* eth_config_data)
+{
+    QJsonObject eth_rc_config;
+    QJsonArray interfaces;
+    QJsonObject interface;
+    QJsonArray addresses;
+    QJsonObject address;
+    if(eth_config_data == nullptr)
+        return eth_rc_config;
+/*
+{
+  "INTERFACES": [
+    {
+      "ADDRESSES": [
+        {
+          "IPV4 ADDRESS": "192.168.212.216",
+          "IPV4 GATEWAY": "192.168.212.1",
+          "IPV4 SUBNET MASK": "255.255.255.0",
+          "PRIMARY": true
+        },
+        {
+          "IPV4 ADDRESS": "10.2.0.253",
+          "IPV4 SUBNET MASK": "255.255.240.0"
+        }
+      ],
+      "INTERFACE NAME": "em0"
+    }
+  ]
+}
+{
+  "INTERFACES": [
+    {
+      "ADDRESSES": [
+        {
+          "IPV4 ADDRESS": "DHCP"
+        }
+      ],
+      "INTERFACE NAME": "em0"
+    }
+  ]
+}
+*/
+    if(eth_config_data->isIpv4Static)
+    {
+        address[QString::fromStdString(JSON_PARAM_IPV4_ADDR)] = eth_config_data->ipv4Address;
+        address[QString::fromStdString(JSON_PARAM_IPV4_MASK)] = eth_config_data->ipv4Mask;
+        if(!eth_config_data->ipv4Gateway.isEmpty())
+            address[QString::fromStdString(JSON_PARAM_IPV4_GW)] = eth_config_data->ipv4Gateway;
+        address[QString::fromStdString(JSON_PARAM_ADDR_PRIMARY)] = true;
+        addresses.push_back(address);
+
+        foreach(const auto &alias, *(eth_config_data->ipv4Aliases))
+        {
+            address = QJsonObject();
+            address[QString::fromStdString(JSON_PARAM_IPV4_ADDR)] = alias.split("/").value(0).trimmed();
+            address[QString::fromStdString(JSON_PARAM_IPV4_MASK)] = alias.split("/").value(1).trimmed();
+            addresses.push_back(address);
+        }
+    }
+    else
+    {
+        address = QJsonObject();
+        address[QString::fromStdString(JSON_PARAM_IPV4_ADDR)] = QString::fromStdString(JSON_PARAM_DHCP);
+        addresses.push_back(address);
+    }
+
+    interface[QString::fromStdString(JSON_PARAM_IF_NAME)] = eth_config_data->ifName;
+    interface[QString::fromStdString(JSON_PARAM_ADDRESSES)] = addresses;
+    interfaces.push_back(interface);
+    eth_rc_config[QString::fromStdString(JSON_PARAM_INTERFACES)] = interfaces;
+
+    return eth_rc_config;
+}
+
+bool NMDaemonClient::SetRcConfEthernet(EthernetConfigData* eth_config_data)
+{
+    if(eth_config_data == nullptr)
+        return false;
+    QJsonObject json_data = GetJsonForRcConf(eth_config_data);
+    QJsonDocument json_data_doc(json_data);
+    QString req_string = QString::asprintf(CMD_RCCONF_WRITE.c_str(), json_data_doc.toJson(QJsonDocument::Compact).toStdString().c_str());
+    return AsyncSendCommand(req_string, "SetRcConfEthernet");
 }
