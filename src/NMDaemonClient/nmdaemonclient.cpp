@@ -1201,6 +1201,7 @@ QJsonObject NMDaemonClient::GetJsonForRcConf(EthernetConfigData* eth_config_data
     {
         address = QJsonObject();
         address[QString::fromStdString(JSON_PARAM_IPV4_ADDR)] = QString::fromStdString(JSON_PARAM_DHCP);
+        address[QString::fromStdString(JSON_PARAM_ADDR_PRIMARY)] = true;
         addresses.push_back(address);
     }
 

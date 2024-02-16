@@ -230,7 +230,7 @@ void ethernetconfig::slot_apply()
         buttonApply->setEnabled(false);
 
     auto result = QMessageBox::question(this, "Modify startup configuration?",
-                                        "The configuration is applied.\nDo you want to apply this configuration at startup too?");
+                                        "Do you want to apply this configuration at startup?");
     if(result==QMessageBox::Yes)
         nmd_status->SetRcConfEthernet(dialogConfigData.get());
 }
