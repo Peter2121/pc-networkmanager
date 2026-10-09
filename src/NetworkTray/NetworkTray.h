@@ -32,8 +32,8 @@ private:
     static constexpr short WIFI_CONNECT_MAX_RETRIES = 5;
     static constexpr short WIFI_CONNECT_RETRY_MSEC = 3000;
     static constexpr int IDLE_REFRESH_TIME_MSEC = 180000;
-    static constexpr int ACTIVE_REFRESH_TIME_MSEC = 10000;
-    static inline const std::string CMD_CONNECT_WIFI_NETWORK = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_CONNECT\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\", \"SSID\" : \"%s\" } }";
+    static constexpr int ACTIVE_REFRESH_TIME_MSEC = 60000;
+//    static inline const std::string CMD_CONNECT_WIFI_NETWORK = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_CONNECT\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\", \"SSID\" : \"%s\" } }";
 //    static inline const std::string CMD_RESET_WPA = "{ \"SCOPE\" : \"WPA\", \"CMD\" : \"WPA_RESET\", \"DATA\" : { \"INTERFACE NAME\" : \"%s\" } }";
 
 public:
@@ -73,6 +73,7 @@ private slots:
    void slotWifiEnableError(QString, QString);
    void slotWifiAddError(QString, QString);
    void slotWifiConnectNetwork(QString, int);
+   void slotFinishRefreshSSIDList(QSharedPointer<QVector<QJsonObject>>);
 
 protected:
    static constexpr short NUM_SEPARATORS = 3;
@@ -125,6 +126,7 @@ private:
    void setTrayIcon();
    QIcon getWifiIcon(int power);
    QString getWifiStatusLine(QPair<QString,int>, bool);
+   bool isNetworkConfigured(QString);
 
 //    bool checkTorMode();
 
@@ -132,6 +134,7 @@ private:
    QProcess *runCommandProc;
    QProcess *getIfProc;
    QActionGroup *trayActionGroup;
-   
-   netKey *dialogNetKey;
+   QSharedPointer<QVector<QJsonObject>> WPAConfiguredNetworks;
+   QScopedPointer<netKey> dialogNetKey;
+   //netKey *dialogNetKey;
 };

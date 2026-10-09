@@ -205,8 +205,9 @@ QVector<QPair<QString,int>> NMDaemonCheckStatus::GetLastNetsWifiPower(QString if
                 if(net_status.first.isEmpty())
                     net_status.first = net.toObject().value("BSSID").toString();
                 net_status.second = (inoi-isig)*4;
-                if(net_status.second>5)
-                    nets_power.append(net_status);
+                //if(net_status.second>5) {
+                nets_power.append(net_status);
+                //}
             }
         }
     }

@@ -10,6 +10,7 @@
 #include <QTimer>
 #include <QTranslator>
 #include <QWidgetAction>
+#include <QMetaType>
 #include <iostream>
 
 #include "NetworkTray.h"
@@ -28,14 +29,19 @@ QString username;
 
 extern bool PICOSESSION;
 
-NetworkTray::NetworkTray(NMDaemonCheckStatus* nmds) : QDialog()
+NetworkTray::NetworkTray(NMDaemonCheckStatus* nmds) : QDialog(), dialogNetKey(nullptr)
 {
      nmdStatus = nmds;
      QuitAction = nullptr;
      ConfigAction = nullptr;
+     ConfigWlanAction = nullptr;
+     ResetAction = nullptr;
+     ScanAction = nullptr;
      StatusAction = nullptr;
+     SaveAction = nullptr;
      TrayIcon = nullptr;
      TrayIconMenu = nullptr;
+     DEVICE = nullptr;
      LastWifiPower = 0;
      numWifiConnectRetries = 0;
      IsWireless = false;
@@ -46,6 +52,12 @@ NetworkTray::NetworkTray(NMDaemonCheckStatus* nmds) : QDialog()
      dialogEthernetConfig=std::make_unique<ethernetconfig>();
      EthConfig = nullptr;
      WlanConfig = nullptr;
+     fileWatcherClosed = nullptr;
+     runCommandProc = nullptr;
+     getIfProc = nullptr;
+     trayActionGroup = nullptr;
+     WPAConfiguredNetworks = nullptr;
+     qRegisterMetaType<QSharedPointer<QVector<QJsonObject>>>();
 }
 
 NetworkTray::~NetworkTray()
@@ -54,8 +66,16 @@ NetworkTray::~NetworkTray()
         delete QuitAction;
     if(ConfigAction != nullptr)
         delete ConfigAction;
+    if(ConfigWlanAction != nullptr)
+        delete ConfigWlanAction;
+    if(ResetAction != nullptr)
+        delete ResetAction;
+    if(ScanAction != nullptr)
+        delete ScanAction;
     if(StatusAction != nullptr)
         delete StatusAction;
+    if(SaveAction != nullptr)
+        delete SaveAction;
     foreach(const auto &pact, ConnectActions)
     {
         if(pact != nullptr)
@@ -72,6 +92,8 @@ NetworkTray::~NetworkTray()
     }
     if(EthConfig!=nullptr)
         delete EthConfig;
+    if(WlanConfig!=nullptr)
+        delete WlanConfig;
 }
 
 void NetworkTray::onActivated(QSystemTrayIcon::ActivationReason reason)
@@ -82,6 +104,12 @@ void NetworkTray::onActivated(QSystemTrayIcon::ActivationReason reason)
 void NetworkTray::slotSave()
 {
     nmdStatus->SaveConfig(IfName);
+}
+
+void NetworkTray::slotFinishRefreshSSIDList(QSharedPointer<QVector<QJsonObject>> wpa_networks)
+{
+    qDebug() << "slotFinishRefreshSSIDList: " << (*wpa_networks).length() << " networks";
+    WPAConfiguredNetworks = wpa_networks;
 }
 
 void NetworkTray::programInit(QString device)
@@ -124,7 +152,13 @@ void NetworkTray::programInit(QString device)
     if(device.startsWith(IF_WIFI_PREFIX))
     {
         IsWireless = true;
+        //connect(nmdStatus, SIGNAL( UpdatedWpaNetworkList(QSharedPointer<QVector<QJsonObject>>) ), this, SLOT( slotFinishRefreshSSIDList(QSharedPointer<QVector<QJsonObject>>) ), Qt::QueuedConnection );
+        connect(nmdStatus, &NMDaemonCheckStatus::UpdatedWpaNetworkList, this, &NetworkTray::slotFinishRefreshSSIDList, Qt::QueuedConnection);
+        nmdStatus->UpdateWpaNetworkList(IfName, false);
+    }
 
+    if(IsWireless)
+    {
         ConfigWlanAction  = new QAction(tr("&Configure") + " Wi-Fi", this);
         ConfigWlanAction->setIcon(IconConfigure);
         connect(ConfigWlanAction, &QAction::triggered, this, &NetworkTray::openWlanConfigDlg);
@@ -144,7 +178,7 @@ void NetworkTray::programInit(QString device)
 
     TrayIconMenu = new QMenu(this);
     TrayIconMenu->addAction(ConfigAction);
-    if(device.startsWith(IF_WIFI_PREFIX))
+    if(IsWireless)
     {
         TrayIconMenu->addAction(ConfigWlanAction);
         TrayIconMenu->addAction(ResetAction);
@@ -152,7 +186,7 @@ void NetworkTray::programInit(QString device)
     }
     TrayIconMenu->addAction(SeparatorActions[0]);
 
-  if(device.startsWith(IF_WIFI_PREFIX))
+  if(IsWireless)
   {
     TrayIcon->setIcon(IconWifiDisconnect);
     QPair<QString,int> wifi_status = nmdStatus->GetLastIfWifiNetwork(device);
@@ -204,8 +238,6 @@ void NetworkTray::programInit(QString device)
   }
 
   TrayIconMenu->addAction(SeparatorActions[2]);
-  //if(device.startsWith(IF_WIFI_PREFIX))
-  // TrayIconMenu->addAction(SaveAction);
   TrayIconMenu->addAction(QuitAction);
   TrayIcon->setContextMenu(TrayIconMenu);
   TrayIcon->show();
@@ -261,17 +293,34 @@ QString NetworkTray::getWifiStatusLine(QPair<QString,int> wifi_status, bool conn
 
 void NetworkTray::slotConnect()
 {
-// TODO: check if psk is already present in WPA config file and ask user for the psk if needed
     if(numWifiConnectRetries>0)
         return;
-    //QString ssid = sender()->property("text").toString().split(" ").at(0);
     QString ssid = (((QAction*)sender())->data()).toString();
-    numWifiConnectRetries = 0;
-    connectWifiNetwork(ssid);
+    qDebug() << "slotConnect " << ssid;
+    if(WPAConfiguredNetworks == nullptr) {
+        qDebug() << "slotConnect: No configured networks";
+        return;
+    }
+    if(isNetworkConfigured(ssid)) {
+        numWifiConnectRetries = 0;
+        connectWifiNetwork(ssid);
+    } else {
+        qDebug() << "slotConnect: Add network...";
+        dialogNetKey.reset(new netKey());
+        dialogNetKey->setSSID(ssid);
+        dialogNetKey->showKeyType(true);
+        connect(dialogNetKey.data(), &netKey::saved, this, &NetworkTray::slotAddNetworkAndConnect);
+        connect(dialogNetKey.data(), &netKey::cancel, nmdStatus, &NMDaemonCheckStatus::SlotStartMonitoring);
+        dialogNetKey->exec();
+    }
 }
 
 void NetworkTray::connectWifiNetwork(QString ssid)
 {
+    if(ssid.isEmpty()) {
+        qDebug() << "connectWifiNetwork: empty ssid";
+        return;
+    }
     if(numWifiConnectRetries>WIFI_CONNECT_MAX_RETRIES)
     {
         numWifiConnectRetries = 0;
@@ -308,23 +357,23 @@ void NetworkTray::slotWifiConnectError(QString ssid, QString result)
     else if( (result.toStdString() == JSON_PARAM_ERR) ||
              (result.toStdString() == JSON_DATA_ERR_AUTH_FAILED) )
     {
-        dialogNetKey = new netKey();
+        dialogNetKey.reset(new netKey());
         //Insert the SSID into the dialog
         dialogNetKey->setSSID(ssid);
         dialogNetKey->showKeyType(true);
-        connect(dialogNetKey, SIGNAL( saved(QString,QString,bool,QString) ), this, SLOT( slotUpdatePskAndConnect(QString,QString,bool,QString) ) );
-        connect(dialogNetKey, SIGNAL( cancel() ), nmdStatus, SLOT( SlotStartMonitoring() ) );
+        connect(dialogNetKey.data(), SIGNAL( saved(QString,QString,bool,QString) ), this, SLOT( slotUpdatePskAndConnect(QString,QString,bool,QString) ) );
+        connect(dialogNetKey.data(), SIGNAL( cancel() ), nmdStatus, SLOT( SlotStartMonitoring() ) );
         //Activate the dialog
         dialogNetKey->exec();
     }
     else if( result.toStdString() == JSON_PARAM_NOTFOUND )
     {
-        dialogNetKey = new netKey();
+        dialogNetKey.reset(new netKey());
         //Insert the SSID into the dialog
         dialogNetKey->setSSID(ssid);
         dialogNetKey->showKeyType(true);
-        connect(dialogNetKey, SIGNAL( saved(QString,QString,bool,QString) ), this, SLOT( slotAddNetworkAndConnect(QString,QString,bool,QString) ) );
-        connect(dialogNetKey, SIGNAL( cancel() ), nmdStatus, SLOT( SlotStartMonitoring() ) );
+        connect(dialogNetKey.data(), SIGNAL( saved(QString,QString,bool,QString) ), this, SLOT( slotAddNetworkAndConnect(QString,QString,bool,QString) ) );
+        connect(dialogNetKey.data(), SIGNAL( cancel() ), nmdStatus, SLOT( SlotStartMonitoring() ) );
         //Activate the dialog
         dialogNetKey->exec();
     }
@@ -344,6 +393,10 @@ void NetworkTray::slotWifiConnectSuccess(QString)
 
 void NetworkTray::slotUpdatePskAndConnect(QString key, QString ssid, bool hexkey, QString security)
 {
+    if(ssid.isEmpty() || key.isEmpty()) {
+        qDebug() << "slotUpdatePskAndConnect: empty ssid or key";
+        return;
+    }
     nmdStatus->StopMonitoring();
     //if(nmdStatus->UpdatePsk(IfName, ssid, key, hexkey))
     if(nmdStatus->UpdatePskAndSave(IfName, ssid, key, hexkey))
@@ -352,7 +405,7 @@ void NetworkTray::slotUpdatePskAndConnect(QString key, QString ssid, bool hexkey
     }
     else
     {
-        qDebug() << "Error updating PSK for network " << ssid;
+        qDebug() << "slotUpdatePskAndConnect: error updating PSK for network " << ssid;
     }
   //Run the wifiQuickConnect function
   //NetworkInterface::wifiQuickConnect(ssid,key,DEVICE->device(), hexkey);
@@ -365,12 +418,16 @@ void NetworkTray::slotUpdatePskAndConnect(QString key, QString ssid, bool hexkey
 
 void NetworkTray::slotAddNetworkAndConnect(QString key, QString ssid, bool hexkey)
 {
+    if(ssid.isEmpty() || key.isEmpty()) {
+        qDebug() << "slotAddNetworkAndConnect: empty ssid or key";
+        return;
+    }
     nmdStatus->StopMonitoring();
     connect(nmdStatus, &NMDaemonClient::successWifiNetAdd, this, &NetworkTray::slotWifiConnectNetwork);
     connect(nmdStatus, &NMDaemonClient::errorWifiNetAdd, this, &NetworkTray::slotWifiAddError);
     if(!nmdStatus->AddNetwork(IfName, ssid, key, hexkey))
     {
-        qDebug() << "Error adding network " << ssid;
+        qDebug() << "slotAddNetworkAndConnect: error adding network " << ssid;
         nmdStatus->StartMonitoring();
     }
 }
@@ -655,6 +712,18 @@ void NetworkTray::loadIcons() {
 
 void NetworkTray::slotQuit() {
    exit(0);
+}
+
+bool NetworkTray::isNetworkConfigured(QString ssid) {
+    auto networks = *WPAConfiguredNetworks;
+    foreach (const auto &net, networks)
+    {
+        QString configured_ssid = net.value(QString::fromStdString(JSON_PARAM_SSID).toLower()).toString();
+        if(ssid == configured_ssid) {
+            return true;
+        }
+    }
+    return false;
 }
 
 void NetworkTray::slotGetNetKey(QAction* act){

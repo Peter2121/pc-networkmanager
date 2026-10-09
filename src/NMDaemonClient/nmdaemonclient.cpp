@@ -285,6 +285,7 @@ bool NMDaemonClient::ConnectWifiNetwork(QString ifname, int netid)
     QJsonObject req_object1;
     req_string1 = QString::asprintf(CMD_CONNECT_WIFI_NET_ID.c_str(), ifname.toStdString().c_str(), netid);
     req_object1 = QJsonDocument::fromJson(req_string1.toUtf8()).object();
+    qDebug() << "ConnectWifiNetwork: " << req_string1;
     QString source1 = "ConnectWifiNetwork";
     lastJsonReceived = QJsonObject();
     auto step1 = std::make_shared<AsynStep<QJsonObject>>
