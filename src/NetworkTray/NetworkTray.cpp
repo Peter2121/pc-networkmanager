@@ -297,6 +297,10 @@ void NetworkTray::slotConnect()
         return;
     QString ssid = (((QAction*)sender())->data()).toString();
     qDebug() << "slotConnect " << ssid;
+    if(ssid.isEmpty()) {
+        qDebug() << "slotConnect: empty ssid received";
+        return;
+    }
     if(WPAConfiguredNetworks == nullptr) {
         qDebug() << "slotConnect: No configured networks";
         return;
@@ -463,7 +467,7 @@ void NetworkTray::UpdateStatus()
     if( (QDateTime::currentDateTime().toSecsSinceEpoch()-LastUpdateTime.toSecsSinceEpoch())*1000 < UPDATE_MSEC/2)
         return;
 
-    if(IfName.startsWith(IF_WIFI_PREFIX))
+    if(IsWireless)
     {
         // Update connected network menu item and tray icon
         QPair<QString,int> wifi_status = nmdStatus->GetLastIfWifiNetwork(IfName);
@@ -513,7 +517,8 @@ void NetworkTray::UpdateStatus()
             while (actions.hasNext())
             {
                 auto action = actions.next();
-                if(net.first == action->text().split(" ").at(0))
+                auto net_action = action->text().split(" ").at(0);
+                if(net.first == net_action)
                 {
                     found = true;
                     if(getWifiStatusLine(net, false) != action->text())
@@ -527,7 +532,8 @@ void NetworkTray::UpdateStatus()
             if( (!found) && (net.first != wifi_status.first) )
             // Action not found for this network, we need to create it, add to ConnectActions list and insert into TrayIconMenu
             {
-                new_action = new QAction(getWifiStatusLine(net, false));
+                new_action = new QAction(getWifiStatusLine(net, false), this);
+                new_action->setData(net.first);
                 if(net.second>0)
                     new_action->setIcon(getWifiIcon(net.second));
                 connect(new_action, &QAction::triggered, this, &NetworkTray::slotConnect);
