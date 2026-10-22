@@ -22,6 +22,9 @@
 
 bool PICOSESSION = false;
 
+// TODO: get the filter list from config file
+static const QStringList DEVICE_FILTER = { "vboxnet" };
+
 int  main(int argc, char *argv[]) {
 
 //  PICOSESSION = !QString(getenv("PICO_CLIENT_LOGIN")).isEmpty();
@@ -61,6 +64,15 @@ int  main(int argc, char *argv[]) {
                 continue;
             json_value = json_object.value("INTERFACE NAME");
             dev = json_value.toString();
+            bool filtered = false;
+            for (const QString &prefix : DEVICE_FILTER) {
+                if (dev.startsWith(prefix)) {
+                    filtered = true;
+                    break;
+                }
+            }
+            if (filtered)
+                continue;
             devs.push_back(dev);
         }
     }
@@ -94,12 +106,12 @@ int  main(int argc, char *argv[]) {
    for(int i=0; i<60 && !ready; i++){
       ready = QSystemTrayIcon::isSystemTrayAvailable();
       if(!ready){
-	//Pause for 5 seconds
-        sleep(5); //don't worry about stopping event handling - nothing running yet
+    //Pause for 10 seconds
+        sleep(10); //don't worry about stopping event handling - nothing running yet
       }
    }
    if(!ready){
-     qDebug() << "Could not find any available system tray after 5 minutes: exiting....";
+     qDebug() << "Could not find any available system tray after 10 seconds: exiting....";
      return 1;
    }
    

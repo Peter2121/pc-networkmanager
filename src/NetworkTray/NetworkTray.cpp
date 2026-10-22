@@ -134,6 +134,7 @@ void NetworkTray::programInit(QString device)
     QString tmp;
     QIcon status_icon;
     QString status;
+    bool is_disconnected = false;
 
     for(short i=0; i<NUM_SEPARATORS; i++)
     {
@@ -149,12 +150,21 @@ void NetworkTray::programInit(QString device)
     ConfigAction->setIcon(IconConfigure);
     connect(ConfigAction, &QAction::triggered, this, &NetworkTray::openConfigDlg);
 
+    auto if_status = nmdStatus->getIfMedia(device);
+    if(if_status.first == "NO_CARRIER")
+    {
+        is_disconnected = true;
+    }
+
     if(device.startsWith(IF_WIFI_PREFIX))
     {
         IsWireless = true;
         //connect(nmdStatus, SIGNAL( UpdatedWpaNetworkList(QSharedPointer<QVector<QJsonObject>>) ), this, SLOT( slotFinishRefreshSSIDList(QSharedPointer<QVector<QJsonObject>>) ), Qt::QueuedConnection );
         connect(nmdStatus, &NMDaemonCheckStatus::UpdatedWpaNetworkList, this, &NetworkTray::slotFinishRefreshSSIDList, Qt::QueuedConnection);
-        nmdStatus->UpdateWpaNetworkList(IfName, false);
+        if(!is_disconnected)
+        {
+            nmdStatus->UpdateWpaNetworkList(IfName, false);
+        }
     }
 
     if(IsWireless)

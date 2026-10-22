@@ -110,6 +110,11 @@ bool NMDaemonCheckStatus::UpdateStatusWifi()
     lastWifiNetStatus.clear();
     foreach(const QString &s, wifiInterfaces)
     {
+        auto if_status = getIfMedia(s);
+        if(if_status.first == "NO_CARRIER")
+        {
+            continue;
+        }
         req_string = QString::asprintf(CMD_WIFI_SCAN.c_str(), s.toStdString().c_str());
         ret_object = AsyncSendCommandGetResult(req_string, "UpdateStatusWifi-scan");
         if(ret_object.empty())
@@ -396,3 +401,27 @@ bool NMDaemonCheckStatus::UpdateStatusJails()
     return true;
 }
 
+QPair<QString,QString> NMDaemonCheckStatus::getIfMedia(QString if_name) const {   // Status, Media
+    QJsonValue json_value;
+    QString dev, str_value;
+    QPair<QString,QString> if_media{"", ""};
+    auto if_status = getLastIfStatus();
+    if(!if_status.empty())
+    {
+        foreach (const QJsonValue &v, if_status)
+        {
+            auto json_object = v.toObject();
+            json_value = json_object.value("INTERFACE NAME");
+            dev = json_value.toString();
+            if(dev == if_name)
+            {
+                json_value = json_object.value("STATUS");
+                if_media.first = json_value.toString();
+                json_value = json_object.value("MEDIA");
+                if_media.second = json_value.toString();
+                break;
+            }
+        }
+    }
+    return if_media;
+}

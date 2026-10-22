@@ -89,10 +89,15 @@ bool ethernetconfig::isWifiEnabled() {
 void ethernetconfig::slot_apply()
 {
     bool action = false;
+    bool action_disable_interface = false;
     bool validate_input = true;
     dialogConfigData = std::make_unique<EthernetConfigData>(this);
     if(!dialogConfigData->isInitialized)
         return;
+    if(runningConfigData==nullptr) {
+        qDebug() << "slot_apply: runningConfigData is null";
+        return;
+    }
     if(dialogConfigData == runningConfigData)
         return;
 
@@ -105,9 +110,16 @@ void ethernetconfig::slot_apply()
     if( dialogConfigData->isUpAndRunning != runningConfigData->isUpAndRunning )
     {
         if(dialogConfigData->isUpAndRunning)
+        {
             nmd_status->EnableInterface(DeviceName);
+            // TODO: check if the interface is wireless and send signal to start periodic network scan
+        }
         else
+        {
             nmd_status->DisableInterface(DeviceName);
+            action_disable_interface = true;
+            // TODO: check if the interface is wireless and send signal to stop periodic network scan
+        }
         action = true;
     }
 
@@ -188,7 +200,7 @@ void ethernetconfig::slot_apply()
                 }
             }
         }
-        else
+        else if (!action_disable_interface)
         {
             if(nmd_status->EnableDhcp4(DeviceName))
                 action = true;
