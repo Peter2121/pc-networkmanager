@@ -239,8 +239,10 @@ void ethernetconfig::slot_apply()
 */
 
     if(action)
+    {
         buttonApply->setEnabled(false);
-
+        emit configUpdated();
+    }
     auto result = QMessageBox::question(this, "Modify startup configuration?",
                                         "Do you want to apply this configuration at startup?");
     if(result==QMessageBox::Yes)

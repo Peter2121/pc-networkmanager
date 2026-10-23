@@ -411,17 +411,49 @@ QPair<QString,QString> NMDaemonCheckStatus::getIfMedia(QString if_name) const { 
         foreach (const QJsonValue &v, if_status)
         {
             auto json_object = v.toObject();
-            json_value = json_object.value("INTERFACE NAME");
+            json_value = json_object.value(QString::fromStdString(JSON_PARAM_IF_NAME));
             dev = json_value.toString();
             if(dev == if_name)
             {
-                json_value = json_object.value("STATUS");
+                json_value = json_object.value(QString::fromStdString(JSON_PARAM_STATUS));
                 if_media.first = json_value.toString();
-                json_value = json_object.value("MEDIA");
+                json_value = json_object.value(QString::fromStdString(JSON_PARAM_MEDIA));
                 if_media.second = json_value.toString();
                 break;
             }
         }
     }
     return if_media;
+}
+
+bool NMDaemonCheckStatus::isUpAndRunning(QString if_name) const {
+    QJsonValue json_value;
+    QString dev, str_value;
+    bool is_up = false;
+    bool is_running = false;
+    bool is_up_and_running = false;
+
+    auto if_status = getLastIfStatus();
+
+    if(!if_status.empty())
+    {
+        foreach (const QJsonValue &v, if_status)
+        {
+            auto json_object = v.toObject();
+            json_value = json_object.value(QString::fromStdString(JSON_PARAM_IF_NAME));
+            dev = json_value.toString();
+            if(dev == if_name)
+            {
+                json_value = json_object.value(QString::fromStdString(JSON_PARAM_UP));
+                if(json_value.isBool())
+                    is_up = json_value.toBool();
+                json_value = json_object.value(QString::fromStdString(JSON_PARAM_RUNNING));
+                if(json_value.isBool())
+                    is_running = json_value.toBool();
+                is_up_and_running = is_up && is_running;
+                break;
+            }
+        }
+    }
+    return is_up_and_running;
 }

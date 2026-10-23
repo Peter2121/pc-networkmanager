@@ -50,6 +50,7 @@ private slots:
    void openWlanConfigDlg();
    void resetWpaSupplicant();
 //   void monitorStatus(bool noloop=false);
+   void checkIfStatus();
    void UpdateStatus();
    void setIdleScanTimeout();
    void setActiveScanTimeout();

@@ -151,6 +151,8 @@ void NetworkTray::programInit(QString device)
     connect(ConfigAction, &QAction::triggered, this, &NetworkTray::openConfigDlg);
 
     auto if_status = nmdStatus->getIfMedia(device);
+    auto is_up_and_running = nmdStatus->isUpAndRunning(device);
+    qDebug() << "Interface status: " << if_status.first << " " << if_status.second << " UP? " << is_up_and_running;
     if(if_status.first == "NO_CARRIER")
     {
         is_disconnected = true;
@@ -240,7 +242,14 @@ void NetworkTray::programInit(QString device)
   }
   else
   {
-    TrayIcon->setIcon(IconWiredConnect);
+      if(is_up_and_running)
+      {
+        TrayIcon->setIcon(IconWiredConnect);
+      }
+      else
+      {
+        TrayIcon->setIcon(IconWiredDisconnect);
+      }
     StatusAction  = new QAction(IfName, this);
     StatusAction->setIcon(IconWiredConnect);
     connect(StatusAction, &QAction::triggered, this, &NetworkTray::slotShowIfStatus);
@@ -586,6 +595,15 @@ void NetworkTray::UpdateStatus()
     else
     // Update wire connection status
     {
+        auto is_up_and_running = nmdStatus->isUpAndRunning(IfName);
+        if(is_up_and_running)
+        {
+            TrayIcon->setIcon(IconWiredConnect);
+        }
+        else
+        {
+            TrayIcon->setIcon(IconWiredDisconnect);
+        }
     }
     LastUpdateTime = QDateTime::currentDateTime();
 }
@@ -615,6 +633,11 @@ QIcon NetworkTray::getWifiIcon(int power)
         return IconWifiConnect;
 }
 
+void  NetworkTray::checkIfStatus() {
+    nmdStatus->UpdateStatusJails();
+    nmdStatus->UpdateStatusInterfaces();
+}
+
 void  NetworkTray::openConfigDlg() {
         if(EthConfig!=nullptr)
             delete EthConfig;   // TODO: What if we open multiple EthConfig dialogs??
@@ -623,6 +646,8 @@ void  NetworkTray::openConfigDlg() {
         EthConfig->setWindowTitle(IfName + " " + "configuration");
         EthConfig->setIsMain(false);
         EthConfig->programInit();
+        //connect(new_action, &QAction::triggered, this, &NetworkTray::slotConnect);
+        connect(EthConfig, &ethernetconfig::configUpdated, this, &NetworkTray::checkIfStatus);
         EthConfig->show();
 }
 

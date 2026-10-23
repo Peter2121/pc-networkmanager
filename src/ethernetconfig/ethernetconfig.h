@@ -93,6 +93,8 @@ private slots:
     void slotFinishLoad();
     void slotCheckGlobalText();
     void slotConfigWPA();
+signals:
+    void configUpdated();
 };
 
 #endif

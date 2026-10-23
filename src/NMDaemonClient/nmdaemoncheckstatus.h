@@ -55,6 +55,7 @@ public:
     QVector<WifiNetworkDetails> GetLastNetsWifiDetails(QString) const;
     QString GetLastIfStatusString(QString) const;
     QPair<QString,QString> getIfMedia(QString) const;   // Status, Media
+    bool isUpAndRunning(QString) const;
     std::shared_ptr<QVector<QString>> GetLastIPv4AliasesFromInterface(QString);
     std::unique_ptr<QVector<QString>> GetLastJailsIPv4();
     std::unique_ptr<QVector<QString>> GetLastJailsIPv6();
