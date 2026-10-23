@@ -636,6 +636,12 @@ QIcon NetworkTray::getWifiIcon(int power)
 void  NetworkTray::checkIfStatus() {
     nmdStatus->UpdateStatusJails();
     nmdStatus->UpdateStatusInterfaces();
+    if(IsWireless)
+    {
+        nmdStatus->StopMonitoring();
+        nmdStatus->UpdateStatusWifi();
+        nmdStatus->StartMonitoring();
+    }
 }
 
 void  NetworkTray::openConfigDlg() {
@@ -706,8 +712,8 @@ void NetworkTray::loadIcons() {
     IconWifiConnect25.addFile( PROGPATH + "/pics/scalable/nm-signal-25.svg");
     IconWifiConnect50.addFile( PROGPATH + "/pics/scalable/nm-signal-50.svg");
     IconWifiConnect75.addFile( PROGPATH + "/pics/scalable/nm-signal-75.svg");
-    IconLocked.addFile( PROGPATH + "/pics/object-locked.png");
-    IconUnlocked.addFile( PROGPATH + "/pics/object-unlocked.png");
+    IconLocked.addFile(":icons/lock/pics/object-locked.png");
+    IconUnlocked.addFile(":icons/lock/pics/object-unlocked.png");
 #else
     IconWiredConnect.addFile(":icons/eth/pics/64x64/nm-eth-connected.png");
     IconWiredDisconnect.addFile(":icons/eth/pics/64x64/nm-eth-disconnected.png");
@@ -735,8 +741,8 @@ void NetworkTray::loadIcons() {
     IconWifiConnect50.addFile( PROGPATH + "/pics/24x24/nm-signal-50.png");
     IconWifiConnect75.addFile( PROGPATH + "/pics/24x24/nm-signal-75.png");
 */
-    IconLocked.addFile( PROGPATH + "/pics/object-locked.png");
-    IconUnlocked.addFile( PROGPATH + "/pics/object-unlocked.png");
+    IconLocked.addFile(":icons/lock/pics/object-locked.png");
+    IconUnlocked.addFile(":icons/lock/pics/object-unlocked.png");
 #endif
     IconConfigure = QIcon::fromTheme("cm_options");
     IconQuit = QIcon::fromTheme("application-exit");

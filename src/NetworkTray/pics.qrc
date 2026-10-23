@@ -10,4 +10,8 @@
         <file>pics/64x64/nm-eth-connected.png</file>
         <file>pics/64x64/nm-eth-disconnected.png</file>
     </qresource>
+    <qresource prefix="/icons/lock">
+        <file>pics/object-locked.png</file>
+        <file>pics/object-unlocked.png</file>
+    </qresource>
 </RCC>
